@@ -31,8 +31,10 @@ app.use(cookieParser());
 //   optionsSuccessStatus: 200
 // }
 
+// Use alter: true to update tables without losing data
 db.sequelize.sync({ alter: true });
 
+// For first-time setup only, use force: true to create all tables
 // db.sequelize.sync({ force: true }).then(() => {
 //   console.log("Drop and re-sync db.");
 // });

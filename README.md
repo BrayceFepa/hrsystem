@@ -35,7 +35,22 @@ This Human Resource Management System was made using [React](https://github.com/
 
 ## Disclaimer
 
-This project has a [70 page documentation](http://estia.hua.gr/browse/23478) (view [here](https://drive.google.com/file/d/1143CfOo8dPUhNYUT7a2deB-Vbi3Yr5ac/view?usp=sharing)), where I analyze the process of information gathering, showcase the Analysis and Design of the api and database and provide a useful User Manual.
+Application Installation
+If we are in the server folder, we first go back to the original folder with
+Then we go to the server folder and execute the same command
+You must have the Node.js framework installed to successfully run the commands and system startup. You can install Node.js in your system.
+
+To install the application you must access the code repository and clone it
+
+Then go to the folder where you downloaded the code using the
+npm install
+cd server && npm install
+cd command ..
+46
+commands and system startup. You can install Node.js in
+To start the application, go to the original folder and run the
+cd commands. First, we need to install all the node_modules.
+npm start
 
 Unfortunately this document is in the Greek language. I am working on an Englsih summary. If you are interested in my work, please do contact me so we can arrange a meeting for a live demo and analysis.
 
