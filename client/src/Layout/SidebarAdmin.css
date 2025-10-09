@@ -1,0 +1,54 @@
+/* Sidebar styling */
+.sidebar-white {
+  background-color: white !important;
+}
+
+/* Menu items */
+.sidebar-white .nav-sidebar .nav-link {
+  color: #6c757d !important;
+  border-left: 3px solid transparent;
+  margin-left: -3px;
+}
+
+.sidebar-white .nav-sidebar .nav-link:hover {
+  color: #495057 !important;
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Active menu item */
+.sidebar-white .nav-sidebar .nav-link.active,
+.sidebar-white .nav-sidebar .nav-item.menu-open > .nav-link {
+  color: #dc3545 !important;
+  border-left: 3px solid #dc3545 !important;
+  background-color: rgba(220, 53, 69, 0.1) !important;
+}
+
+/* Nested menu items */
+.sidebar-white .nav-sidebar .nav-treeview .nav-link {
+  padding-left: 3rem !important;
+}
+
+.sidebar-white .nav-sidebar .nav-treeview .nav-link.active {
+  padding-left: calc(3rem - 3px) !important;
+}
+
+/* Brand text color */
+.sidebar-white .brand-text {
+  color: #6c757d !important;
+}
+
+/* User panel text color */
+.sidebar-white .user-panel .info a {
+  color: #6c757d !important;
+}
+
+/* Treeview arrow color */
+.sidebar-white .nav-item > .nav-link > .right {
+  color: #6c757d;
+}
+
+/* Active treeview parent */
+.sidebar-white .nav-item.has-treeview.menu-open > .nav-link {
+  color: #dc3545 !important;
+  background-color: rgba(220, 53, 69, 0.1) !important;
+}

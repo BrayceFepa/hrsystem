@@ -83,7 +83,7 @@ export default class Dashboard extends Component {
           <div className="col-md-4 col-sm-6 col-xs-12">
             <Infobox
               title="Total Expenses"
-              description={this.state.totalExpenses + "€"}
+              description={this.state.totalExpenses + " Birr"}
               color="bg-warning"
               icon="fa fa-shopping-cart"
             />
@@ -92,7 +92,7 @@ export default class Dashboard extends Component {
           <div className="col-md-4 col-sm-6 col-xs-12">
             <Infobox
               title="Total Payments"
-              description={this.state.totalPayments + "€"}
+              description={this.state.totalPayments + " Birr"}
               color="bg-danger"
               icon="fa fa-money-check"
             />
@@ -106,9 +106,9 @@ export default class Dashboard extends Component {
             <div className="panel panel-default">
               <div
                 className="panel-heading with-border"
-                style={{ backgroundColor: "#515e73", color: "white" }}
+                style={{ backgroundColor: " #dc3545", color: "white" }}
               >
-                <h3 className="panel-title">Recent Applications</h3>
+                <h3 className="panel-title" >Recent Applications</h3>
               </div>
               <RecentApplciations />
             </div>
@@ -116,27 +116,27 @@ export default class Dashboard extends Component {
           {/* Expense Report & Recent Applications */}
           <div className="col-md-6">
             <div className="panel panel-default">
-              <div
+            <div
                 className="panel-heading with-border"
-                style={{ backgroundColor: "#515e73", color: "white" }}
+                style={{ backgroundColor: " #dc3545", color: "white" }}
               >
                 <h3 className="panel-title">Expense Report</h3>
               </div>
               <ExpenseChartsPage />
             </div>
             <div className="panel panel-default">
-              <div
+            <div
                 className="panel-heading with-border"
-                style={{ backgroundColor: "#515e73", color: "white" }}
+                style={{ backgroundColor: " #dc3545", color: "white" }}
               >
                 <h3 className="panel-title">Payment Report</h3>
               </div>
               <PaymentChartsPage />
             </div>
             <div className="panel panel-default">
-              <div
+            <div
                 className="panel-heading with-border"
-                style={{ backgroundColor: "#515e73", color: "white" }}
+                style={{ backgroundColor: " #dc3545", color: "white" }}
               >
                 <h3 className="panel-title">Recent Announcements</h3>
               </div>

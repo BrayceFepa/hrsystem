@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import { loadTree } from '../menuTreeHelper';
-import {NavLink} from 'react-router-dom'
+import { NavLink } from 'react-router-dom';
+import './SidebarAdmin.css';
 
 export default class SidebarAdmin extends Component {
 
@@ -20,15 +21,21 @@ export default class SidebarAdmin extends Component {
 
   render() {
     return (
-      <aside className="main-sidebar sidebar-dark-primary elevation-4" >
+      <aside className="main-sidebar sidebar-white elevation-4" >
         {/* Brand Logo */}
-        <a href="/" className="brand-link">
-          <span className="brand-text font-weight-light ml-1">HRMS Admin</span>
+        <a href="/" className="brand-link d-flex flex-column align-items-center">
+          <img 
+            src={process.env.PUBLIC_URL + '/Logo.png'} 
+            alt="HRMS Logo" 
+            className="brand-image   mb-2"
+            style={{opacity: '.8', width: '50px', height: '150px'}}
+          />
+          {/* <span className="brand-text font-weight-light">HRMS Admin</span> */}
         </a>
         {/* Sidebar */}
         <div className="sidebar">
           {/* Sidebar user panel (optional) */}
-          <div className="user-panel mt-3 pb-3 mb-3 d-flex">
+          {/* <div className="user-panel mt-3 pb-3 mb-3 d-flex">
             <div className="image">
               <img
                 src={process.env.PUBLIC_URL + '/user-64.png'}
@@ -41,7 +48,7 @@ export default class SidebarAdmin extends Component {
                 {this.state.user.fullname}
               </a>
             </div>
-          </div>
+          </div> */}
           {/* Sidebar Menu */}
           <nav className="mt-2">
             <ul
@@ -53,16 +60,16 @@ export default class SidebarAdmin extends Component {
               {/* Add icons to the links using the .nav-icon class
          with font-awesome or any other icon font library */}
               <li className="nav-item">
-                <NavLink exact to="/" className="nav-link">
+                <NavLink exact to="/" className="nav-link" activeClassName="active">
                   <i className="nav-icon fas fa-tachometer-alt" />
                   <p>
                     Dashboard
-                    <span className="right badge badge-success">Home</span>
+                    {/* <span className="right badge badge-success">Home</span> */}
                   </p>
                 </NavLink>
               </li>
               <li className="nav-item">
-                <NavLink exact to="/departments" className="nav-link">
+                <NavLink exact to="/departments" className="nav-link" activeClassName="active">
                   <i className="nav-icon fa fa-building" />
                   <p>
                     Departments
@@ -93,7 +100,7 @@ export default class SidebarAdmin extends Component {
                 </ul>
               </li>
               <li className="nav-item">
-                <NavLink to="/job-list" className="nav-link">
+                <NavLink to="/job-list" className="nav-link" activeClassName="active">
                   <i className="nav-icon fas fa-briefcase" />
                   <p>
                     Job List
@@ -176,7 +183,7 @@ export default class SidebarAdmin extends Component {
                 </ul>
               </li>
               <li className="nav-item">
-                <NavLink exact to="/announcement" className="nav-link">
+                <NavLink exact to="/announcement" className="nav-link" activeClassName="active">
                   <i className="nav-icon fa fa-bell" />
                   <p>
                     Announcements
