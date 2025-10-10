@@ -8,22 +8,30 @@
 
 /* Brand logo */
 .brand-link {
-  background-color: #1a252f;
+  background-color: #ffffff !important;
   padding: 1rem 0.5rem !important;
   transition: all 0.3s ease-in-out;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  border-bottom: 1px solid #e9ecef;
+  text-align: center !important;
+  width: 100%;
 }
 
 .brand-link:hover {
   text-decoration: none;
-  background-color: #1e2b38;
+  background-color: #f8f9fa !important;
 }
 
 .brand-image {
   transition: all 0.3s ease-in-out;
   height: 40px !important;
   width: auto !important;
-  margin: 0 auto;
-  padding: 5px 0;
+  max-width: 100%;
+  display: block !important;
+  margin: 0 !important;
+  padding: 0;
 }
 
 /* Menu items */
