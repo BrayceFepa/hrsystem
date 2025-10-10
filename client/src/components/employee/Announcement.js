@@ -65,7 +65,7 @@ export default class Announcement extends Component {
         <div className="row">
             <div className="col-sm-12">
             <Card className="main-card">
-                <Card.Header>
+                <Card.Header className="bg-danger">
                 <div className="panel-title">
                     <strong>Announcement List</strong>
                 </div>
@@ -90,7 +90,7 @@ export default class Announcement extends Component {
                                 pageSize: 8,
                                 pageSizeOptions: [5, 10, 20, 30, 50, 75, 100]
                             }}
-                            title="Announcements"
+                            title=""
                     />
                     </ThemeProvider>
                 </Card.Body>

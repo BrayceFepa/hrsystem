@@ -116,7 +116,7 @@ export default class ApplicationList extends Component {
       <div className="container-fluid pt-5">
         <div className="col-sm-12">
           <Card>
-            <Card.Header style={{ backgroundColor: "#515e73", color: "white" }}>
+            <Card.Header className="bg-danger">
               <div className="panel-title">
                 <strong>Application List</strong>
               </div>

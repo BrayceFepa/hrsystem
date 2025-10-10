@@ -83,7 +83,7 @@ export default class DashboardManager extends Component {
           <div className="col-md-6">
             <div className="panel panel-default">
               <div
-                className="panel-heading with-border"
+                className="panel-heading with-border bg-danger"
                 style={{ backgroundColor: "#515e73", color: "white" }}
               >
                 <h3 className="panel-title">Department Expense Report</h3>
@@ -92,7 +92,7 @@ export default class DashboardManager extends Component {
             </div>
             <div className="panel panel-default">
               <div
-                className="panel-heading with-border"
+                className="panel-heading with-border bg-danger"
                 style={{ backgroundColor: "#515e73", color: "white" }}
               >
                 <h3 className="panel-title">Recent Applications</h3>
@@ -101,7 +101,7 @@ export default class DashboardManager extends Component {
             </div>
             <div className="panel panel-default">
               <div
-                className="panel-heading with-border"
+                className="panel-heading with-border bg-danger"
                 style={{ backgroundColor: "#515e73", color: "white" }}
               >
                 <h3 className="panel-title">Recent Announcements</h3>

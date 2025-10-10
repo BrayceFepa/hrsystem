@@ -111,7 +111,7 @@ export default class Announcement extends Component {
         <div className="row">
             <div className="col-sm-12">
                 <Card className="main-card">
-                    <Card.Header><strong>Add Announcement</strong></Card.Header>
+                    <Card.Header className="bg-danger"><strong>Add Announcement</strong></Card.Header>
                     <Card.Body>
                         <Card.Text>
                             <Form onSubmit={this.onSubmit}>
@@ -135,7 +135,7 @@ export default class Announcement extends Component {
                                         required
                                     />
                                 </Form.Group>
-                                <Button type="submit" size="sm" className="mt-1">Publish</Button>
+                                <Button type="submit" size="sm" className="mt-1 bg-danger border-danger">Publish</Button>
                             </Form>
                         </Card.Text>
                     </Card.Body>
@@ -145,7 +145,7 @@ export default class Announcement extends Component {
         <div className="row">
             <div className="col-sm-12">
             <Card className="main-card">
-                <Card.Header>
+                <Card.Header className="bg-danger">
                 <div className="panel-title">
                     <strong>Announcement List</strong>
                 </div>
