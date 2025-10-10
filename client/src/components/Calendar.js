@@ -16,16 +16,33 @@ const CalendarStyles = createGlobalStyle`
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     max-width: 100%;
     margin: 20px auto;
-    padding: 0 15px;
+    padding: 0 10px;
     
     .fc-toolbar {
       flex-direction: column;
       gap: 15px;
       margin-bottom: 1.5em !important;
+      padding: 0 10px;
+      
+      .fc-toolbar-chunk {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 10px;
+        justify-content: center;
+        width: 100%;
+      }
       
       @media (min-width: 768px) {
         flex-direction: row;
         align-items: center;
+        padding: 0;
+        
+        .fc-toolbar-chunk {
+          width: auto;
+          margin-bottom: 0;
+          justify-content: flex-start;
+        }
       }
       
       h2 {
@@ -41,12 +58,21 @@ const CalendarStyles = createGlobalStyle`
       border: none;
       color: white;
       border-radius: 4px;
-      padding: 6px 12px;
+      padding: 8px 16px;
       font-size: 0.9em;
       font-weight: 500;
       text-transform: capitalize;
       transition: all 0.2s ease;
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      margin: 3px;
+      min-width: 80px;
+      text-align: center;
+      
+      @media (max-width: 767px) {
+        padding: 8px 12px;
+        font-size: 0.85em;
+        min-width: 70px;
+      }
       
       &:hover {
         background-color:rgb(238, 0, 0);

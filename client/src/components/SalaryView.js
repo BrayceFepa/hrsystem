@@ -57,7 +57,7 @@ export default class SalaryView extends Component {
                 <Row>
                     <Col sm={12}>
                         <Card>
-                            <Card.Header style={{ backgroundColor: "#515e73", color: "white", fontSize: '17px' }}>Employee Salary Detail <Form className="float-right"><span style={{cursor: 'pointer'}} onClick={this.onEdit}><i className="far fa-edit"></i> Edit</span></Form></Card.Header>
+                            <Card.Header className="bg-danger" style={{ backgroundColor: "#515e73", color: "white", fontSize: '17px' }}>Employee Salary Detail <Form className="float-right"><span style={{cursor: 'pointer'}} onClick={this.onEdit}><i className="far fa-edit"></i> Edit</span></Form></Card.Header>
                             <Card.Body>
                                 <Card.Title><strong>{this.state.user.fullName}</strong></Card.Title>
                                 <Card.Text>
@@ -70,7 +70,7 @@ export default class SalaryView extends Component {
                                                 <div className="emp-view-list">
                                                     <ul>
                                                         <li><span>Employee ID: </span> {this.state.user.id}</li>
-                                                        <li><span>Department: </span> {this.state.user.department.departmentName}</li>
+                                                        <li><span>Department: </span> {this.state.user.department ? this.state.user.department.departmentName : 'Not assigned'}</li>
                                                         <li><span>Job Title: </span> {this.state.currentJobTitle}</li>
                                                         <li><span>Role: </span>{this.state.user.role==='ROLE_ADMIN' ? 'Admin' : this.state.user.role==='ROLE_MANAGER' ? 'Manager' : 'Employee'}</li>
                                                     </ul>
@@ -80,7 +80,7 @@ export default class SalaryView extends Component {
                                         <Row className="pt-4">
                                             <Col sm={6}>
                                                 <Card className="secondary-card sal-view">
-                                                    <Card.Header>Salary Details</Card.Header>
+                                                    <Card.Header className="bg-red">Salary Details</Card.Header>
                                                     <Card.Body>
                                                         <Card.Text id="sal-view-details">
                                                             <Form.Group as={Row}>
@@ -105,7 +105,7 @@ export default class SalaryView extends Component {
                                             </Col>
                                             <Col sm={6}>
                                                 <Card className="secondary-card sal-view">
-                                                    <Card.Header>Allowances</Card.Header>
+                                                    <Card.Header className="bg-danger">Allowances</Card.Header>
                                                     <Card.Body>
                                                         <Card.Text id="sal-view-allowances">
                                                             <Form.Group as={Row}>
@@ -172,7 +172,7 @@ export default class SalaryView extends Component {
                                         <Row>
                                             <Col cm={6}>
                                                 <Card className="secondary-card">
-                                                    <Card.Header>Deductions</Card.Header>
+                                                    <Card.Header className="bg-danger">Deductions</Card.Header>
                                                     <Card.Body>
                                                         <Card.Text id="sal-view-deductions">
                                                             <Form.Group as={Row}>
@@ -205,7 +205,7 @@ export default class SalaryView extends Component {
                                             </Col>
                                             <Col sm={6}>
                                             <Card className="secondary-card">
-                                                    <Card.Header>Total Salary Details</Card.Header>
+                                                    <Card.Header className="bg-danger" >Total Salary Details</Card.Header>
                                                     <Card.Body>
                                                         <Card.Text id="sal-view-total">
                                                             <Form.Group as={Row}>

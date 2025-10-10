@@ -1,21 +1,44 @@
 import React, { Component } from "react";
-import { Card, Form, Button, Alert } from "react-bootstrap";
-import { Redirect, NavLink } from 'react-router-dom'
+import { Card, Form, Button, Alert, Row, Col } from "react-bootstrap";
+import { Redirect, NavLink } from 'react-router-dom';
 import DatePicker from "react-datepicker";
-import axios from 'axios'
-import moment from 'moment'
+import axios from 'axios';
+import moment from 'moment';
+
+// Custom styles for file upload buttons
+const customFileUploadStyles = `
+  .custom-file-upload .custom-file-label::after {
+    content: 'Browse';
+    background-color: #dc3545;
+    color: white;
+    border-color: #dc3545;
+    transition: all 0.2s ease-in-out;
+  }
+  
+  .custom-file-upload .custom-file-label:hover::after {
+    background-color: #c82333;
+    border-color: #bd2130;
+    cursor: pointer;
+  }
+`;
+
+// Add the styles to the document head
+const styleElement = document.createElement('style');
+styleElement.textContent = customFileUploadStyles;
+document.head.appendChild(styleElement);
 
 export default class EmployeeEdit extends Component {
   constructor(props) {
     super(props);
-
     this.state = {
         user: {
             id: null,
             fullName: '',
             role: null,
             active: null,
-            departmentId: null
+            departmentId: null,
+            username: '',
+            password: ''
         },
         userPersonalInfo: {
             id: null,
@@ -27,7 +50,7 @@ export default class EmployeeEdit extends Component {
             address: '',
             city: '',
             country: '',
-            mobile: '',
+            mobile: null,
             phone: null,
             emailAddress: ''
         },
@@ -45,10 +68,15 @@ export default class EmployeeEdit extends Component {
         departments: [],
         job: {
           id: null,
-          jobTitle: null,
+          jobTitle: '',
           startDate: null,
-          endDate: null
+          endDate: null,
+          joiningDate: ''
         },
+        idCopy: null,
+        contract: null,
+        certificate: null,
+        emergencyContact: '',
         hasError: false,
         errMsg: "",
         completed: false,
@@ -279,9 +307,9 @@ export default class EmployeeEdit extends Component {
           ) : (<></>)}
 
           {/* Main Card */}
-          <Card className="col-sm-12 main-card">
-            <Card.Header>
-              <b>Add Employee</b>
+          <Card className="col-sm-12 main-card mb-3 border-danger">
+            <Card.Header className="bg-danger">
+              <b className="text-medium">Edit Employee</b>
             </Card.Header>
             <Card.Body>
               <div className="row">
@@ -291,16 +319,48 @@ export default class EmployeeEdit extends Component {
                     <Card.Header>Personal Details</Card.Header>
                     <Card.Body>
                       <Card.Text>
-                        <Form.Group controlId="formFullName">
+                        <Form.Group controlId="formFirstName">
                           <Form.Label className="text-muted required">
-                            Full Name
+                            First Name
                           </Form.Label>
                           <Form.Control
                             type="text"
-                            placeholder="Enter first Name"
-                            name="fullName"
-                            value={this.state.user.fullName}
-                            onChange={this.handleChangeUser}
+                            placeholder="Enter first name"
+                            name="firstName"
+                            value={this.state.user.fullName ? this.state.user.fullName.split(' ')[0] : ''}
+                            onChange={(e) => {
+                              const firstName = e.target.value;
+                              const lastName = this.state.user.fullName ? this.state.user.fullName.split(' ').slice(1).join(' ') : '';
+                              this.setState(prevState => ({
+                                user: {
+                                  ...prevState.user,
+                                  fullName: `${firstName} ${lastName}`.trim()
+                                }
+                              }));
+                            }}
+                            required
+                          />
+                        </Form.Group>
+
+                        <Form.Group controlId="formLastName">
+                          <Form.Label className="text-muted required">
+                            Last Name
+                          </Form.Label>
+                          <Form.Control
+                            type="text"
+                            placeholder="Enter last name"
+                            name="lastName"
+                            value={this.state.user.fullName ? this.state.user.fullName.split(' ').slice(1).join(' ') : ''}
+                            onChange={(e) => {
+                              const lastName = e.target.value;
+                              const firstName = this.state.user.fullName ? this.state.user.fullName.split(' ')[0] : '';
+                              this.setState(prevState => ({
+                                user: {
+                                  ...prevState.user,
+                                  fullName: `${firstName} ${lastName}`.trim()
+                                }
+                              }));
+                            }}
                             required
                           />
                         </Form.Group>
@@ -343,8 +403,8 @@ export default class EmployeeEdit extends Component {
                             required
                           >
                             <option value="">Choose...</option>
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
                           </Form.Control>
                         </Form.Group>
 
@@ -360,28 +420,15 @@ export default class EmployeeEdit extends Component {
                             required
                           >
                             <option value="">Choose...</option>
-                            <option value="Married">Married</option>
-                            <option value="Single">Single</option>
+                            <option value="married">Married</option>
+                            <option value="single">Single</option>
                           </Form.Control>
                         </Form.Group>
 
-                        <Form.Group controlId="formFatherName">
-                          <Form.Label className="text-muted required">
-                            Father's name
-                          </Form.Label>
-                          <Form.Control
-                            type="text"
-                            placeholder="Enter Father's Name"
-                            name="fatherName"
-                            value={this.state.userPersonalInfo.fatherName}
-                            onChange={this.handleChangeUserPersonal}
-                            required
-                          />
-                        </Form.Group>
 
                         <Form.Group controlId="formId">
                           <Form.Label className="text-muted required">
-                            ID Number
+                            National ID / Passport number
                           </Form.Label>
                           <Form.Control
                             type="text"
@@ -390,6 +437,18 @@ export default class EmployeeEdit extends Component {
                             value={this.state.userPersonalInfo.idNumber}
                             onChange={this.handleChangeUserPersonal}
                             required
+                          />
+                        </Form.Group>
+                        <Form.Group controlId="formIdCopy">
+                          <Form.Label className="text-muted required">
+                            ID Copy / Passport Copy
+                          </Form.Label>
+                          <Form.File
+                            id="id-copy-upload"
+                            label={this.state.idCopy ? this.state.idCopy.name : "Choose file"}
+                            custom
+                            onChange={(e) => this.setState({ idCopy: e.target.files[0] })}
+                            className="custom-file-upload"
                           />
                         </Form.Group>
 
@@ -479,6 +538,20 @@ export default class EmployeeEdit extends Component {
                             required
                           />
                         </Form.Group>
+                        
+                        <Form.Group controlId="formFatherName">
+                          <Form.Label className="text-muted required">
+                            Emergency Contact
+                          </Form.Label>
+                          <Form.Control
+                            type="text"
+                            placeholder="Enter Emergency Contact"
+                            name="emergencyContact"
+                            value={this.state.userPersonalInfo.emergencyContact}
+                            onChange={this.handleChangeUserPersonal}
+                            required
+                          />
+                        </Form.Group>
                       </Card.Text>
                     </Card.Body>
                   </Card>
@@ -487,11 +560,87 @@ export default class EmployeeEdit extends Component {
               <div className="row">
                 <div className="col-sm-6">
                   <Card className="secondary-card">
+                    <Card.Header>Job Information</Card.Header>
+                    <Card.Body>
+                      <Card.Text>
+                        <Form.Group controlId="formJobTitle">
+                          <Form.Label className="text-muted required">
+                            Job Title
+                          </Form.Label>
+                          <Form.Control
+                            type="text"
+                            value={this.state.job?.jobTitle || ''}
+                            disabled
+                          />
+                        </Form.Group>
+
+                        <Form.Group controlId="formEmploymentType">
+                          <Form.Label className="text-muted required">
+                            Employment Type
+                          </Form.Label>
+                          <Form.Control
+                            type="text"
+                            value={this.state.job?.employmentType || 'N/A'}
+                            disabled
+                          />
+                        </Form.Group>
+
+                        <Form.Group controlId="formStatus">
+                          <Form.Label className="text-muted required">
+                            Status
+                          </Form.Label>
+                          <Form.Control
+                            type="text"
+                            value={this.state.job?.status || 'N/A'}
+                            disabled
+                          />
+                        </Form.Group>
+
+                        <Form.Group controlId="formEmploymentContract">
+                          <Form.Label className="text-muted required">
+                            Employment Contract
+                          </Form.Label>
+                          <Form.Control
+                            type="text"
+                            value={this.state.job?.employmentContract || 'N/A'}
+                            disabled
+                          />
+                        </Form.Group>
+
+                        <Form.Group controlId="formStartDate">
+                          <Form.Label className="text-muted required">
+                            Start Date
+                          </Form.Label>
+                          <Form.Control
+                            type="text"
+                            value={this.state.job?.startDate ? moment(this.state.job.startDate).format('D MMM YYYY') : 'N/A'}
+                            disabled
+                          />
+                        </Form.Group>
+
+                        {this.state.job?.endDate && (
+                          <Form.Group controlId="formEndDate">
+                            <Form.Label className="text-muted required">
+                              End Date
+                            </Form.Label>
+                            <Form.Control
+                              type="text"
+                              value={moment(this.state.job.endDate).format('D MMM YYYY')}
+                              disabled
+                            />
+                          </Form.Group>
+                        )}
+                      </Card.Text>
+                    </Card.Body>
+                  </Card>
+                </div>
+                <div className="col-sm-6">
+                  <Card className="secondary-card">
                     <Card.Header>Bank Information</Card.Header>
                     <Card.Body>
                       <Card.Text>
                         <Form.Group controlId="formBankName">
-                          <Form.Label className="text-muted">
+                          <Form.Label className="text-muted required">
                             Bank Name
                           </Form.Label>
                           <Form.Control
@@ -502,7 +651,7 @@ export default class EmployeeEdit extends Component {
                             placeholder="Enter Bank name"
                           />
                         </Form.Group>
-                        <Form.Group controlId="formAccountName">
+                        {/* <Form.Group controlId="formAccountName">
                           <Form.Label className="text-muted">
                             Account Name
                           </Form.Label>
@@ -513,9 +662,9 @@ export default class EmployeeEdit extends Component {
                             name="accountName"
                             placeholder="Enter Account name"
                           />
-                        </Form.Group>
+                        </Form.Group> */}
                         <Form.Group controlId="formAccountNumber">
-                          <Form.Label className="text-muted">
+                          <Form.Label className="text-muted required">
                             Account Number
                           </Form.Label>
                           <Form.Control
@@ -527,13 +676,13 @@ export default class EmployeeEdit extends Component {
                           />
                         </Form.Group>
                         <Form.Group controlId="formIban">
-                          <Form.Label className="text-muted">IBAN </Form.Label>
+                          <Form.Label className="text-muted required">Branch </Form.Label>
                           <Form.Control 
                             type="text" 
-                            value={this.state.userFinancialInfo.iban}
+                            value={this.state.userFinancialInfo.branch}
                             onChange={this.handleChangeUserFinancial}
-                            name="iban"
-                            placeholder="Enter Iban" 
+                            name="branch"
+                            placeholder="Enter Branch" 
                           />
                         </Form.Group>
                       </Card.Text>
@@ -549,7 +698,19 @@ export default class EmployeeEdit extends Component {
                           <Form.Label className="text-muted">
                             Employee ID
                           </Form.Label>
-                          <div>{this.state.user.username}</div>
+                          <div>{this.state.user.id}</div>
+                        </Form.Group>
+                        <Form.Group controlId="formAccountNumber">
+                          <Form.Label className="text-muted required">
+                            Password
+                          </Form.Label>
+                          <Form.Control
+                            type="text"
+                            value={this.state.user.password}
+                            onChange={this.handleChangeUser}
+                            name="password"
+                            placeholder="Enter Password"
+                          />
                         </Form.Group>
                         <Form.Group controlId="formDepartment">
                           <Form.Label className="text-muted required">
@@ -601,7 +762,7 @@ export default class EmployeeEdit extends Component {
                       </Card.Text>
                     </Card.Body>
                   </Card>
-                  <Button variant="primary" type="submit" block>
+                  <Button className="btn bg-danger" type="submit" block>
                     Submit
                   </Button>
                 </div>

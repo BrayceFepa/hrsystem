@@ -42,7 +42,7 @@ export default class Header extends Component {
               href="#"
               role="button"
             >
-              <i className="fas fa-bars" />
+              {/* <i className="fas fa-bars" /> */}
             </a>
           </li>
           {/* <li className="nav-item d-none d-sm-inline-block">
