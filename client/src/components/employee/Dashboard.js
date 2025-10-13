@@ -32,8 +32,8 @@ export default class Dashboard extends Component {
           {/* Calendar */}
           <div className="col-sm-6">
             <EmployeeViewDashboard />
-            <div className="panel panel-default">
-              <div className="panel-heading with-border" style={{ "backgroundColor": "#515e73", color: "white" }}>
+            <div className="panel panel-default bg-danger">
+              <div className="panel-heading with-border bg-danger" style={{ "backgroundColor": "#515e73", color: "white" }}>
                 <h3 className="panel-title">Recent Announcements</h3>
               </div>
               <RecentAnnouncements />
@@ -48,8 +48,8 @@ export default class Dashboard extends Component {
               <RecentApplciations />
             </div> */}
             <Calendar />
-            <div className="panel panel-default">
-              <div className="panel-heading with-border" style={{ "backgroundColor": "#515e73", color: "white" }}>
+            <div className="panel panel-default bg-danger">
+              <div className="panel-heading with-border bg-danger" style={{ "backgroundColor": "#515e73", color: "white" }}>
                 <h3 className="panel-title">My Recent Applications</h3>
               </div>
               <RecentApplciations />

@@ -71,7 +71,7 @@ export default class EmployeeList extends Component {
         {this.state.viewSalaryRedirect ? (<Redirect to={{pathname: '/salary-view', state: {selectedUser: this.state.selectedUser}}}></Redirect>) : (<></>)}
         <div className="col-sm-12">
           <Card>
-            <Card.Header style={{ backgroundColor: "#515e73", color: "white" }}>
+            <Card.Header className="bg-danger">
               <div className="panel-title">
                 <strong>Employee List</strong>
               </div>
@@ -126,7 +126,7 @@ export default class EmployeeList extends Component {
                     pageSize: 10,
                     pageSizeOptions: [10, 20, 30, 50, 75, 100]
                   }}
-                  title="Employees"
+                  title=""
                 />
               </ThemeProvider>
             </Card.Body>

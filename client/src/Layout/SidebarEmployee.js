@@ -20,11 +20,27 @@ export default class SidebarEmployee extends Component {
 
   render() {
     return (
-      <aside className="main-sidebar sidebar-dark-primary elevation-4" >
+      <aside className="main-sidebar sidebar-white elevation-4" >
         {/* Brand Logo */}
-        <a href="/" className="brand-link">
+        {/* <a href="/" className="brand-link">
           <span className="brand-text font-weight-light ml-1">HRMS Employee</span>
-        </a>
+        </a> */}
+                  <div className="brand-link d-flex justify-content-between align-items-center">
+            <div className="d-flex align-items-center">
+              <img 
+                src={process.env.PUBLIC_URL + '/Logo.png'} 
+                alt="CHIP CHIP HRMS Logo" 
+                className="brand-image"
+              />
+            </div>
+            <button 
+              className="btn btn-link text-white" 
+              onClick={this.toggleSidebar}
+              style={{padding: '0.5rem'}}
+            >
+              {/* <i className={`fa fa-${collapsed ? 'bars' : 'times'}`} /> */}
+            </button>
+          </div>
         {/* Sidebar */}
         <div className="sidebar">
           {/* Sidebar user panel (optional) */}
@@ -37,7 +53,7 @@ export default class SidebarEmployee extends Component {
               />
             </div>
             <div className="info">
-              <a href="#" className="d-block">
+              <a href="#" className="d-block text-danger text-bold">
                 {this.state.user.fullname}
               </a>
             </div>
@@ -57,7 +73,7 @@ export default class SidebarEmployee extends Component {
                   <i className="nav-icon fas fa-tachometer-alt" />
                   <p>
                     Dashboard
-                    <span className="right badge badge-success">Home</span>
+                    {/* <span className="right badge badge-success">Home</span> */}
                   </p>
                 </NavLink>
               </li>

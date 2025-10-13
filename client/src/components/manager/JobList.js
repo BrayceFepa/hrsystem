@@ -66,7 +66,7 @@ export default class JobList extends Component {
         <div className="row">
             <div className="col-sm-12">
             <Card className="main-card">
-                <Card.Header>
+                <Card.Header className="bg-danger">
                 <div className="panel-title">
                     <strong>Job List</strong>
                 </div>

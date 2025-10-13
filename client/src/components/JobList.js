@@ -9,7 +9,8 @@ import moment from 'moment'
 import MaterialTable from 'material-table'
 import { ThemeProvider } from '@material-ui/core'
 import { createMuiTheme } from '@material-ui/core/styles'
-import AlertModal from './AlertModal'
+import AlertModal from './AlertModal';
+import { FiEdit2, FiTrash2 } from 'react-icons/fi';
 
 export default class JobList extends Component {
 
@@ -179,94 +180,170 @@ export default class JobList extends Component {
     return (
       <div className="container-fluid pt-2">
         <div className="row">
-            <div className="col-sm-12">
-                <Card className="secondary-card">
-                    <Card.Header><div className="required">Select Department</div></Card.Header>
-                    <Card.Body>
-                        <Card.Text>
-                            <select 
-                                className="select-css"
-                                value={this.state.selectedDepartment || ''}
-                                onChange={this.handleChange}
+            <div className="col-12 mb-4">
+                <Card className="shadow-sm border-0 rounded-3">
+                    <Card.Header className="bg-white border-0 py-3">
+                        <h5 className="mb-0 fw-semibold text-danger">
+                            <i className="bi bi-building me-2"></i>
+                            Select Department
+                            <span className="text-danger">*</span>
+                        </h5>
+                    </Card.Header>
+                    <Card.Body className="pt-0">
+                        <div className="d-flex align-items-center gap-2">
+                            <div className="flex-grow-1">
+                                <select 
+                                    className="form-select form-select-lg border-2 py-2"
+                                    value={this.state.selectedDepartment || ''}
+                                    onChange={this.handleChange}
+                                    style={{
+                                        borderColor: '#dee2e6',
+                                        borderRadius: '8px',
+                                        boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                                    }}
+                                >
+                                    <option value="" disabled>Select a department...</option>
+                                    {this.pushSelectItems()}
+                                </select>
+                            </div>
+                            <Button 
+                                variant="danger"
+                                onClick={this.addJob}
+                                className="d-flex align-items-center"
+                                style={{
+                                    whiteSpace: 'nowrap',
+                                    height: '35px',
+                                    padding: '0.5rem 1.5rem'
+                                }}
                             >
-                                <option value="">Choose one...</option>
-                                {this.pushSelectItems()}
-                            </select>
-                        </Card.Text>
+                                <i className="fa fa-plus me-2 pr-2"></i>
+                                Add Job
+                            </Button>
+                        </div>
                     </Card.Body>
                 </Card>
             </div>
         </div>
         <div className="row">
             <div className="col-sm-12">
-                <h4>
-                    <a className="fa fa-plus mb-2 ml-2" onClick={this.addJob} style={{color: 'blue', cursor: 'pointer'}}>
-                        Add Job
-                    </a>
-                </h4>
-            <Card className="main-card">
-                <Card.Header>
-                <div className="panel-title">
-                    <strong>Job List</strong>
-                </div>
+                <Card className="main-card">
+                <Card.Header className="bg-danger">
+                    <div className="panel-title">
+                        <strong>Job List</strong>
+                    </div>
                 </Card.Header>
                 <Card.Body>
-                    <ThemeProvider theme={theme}>
-                    <MaterialTable
-                            columns={[
-                                {title: 'JOB ID', field: 'id'},
-                                {title: 'Job Title', field: 'jobTitle'},
-                                {title: 'Employee', field: 'user.fullName'},
-                                {title: 'Start Date', field: 'startDate'},
-                                {title: 'End Date', field: 'endDate'},
-                                {
-                                    title: 'State', 
-                                    field: 'endDate',
-                                    render: job => (
-                                    //We have to set startDate hours to 0 and endDate hours to 24 so that the state of the job remains the same the whole day
-                                    new Date(job.startDate).setHours(0) > new Date() ? (<Badge variant="warning">Future Job</Badge>) : (
-                                        new Date(job.endDate).setHours(24) >= new Date() ? (<Badge variant="success">Current Job</Badge>) : (
-                                            <Badge variant="danger">Old Job</Badge>
-                                        )
-                                    )
-                                    ),
-                                    cellStyle: {
-                                        paddingLeft: 30,
-                                        paddingRight: 50
-                                    },
-                                    headerStyle: {
-                                        paddingLeft: 30,
-                                        paddingRight: 30
-                                    }
-                                },
-                                {
-                                    title: 'Action',
-                                    render: rowData => (
-                                        <Form className="row">
-                                            <div className="col pl-5">
-                                                <Button size="sm" variant="info" onClick={this.onEdit(rowData)}><i className="fas fa-edit"></i>Edit</Button>
-                                            </div>
-                                            <div className="col pr-5">
-                                                <Button onClick={this.onDelete(rowData)} size="sm" variant="danger"><i className="fas fa-trash"></i>Delete</Button>
-                                            </div>
-                                        </Form>
-                                    )
-                                }
-                            ]}
-                            data={this.state.jobs}
-                            
-                            options={{
-                                rowStyle: (rowData, index) => {
-                                    if(index%2) {
-                                        return {backgroundColor: '#f2f2f2'}
-                                    }
-                                },
-                                pageSize: 8,
-                                pageSizeOptions: [5, 10, 20, 30, 50, 75, 100]
-                            }}
-                            title= {this.selectedUser ? this.selectedUser.fullName : ''}
-                    />
-                    </ThemeProvider>
+                <ThemeProvider theme={theme}>
+  <MaterialTable
+    title={this.selectedUser ? this.selectedUser.fullName : ''}
+    components={{
+      Container: props => <div {...props} style={{ width: '100%', margin: 0, padding: 0 }} />
+    }}
+    columns={[
+      {
+        title: 'JOB ID', 
+        field: 'id',
+        headerStyle: { minWidth: '100px' },
+        cellStyle: { fontFamily: 'monospace', color: '#4b5563' }
+      },
+      {
+        title: 'JOB TITLE', 
+        field: 'jobTitle',
+        headerStyle: { minWidth: '180px' },
+        cellStyle: { fontWeight: 500, color: '#1e293b' }
+      },
+      {
+        title: 'EMPLOYEE', 
+        field: 'user.fullName',
+        headerStyle: { minWidth: '180px' },
+        cellStyle: { color: '#4b5563' }
+      },
+      {
+        title: 'START DATE', 
+        field: 'startDate',
+        headerStyle: { minWidth: '120px' },
+        cellStyle: { color: '#4b5563' }
+      },
+      {
+        title: 'END DATE', 
+        field: 'endDate',
+        headerStyle: { minWidth: '120px' },
+        cellStyle: { color: '#4b5563' }
+      },
+      {
+        title: 'STATE', 
+        field: 'endDate',
+        headerStyle: { minWidth: '120px' },
+        render: job => (
+          new Date(job.startDate).setHours(0) > new Date() ? 
+            <Badge variant="warning" className="px-2 py-1 text-xs">Future Job</Badge> : 
+            new Date(job.endDate).setHours(24) >= new Date() ? 
+              <Badge variant="success" className="px-2 py-1 text-xs">Current Job</Badge> : 
+              <Badge variant="danger" className="px-2 py-1 text-xs">Old Job</Badge>
+        )
+      },
+      {
+        title: 'ACTIONS',
+        field: 'actions',
+        headerStyle: { minWidth: '150px', textAlign: 'center' },
+        cellStyle: { textAlign: 'center' },
+        render: rowData => (
+          <div className="flex justify-center space-x-2">
+            <Button 
+              size="sm" 
+              variant="outline-primary" 
+              className="px-2 py-1 text-xs"
+              onClick={this.onEdit(rowData)}
+            >
+              <FiEdit2 className="mr-1" /> Edit
+            </Button>
+            <Button 
+              size="sm" 
+              variant="outline-danger" 
+              className="px-2 py-1 text-xs"
+              onClick={this.onDelete(rowData)}
+            >
+              <FiTrash2 className="mr-1" /> Delete
+            </Button>
+          </div>
+        )
+      }
+    ]}
+    data={this.state.jobs}
+    options={{
+      pageSize: 10,
+      pageSizeOptions: [5, 10, 20, 50],
+      padding: 'dense',
+      tableLayout: 'auto',
+      maxBodyHeight: 'calc(100vh - 300px)',
+      headerStyle: {
+        position: 'sticky',
+        top: 0,
+        backgroundColor: '#fff',
+        zIndex: 1,
+        borderBottom: '1px solid #e2e8f0',
+      },
+      rowStyle: (rowData, index) => ({
+        backgroundColor: index % 2 ? '#f8fafc' : '#ffffff',
+        '&:hover': {
+          backgroundColor: '#f1f5f9'
+        }
+      }),
+      search: true,
+      searchFieldAlignment: 'right',
+      searchAutoFocus: true,
+      showTitle: false,
+      toolbar: true,
+      searchFieldStyle: {
+        height: '32px',
+        padding: '0 8px',
+        margin: '8px 0',
+        borderRadius: '4px',
+        border: '1px solid #e2e8f0'
+      }
+    }}
+  />
+</ThemeProvider>
                 </Card.Body>
             </Card>
             {this.state.showEditModel ? (

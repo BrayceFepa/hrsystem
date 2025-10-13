@@ -274,7 +274,7 @@ export default class SalaryDetails extends Component {
 
             <div className="col-sm-12">
                 <Card className="main-card">
-                    <Card.Header><div className="required">Manage Salary Details</div></Card.Header>
+                    <Card.Header className="bg-red"><div className="required">Manage Salary Details</div></Card.Header>
                     <Card.Body>
                         <Card.Text>
                             <Form onSubmit={this.onSubmit}>
@@ -313,7 +313,7 @@ export default class SalaryDetails extends Component {
                 <div className="row">
                     <div className="col-sm-12">
                         <Card className="main-card">
-                            <Card.Header>Salary Details</Card.Header>
+                            <Card.Header className="bg-red">Salary Details</Card.Header>
                             <Card.Body>
                                 <Card.Text>
                                     <Form.Group>
@@ -347,7 +347,7 @@ export default class SalaryDetails extends Component {
                 <div className="row">
                     <div className="col-sm-6">
                         <Card className="main-card">
-                            <Card.Header>Allowances</Card.Header>
+                            <Card.Header className="bg-red">Allowances</Card.Header>
                             <Card.Body>
                                 <Card.Text>
                                     <Form.Group>
@@ -412,7 +412,7 @@ export default class SalaryDetails extends Component {
                         <div className="row">
                             <div className="col-sm-12">
                                 <Card className="main-card">
-                                    <Card.Header>Deductions</Card.Header>
+                                    <Card.Header className="bg-red">Deductions</Card.Header>
                                     <Card.Body>
                                         <Card.Text>
                                             <Form.Group>
@@ -441,7 +441,7 @@ export default class SalaryDetails extends Component {
                         <div className="row">
                             <div className="col-sm-12">
                                 <Card className="main-card">
-                                    <Card.Header>Total Salary Details</Card.Header>
+                                    <Card.Header className="bg-red">Total Salary Details</Card.Header>
                                     <Card.Body>
                                         <Card.Text>
                                             <Form.Group>
@@ -473,8 +473,8 @@ export default class SalaryDetails extends Component {
                                 </Card>
                             </div>
                         </div>
-                        <div className="row mb-2">
-                            <Button type="submit" block>Submit</Button>
+                        <div className="row mb-2 bg-danger">
+                            <Button type="submit" block className="btn-danger">Submit</Button>
                         </div>
                     </div>
                 </div>

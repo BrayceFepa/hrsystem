@@ -78,7 +78,7 @@ export default class Expense extends Component {
 
             <div className="col-sm-12">
                 <Card className="main-card">
-                    <Card.Header>Add Expense</Card.Header>
+                    <Card.Header className="bg-danger">Add Expense</Card.Header>
                     <Card.Body>
                         <Card.Text>
                             <Form onSubmit={this.onSubmit}>
@@ -124,7 +124,7 @@ export default class Expense extends Component {
                                         required
                                     />
                                 </Form.Group>
-                                <Button type="submit" className="mt-2" size="sm">Save</Button>
+                                <Button type="submit" className="mt-2 bg-danger border-danger" size="sm">Save</Button>
                             </Form>
                         </Card.Text>
                     </Card.Body>

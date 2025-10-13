@@ -4,6 +4,28 @@ import DatePicker from "react-datepicker";
 import axios from "axios";
 import moment from "moment";
 
+// Custom styles for file upload buttons
+const customFileUploadStyles = `
+  .custom-file-upload .custom-file-label::after {
+    content: 'Browse';
+    background-color: #dc3545;
+    color: white;
+    border-color: #dc3545;
+    transition: all 0.2s ease-in-out;
+  }
+  
+  .custom-file-upload .custom-file-label:hover::after {
+    background-color: #c82333;
+    border-color: #bd2130;
+    cursor: pointer;
+  }
+`;
+
+// Add the styles to the document head
+const styleElement = document.createElement('style');
+styleElement.textContent = customFileUploadStyles;
+document.head.appendChild(styleElement);
+
 export default class EmployeeAdd extends Component {
   constructor(props) {
     super(props);
@@ -36,10 +58,13 @@ export default class EmployeeAdd extends Component {
       departments: [],
       jobTitle: null,
       joiningDate: "",
-      file: null,
+      idCopy: null,
+      contract: null,
+      certificate: null,
       hasError: false,
       errMsg: "",
       completed: false,
+      emergencyContact: "",
     };
   }
 
@@ -208,16 +233,16 @@ export default class EmployeeAdd extends Component {
           )}
 
           {/* Main Card */}
-          <Card className="col-sm-12 main-card">
-            <Card.Header>
-              <b>Add Employee</b>
+          <Card className="col-sm-12 main-card mb-3 border-danger">
+            <Card.Header className="bg-danger">
+              <b className="text-medium">Add Employee</b>
             </Card.Header>
             <Card.Body>
               <div className="row">
                 {/* Personal Details Card */}
                 <div className="col-sm-6">
                   <Card className="secondary-card">
-                    <Card.Header>Personal Details</Card.Header>
+                    <Card.Header >Personal Details</Card.Header>
                     <Card.Body>
                       <Card.Text>
                         <Form.Group controlId="formFirstName">
@@ -308,23 +333,9 @@ export default class EmployeeAdd extends Component {
                           </Form.Control>
                         </Form.Group>
 
-                        <Form.Group controlId="formFatherName">
-                          <Form.Label className="text-muted required">
-                            Father's name
-                          </Form.Label>
-                          <Form.Control
-                            type="text"
-                            placeholder="Enter Father's Name"
-                            name="fathername"
-                            value={this.state.fathername}
-                            onChange={this.handleChange}
-                            required
-                          />
-                        </Form.Group>
-
                         <Form.Group controlId="formId">
                           <Form.Label className="text-muted required">
-                            ID Number
+                            National ID / Passport number
                           </Form.Label>
                           <Form.Control
                             type="text"
@@ -333,6 +344,18 @@ export default class EmployeeAdd extends Component {
                             value={this.state.idNumber}
                             onChange={this.handleChange}
                             required
+                          />
+                        </Form.Group>
+                        <Form.Group controlId="formIdCopy">
+                          <Form.Label className="text-muted required">
+                            ID Copy / Passport Copy
+                          </Form.Label>
+                          <Form.File
+                            id="id-copy-upload"
+                            label={this.state.idCopy ? this.state.idCopy.name : "Choose file"}
+                            custom
+                            onChange={(e) => this.setState({ idCopy: e.target.files[0] })}
+                            className="custom-file-upload"
                           />
                         </Form.Group>
                       </Card.Text>
@@ -385,7 +408,7 @@ export default class EmployeeAdd extends Component {
                         </Form.Group>
                         <Form.Group controlId="formMobile">
                           <Form.Label className="text-muted required">
-                            Mobile
+                            Mobile number
                           </Form.Label>
                           <Form.Control
                             type="text"
@@ -396,7 +419,20 @@ export default class EmployeeAdd extends Component {
                             required
                           />
                         </Form.Group>
-                        <Form.Group controlId="formPhone">
+                        <Form.Group controlId="formEmergencyContact">
+                          <Form.Label className="text-muted required">
+                            Emergency Contact
+                          </Form.Label>
+                          <Form.Control
+                            type="text"
+                            placeholder="Enter Emergency Contact"
+                            name="emergencyContact"
+                            value={this.state.emergencyContact}
+                            onChange={this.handleChange}
+                            required
+                          />
+                        </Form.Group>
+                        {/* <Form.Group controlId="formPhone">
                           <Form.Label className="text-muted">Phone</Form.Label>
                           <Form.Control
                             type="text"
@@ -405,7 +441,7 @@ export default class EmployeeAdd extends Component {
                             name="phone"
                             placeholder="Enter Phone"
                           />
-                        </Form.Group>
+                        </Form.Group> */}
                         <Form.Group controlId="formEmail">
                           <Form.Label className="text-muted required">
                             Email
@@ -427,54 +463,122 @@ export default class EmployeeAdd extends Component {
               <div className="row">
                 <div className="col-sm-6">
                   <Card className="secondary-card">
-                    <Card.Header>Bank Information</Card.Header>
+                    <Card.Header>Job</Card.Header>
                     <Card.Body>
                       <Card.Text>
-                        <Form.Group controlId="formBankName">
-                          <Form.Label className="text-muted">
-                            Bank Name
+                        <Form.Group controlId="formJobTitle">
+                          <Form.Label className="text-muted required">
+                            Job Title
                           </Form.Label>
                           <Form.Control
                             type="text"
-                            value={this.state.bankName}
+                            value={this.state.jobTitle}
                             onChange={this.handleChange}
-                            name="bankName"
-                            placeholder="Enter Bank name"
+                            name="jobTitle"
+                            placeholder="Enter Job Title"
                           />
                         </Form.Group>
-                        <Form.Group controlId="formAccountName">
-                          <Form.Label className="text-muted">
-                            Account Name
+                        <Form.Group controlId="formEmploymentType">
+                          <Form.Label className="text-muted required">
+                            Employment Type
                           </Form.Label>
                           <Form.Control
-                            type="text"
-                            value={this.state.accountName}
+                            as="select"
+                            value={this.state.empType}
                             onChange={this.handleChange}
-                            name="accountName"
-                            placeholder="Enter Account name"
-                          />
+                            name="empType"
+                            required
+                          >
+                            <option value="">Choose...</option>
+                            <option value="Full Time">Full Time</option>
+                            <option value="Part Time">Part Time</option>
+                            <option value="Contract">Contract</option>
+                            <option value="Probation">Probation</option>
+                          </Form.Control>
                         </Form.Group>
-                        <Form.Group controlId="formAccountNumber">
-                          <Form.Label className="text-muted">
-                            Account Number
+                        <Form.Group controlId="formEmploymentType">
+                          <Form.Label className="text-muted required">
+                            Status
                           </Form.Label>
                           <Form.Control
-                            type="text"
-                            value={this.state.accountNumber}
+                            as="select"
+                            value={this.state.empType}
                             onChange={this.handleChange}
-                            name="accountNumber"
-                            placeholder="Enter Account number"
+                            name="empType"
+                            required
+                          >
+                            <option value="">Choose...</option>
+                            <option value="Active">Active</option>
+                            <option value="Probation">Probation</option>
+                            <option value="Resigned">Resigned</option>
+                            <option value="Probation">Terminated</option>
+                            <option value="On Leave">On Leave</option>
+                          </Form.Control>
+                        </Form.Group>
+                        <Form.Group controlId="formContract">
+                          <Form.Label className="text-muted required">
+                            Employment Contract
+                          </Form.Label>
+                          <Form.File
+                            id="contract-upload"
+                            label={this.state.contract ? this.state.contract.name : "Upload Contract"}
+                            custom
+                            onChange={(e) => this.setState({ contract: e.target.files[0] })}
+                            className="mb-3 custom-file-upload"
                           />
                         </Form.Group>
-                        <Form.Group controlId="formIban">
-                          <Form.Label className="text-muted">iBan</Form.Label>
-                          <Form.Control
-                            type="text"
-                            value={this.state.iBan}
-                            onChange={this.handleChange}
-                            name="iBan"
-                            placeholder="Enter Iban"
+                        <Form.Group controlId="formCertificate">
+                          <Form.Label className="text-muted required">
+                            Professional Certificates
+                          </Form.Label>
+                          <Form.File
+                            id="certificate-upload"
+                            label={this.state.certificate ? this.state.certificate.name : "Upload Certificates"}
+                            custom
+                            onChange={(e) => this.setState({ certificate: e.target.files[0] })}
+                            className="mb-3 custom-file-upload"
                           />
+                        </Form.Group>
+                        <Form.Group controlId="formJobStart">
+                          <Form.Label className="text-muted required">
+                            Start Date
+                          </Form.Label>
+                          <Form.Row>
+                            <DatePicker
+                              selected={this.state.startDate}
+                              onChange={(startDate) =>
+                                this.setState({ startDate })
+                              }
+                              dropdownMode="select"
+                              timeFormat="HH:mm"
+                              name="startDate"
+                              timeCaption="time"
+                              dateFormat="yyyy-MM-dd"
+                              className="form-control ml-1"
+                              placeholderText="Select Start Date"
+                              autoComplete="off"
+                              required
+                            />
+                          </Form.Row>
+                        </Form.Group>
+                        <Form.Group controlId="formJobEnd">
+                          <Form.Label className="text-muted ">
+                            End Date <span className="italic text-gray-400 ">(Not required)</span> 
+                          </Form.Label>
+                          <Form.Row>
+                            <DatePicker
+                              selected={this.state.endDate}
+                              onChange={(endDate) => this.setState({ endDate })}
+                              dropdownMode="select"
+                              timeFormat="HH:mm"
+                              name="endDate"
+                              timeCaption="time"
+                              dateFormat="yyyy-MM-dd"
+                              className="form-control ml-1"
+                              placeholderText="Select End Date"
+                              autoComplete="off"
+                            />
+                          </Form.Row>
                         </Form.Group>
                       </Card.Text>
                     </Card.Body>
@@ -548,7 +652,7 @@ export default class EmployeeAdd extends Component {
                       </Card.Text>
                     </Card.Body>
                   </Card>
-                  <Button variant="primary" type="submit" block>
+                  <Button variant="danger" type="submit" block>
                     Submit
                   </Button>
                 </div>
@@ -556,61 +660,54 @@ export default class EmployeeAdd extends Component {
               <div className="row">
                 <div className="col-sm-6">
                   <Card className="secondary-card">
-                    <Card.Header>Job</Card.Header>
+                    <Card.Header>Bank Information</Card.Header>
                     <Card.Body>
                       <Card.Text>
-                        <Form.Group controlId="formJobTitle">
+                        <Form.Group controlId="formBankName">
                           <Form.Label className="text-muted required">
-                            Job Title
+                            Bank Name
                           </Form.Label>
                           <Form.Control
                             type="text"
-                            value={this.state.jobTitle}
+                            value={this.state.bankName}
                             onChange={this.handleChange}
-                            name="jobTitle"
-                            placeholder="Enter Job Title"
+                            name="bankName"
+                            placeholder="Enter Bank name"
                           />
                         </Form.Group>
-                        <Form.Group controlId="formJobStart">
-                          <Form.Label className="text-muted required">
-                            Start Date
+                        {/* <Form.Group controlId="formAccountName">
+                          <Form.Label className="text-muted">
+                            Account Name
                           </Form.Label>
-                          <Form.Row>
-                            <DatePicker
-                              selected={this.state.startDate}
-                              onChange={(startDate) =>
-                                this.setState({ startDate })
-                              }
-                              dropdownMode="select"
-                              timeFormat="HH:mm"
-                              name="startDate"
-                              timeCaption="time"
-                              dateFormat="yyyy-MM-dd"
-                              className="form-control ml-1"
-                              placeholderText="Select Date Of Birth"
-                              autoComplete="off"
-                              required
-                            />
-                          </Form.Row>
+                          <Form.Control
+                            type="text"
+                            value={this.state.accountName}
+                            onChange={this.handleChange}
+                            name="accountName"
+                            placeholder="Enter Account name"
+                          />
+                        </Form.Group> */}
+                        <Form.Group controlId="formAccountNumber">
+                          <Form.Label className="text-muted required">
+                            Account Number
+                          </Form.Label>
+                          <Form.Control
+                            type="text"
+                            value={this.state.accountNumber}
+                            onChange={this.handleChange}
+                            name="accountNumber"
+                            placeholder="Enter Account number"
+                          />
                         </Form.Group>
-                        <Form.Group controlId="formJobEnd">
-                          <Form.Label className="text-muted required">
-                            End Date
-                          </Form.Label>
-                          <Form.Row>
-                            <DatePicker
-                              selected={this.state.endDate}
-                              onChange={(endDate) => this.setState({ endDate })}
-                              dropdownMode="select"
-                              timeFormat="HH:mm"
-                              name="endDate"
-                              timeCaption="time"
-                              dateFormat="yyyy-MM-dd"
-                              className="form-control ml-1"
-                              placeholderText="Select Date Of Birth"
-                              autoComplete="off"
-                            />
-                          </Form.Row>
+                        <Form.Group controlId="formBranch">
+                          <Form.Label className="text-muted required">Branch</Form.Label>
+                          <Form.Control
+                            type="text"
+                            value={this.state.iBan}
+                            onChange={this.handleChange}
+                            name="iBan"
+                            placeholder="Enter Branch"
+                          />
                         </Form.Group>
                       </Card.Text>
                     </Card.Body>

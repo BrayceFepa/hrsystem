@@ -77,7 +77,7 @@ export default class EmployeeViewEmployee extends Component {
   render() {
     return (
         <Card>
-            <Card.Header style={{ backgroundColor: "#515e73", color: "white", fontSize: '17px' }}>My Profile</Card.Header>
+            <Card.Header className="bg-danger">My Profile</Card.Header>
             <Card.Body>
                 <Card.Title><strong>{this.state.user.fullName}</strong></Card.Title>
                 <Card.Text>
@@ -100,7 +100,7 @@ export default class EmployeeViewEmployee extends Component {
                         <Row>
                             <Col sm={6}>
                                 <Card className="secondary-card emp-view">
-                                    <Card.Header>Personal Details</Card.Header>
+                                    <Card.Header className="bg-danger">Personal Details</Card.Header>
                                     <Card.Body>
                                         <Card.Text id="emp-view-personal-dashboard">
                                             <Form.Group as={Row}>
@@ -141,7 +141,7 @@ export default class EmployeeViewEmployee extends Component {
                             </Col>
                             <Col sm={6}>
                                 <Card className="secondary-card emp-view">
-                                    <Card.Header>Contact Details</Card.Header>
+                                    <Card.Header className="bg-danger">Contact Details</Card.Header>
                                     <Card.Body>
                                         <Card.Text id="emp-view-contact-dashboard">
                                             <Form.Group as={Row}>
@@ -184,7 +184,7 @@ export default class EmployeeViewEmployee extends Component {
                         <Row>
                             <Col cm={6}>
                                 <Card className="secondary-card">
-                                    <Card.Header>Bank Information</Card.Header>
+                                    <Card.Header className="bg-danger">Bank Information</Card.Header>
                                     <Card.Body>
                                         <Card.Text id="emp-view-bank-dashboard">
                                             <Form.Group as={Row}>

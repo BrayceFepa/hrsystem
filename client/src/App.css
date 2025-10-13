@@ -97,8 +97,11 @@ div.myDiv input {
 }
 
 .required::after {
-  content: ' *';
+  content: '*';
+  color: #dc3545;
+  margin-left: 4px;
   color: red;
+  margin-right: 4px;
 }
 
 .form-group {
@@ -200,210 +203,114 @@ div.myDiv input {
   padding-right: 58px;
 }
 
-#emp-view-personal .form-label {
-  padding-left: 7.6rem;
+/* Common form group styling for all sections */
+.secondary-card .form-label {
+  font-weight: bold;
+  text-align: left;
+  padding-right: 1px;
+  min-width: 30px;
+  margin-bottom: 4px;
 }
 
-#emp-view-personal .form-group:nth-child(1) span {
-  padding-left: 6.26em;
+.secondary-card .form-group {
+  margin-bottom: 12px;
+  display: flex;
+  align-items: flex-start;
 }
 
-#emp-view-personal .form-group:nth-child(2) span {
-  padding-left: 8.9em;
+.secondary-card span {
+  flex: 1;
+  padding-left: 5px;
 }
 
-#emp-view-personal .form-group:nth-child(3) span {
-  padding-left: 5.8em;
-}
-
-#emp-view-personal .form-group:nth-child(4) span {
-  padding-left: 5.7em;
-}
-
-#emp-view-contact .form-label {
-  padding-left: 100px;
-}
-
-#emp-view-contact .form-group:nth-child(1) span {
-  padding-left: 6.5em;
-}
-
-#emp-view-contact .form-group:nth-child(2) span {
-  padding-left: 6.8em;
-}
-
-#emp-view-contact .form-group:nth-child(3) span {
-  padding-left: 7.25em;
-}
-
-#emp-view-contact .form-group:nth-child(4) span {
-  padding-left: 4em;
-}
-
-#emp-view-bank .form-label {
-  padding-left: 7.6rem;
-}
-
-#emp-view-bank .form-group:nth-child(1) span {
-  padding-left: 7em;
-}
-
-#emp-view-bank .form-group:nth-child(2) span {
-  padding-left: 5.45em;
-}
-
-#emp-view-bank .form-group:nth-child(3) span {
-  padding-left: 9em;
-}
-
-#emp-view-bank .form-group:nth-child(4) span {
-  padding-left: 9.9em;
-}
-
-
-
-#emp-view-personal-dashboard .form-label {
-  padding-left: 2rem;
-}
-
-#emp-view-personal-dashboard .form-group:nth-child(1) span {
-  padding-left: 6.26em;
-}
-
-#emp-view-personal-dashboard .form-group:nth-child(2) span {
-  padding-left: 8.9em;
-}
-
-#emp-view-personal-dashboard .form-group:nth-child(3) span {
-  padding-left: 5.8em;
-}
-
-#emp-view-personal-dashboard .form-group:nth-child(4) span {
-  padding-left: 5.7em;
-}
-
-#emp-view-contact-dashboard .form-label {
-  padding-left: 2rem;
-}
-
-#emp-view-contact-dashboard .form-group:nth-child(1) span {
-  padding-left: 6.5em;
-}
-
-#emp-view-contact-dashboard .form-group:nth-child(2) span {
-  padding-left: 6.8em;
-}
-
-#emp-view-contact-dashboard .form-group:nth-child(3) span {
-  padding-left: 7.25em;
-}
-
-#emp-view-contact-dashboard .form-group:nth-child(4) span {
-  padding-left: 4em;
-}
-
-#emp-view-bank-dashboard .form-label {
-  padding-left: 2rem;
-}
-
-#emp-view-bank-dashboard .form-group:nth-child(1) span {
-  padding-left: 7em;
-}
-
-#emp-view-bank-dashboard .form-group:nth-child(2) span {
-  padding-left: 5.45em;
-}
-
-#emp-view-bank-dashboard .form-group:nth-child(3) span {
-  padding-left: 9em;
-}
-
-#emp-view-bank-dashboard .form-group:nth-child(4) span {
-  padding-left: 9.9em;
-}
-
-
-
-
-
-
-
-
-#sal-view-details .form-label {
-  padding-left: 7.6rem;
-}
-
-#sal-view-details .form-group:nth-child(1) span {
-  padding-left: 6em;
-}
-
-#sal-view-details .form-group:nth-child(2) span {
-  padding-left: 8.9em;
-}
-
-
-#sal-view-allowances .form-label {
-  padding-left: 7.6rem;
-}
-
-#sal-view-allowances .form-group:nth-child(1) span {
-  padding-left: 6em;
-}
-
-#sal-view-allowances .form-group:nth-child(2) span {
-  padding-left: 7.7em;
-}
-
-#sal-view-allowances .form-group:nth-child(3) span {
-  padding-left: 8.1em;
-}
-
-#sal-view-allowances .form-group:nth-child(4) span {
-  padding-left: 9.45em;
-}
-
-#sal-view-allowances .form-group:nth-child(5) span {
-  padding-left: 6.6em;
-}
-
-#sal-view-allowances .form-group:nth-child(6) span {
-  padding-left: 8.75em;
-}
-
-#sal-view-allowances .form-group:nth-child(7) span {
-  padding-left: 9.08em;
-}
-
-#sal-view-deductions .form-label {
-  padding-left: 7.6rem;
-}
-
-#sal-view-deductions .form-group:nth-child(1) span {
-  padding-left: 7em;
-}
-
-#sal-view-deductions .form-group:nth-child(2) span {
-  padding-left: 5.9em;
-}
-
-#sal-view-deductions .form-group:nth-child(3) span {
-  padding-left: 6.21em;
-}
-
+/* Remove all specific padding overrides */
+#emp-view-personal .form-label,
+#emp-view-contact .form-label,
+#emp-view-bank .form-label,
+#emp-view-official-status .form-label,
+#emp-view-personal-dashboard .form-label,
+#emp-view-contact-dashboard .form-label,
+#emp-view-bank-dashboard .form-label,
+#sal-view-details .form-label,
+#sal-view-allowances .form-label,
+#sal-view-deductions .form-label,
 #sal-view-total .form-label {
-  padding-left: 7.6rem;
+  all: unset;
+  font-weight: bold;
+  min-width: 100px;
+  margin-bottom: 4px;
 }
 
-#sal-view-total .form-group:nth-child(1) span {
-  padding-left: 10.5em;
+/* Remove all specific padding overrides for spans */
+#emp-view-personal .form-group span,
+#emp-view-contact .form-group span,
+#emp-view-bank .form-group span,
+#emp-view-official-status .form-group span,
+#emp-view-personal-dashboard .form-group span,
+#emp-view-contact-dashboard .form-group span,
+#emp-view-bank-dashboard .form-group span,
+#sal-view-details .form-group span,
+#sal-view-allowances .form-group span,
+#sal-view-deductions .form-group span,
+#sal-view-total .form-group span {
+  padding-left: 5px !important;
 }
 
-#sal-view-total .form-group:nth-child(2) span {
-  padding-left: 8.86em;
+/* Contact section specific styles */
+#emp-view-contact .form-label {
+  min-width: 40px;
 }
 
-#sal-view-total .form-group:nth-child(3) span {
-  padding-left: 11.47em;
+/* Bank section specific styles */
+#emp-view-bank .form-label {
+  min-width: 40px;
+}
+
+
+
+/* Dashboard personal section specific styles */
+#emp-view-personal-dashboard .form-label {
+  min-width: 40px;
+}
+
+/* Dashboard contact section specific styles */
+#emp-view-contact-dashboard .form-label {
+  min-width: 40px;
+}
+
+/* Dashboard bank section specific styles */
+#emp-view-bank-dashboard .form-label {
+  min-width: 180px;
+}
+
+
+
+
+
+
+
+
+/* Salary details section specific styles */
+#sal-view-details .form-label {
+  min-width: 200px;
+}
+
+
+/* Salary allowances section specific styles */
+#sal-view-allowances .form-label {
+  min-width: 220px;
+}
+
+/* Salary deductions section specific styles */
+#sal-view-deductions .form-label {
+  min-width: 220px;
+}
+
+/* Salary total section specific styles */
+#sal-view-total .form-label {
+  min-width: 250px;
+  font-weight: bold;
+  color: #2c3e50;
 }
 
 
