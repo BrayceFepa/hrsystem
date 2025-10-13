@@ -19,6 +19,14 @@ const customFileUploadStyles = `
     border-color: #bd2130;
     cursor: pointer;
   }
+  
+  .react-datepicker-popper {
+    z-index: 10 !important;
+  }
+  
+  .react-datepicker {
+    z-index: 10 !important;
+  }
 `;
 
 // Add the styles to the document head
@@ -31,21 +39,21 @@ export default class EmployeeAdd extends Component {
     super(props);
 
     this.state = {
-      fistname: "",
+      firstName: "",
       lastname: "",
       dateOfBirth: "",
       gender: "",
       maritalStatus: "",
-      fathername: "",
+      // fathername: "",
       idNumber: "",
       bankName: "",
       accountName: "",
       accountNumber: "",
-      iBan: "",
+      branch: "",
       address: "",
       country: "",
       city: "",
-      mobile: null,
+      // mobile: null,
       phone: null,
       email: "",
       username: "",
@@ -54,10 +62,12 @@ export default class EmployeeAdd extends Component {
       department: "",
       departmentId: null,
       startDate: "",
+      empType: "",
+      empStatus: "",
       endDate: "",
       departments: [],
       jobTitle: null,
-      joiningDate: "",
+      // joiningDate: "",
       idCopy: null,
       contract: null,
       certificate: null,
@@ -83,15 +93,34 @@ export default class EmployeeAdd extends Component {
   }
 
   handleChange = (event) => {
-    const { value, name } = event.target;
-    this.setState({
-      [name]: value,
-    });
+    const { value, name, type, files } = event.target;
+    
+    if (type === 'file') {
+      this.setState({
+        [name]: files[0]
+      });
+    } else {
+      this.setState({
+        [name]: value,
+      });
+    }
   };
 
-  fileSelectedHandler = (event) => {
-    this.setState({
-      file: event.target.files[0],
+  handleFileUpload = (file, apiEndpoint, userId) => {
+    if (!file) return Promise.resolve();
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('userId', userId);
+    
+    return axios({
+      method: 'post',
+      url: `/api/${apiEndpoint}`,
+      data: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
     });
   };
 
@@ -101,10 +130,11 @@ export default class EmployeeAdd extends Component {
     let user = {
       username: this.state.username,
       password: 1234,
-      fullname: this.state.fistname + " " + this.state.lastname,
+      fullname: this.state.firstName + " " + this.state.lastname,
       role: this.state.role,
       departmentId: this.state.departmentId,
       active: 1,
+      emergencyContact: this.state.emergencyContact,
     };
 
     e.preventDefault();
@@ -126,7 +156,7 @@ export default class EmployeeAdd extends Component {
           address: this.state.address,
           city: this.state.city,
           country: this.state.country,
-          mobile: this.state.mobile,
+          // mobile: this.state.mobile,
           phone: this.state.phone,
           emailAddress: this.state.email,
           userId: userId,
@@ -160,6 +190,7 @@ export default class EmployeeAdd extends Component {
                   jobTitle: this.state.jobTitle,
                   startDate: this.state.startDate,
                   endDate: this.state.endDate,
+                  // joiningDate: this.state.joiningDate,
                   userId: userId,
                 };
                 axios({
@@ -265,9 +296,22 @@ export default class EmployeeAdd extends Component {
                           </Form.Label>
                           <Form.Control
                             type="text"
-                            placeholder="Enter last Name"
+                            placeholder="Enter Last Name"
                             name="lastname"
                             value={this.state.lastname}
+                            onChange={this.handleChange}
+                            required
+                          />
+                        </Form.Group>
+                        <Form.Group controlId="formUsername">
+                          <Form.Label className="text-muted required">
+                            Username
+                          </Form.Label>
+                          <Form.Control
+                            type="text"
+                            placeholder="Enter Username"
+                            name="username"
+                            value={this.state.username}
                             onChange={this.handleChange}
                             required
                           />
@@ -351,7 +395,7 @@ export default class EmployeeAdd extends Component {
                             ID Copy / Passport Copy
                           </Form.Label>
                           <Form.File
-                            id="id-copy-upload"
+                            id="idCopy"
                             label={this.state.idCopy ? this.state.idCopy.name : "Choose file"}
                             custom
                             onChange={(e) => this.setState({ idCopy: e.target.files[0] })}
@@ -367,9 +411,9 @@ export default class EmployeeAdd extends Component {
                     <Card.Header>Contact Details</Card.Header>
                     <Card.Body>
                       <Card.Text>
-                        <Form.Group controlId="formPhysicalAddress">
+                        <Form.Group controlId="formAddress">
                           <Form.Label className="text-muted required">
-                            Physical Address
+                            Address
                           </Form.Label>
                           <Form.Control
                             type="text"
@@ -406,16 +450,16 @@ export default class EmployeeAdd extends Component {
                             required
                           />
                         </Form.Group>
-                        <Form.Group controlId="formMobile">
+                        <Form.Group controlId="formPhone">
                           <Form.Label className="text-muted required">
-                            Mobile number
+                            Phone number
                           </Form.Label>
                           <Form.Control
                             type="text"
-                            value={this.state.mobile}
+                            value={this.state.phone}
                             onChange={this.handleChange}
-                            name="mobile"
-                            placeholder="Enter Mobile"
+                            name="phone"
+                            placeholder="Enter Phone Number"
                             required
                           />
                         </Form.Group>
@@ -496,15 +540,15 @@ export default class EmployeeAdd extends Component {
                             <option value="Probation">Probation</option>
                           </Form.Control>
                         </Form.Group>
-                        <Form.Group controlId="formEmploymentType">
+                        <Form.Group controlId="formEmploymentStatus">
                           <Form.Label className="text-muted required">
                             Status
                           </Form.Label>
                           <Form.Control
                             as="select"
-                            value={this.state.empType}
+                            value={this.state.empSatus}
                             onChange={this.handleChange}
-                            name="empType"
+                            name="empStatus"
                             required
                           >
                             <option value="">Choose...</option>
@@ -520,7 +564,7 @@ export default class EmployeeAdd extends Component {
                             Employment Contract
                           </Form.Label>
                           <Form.File
-                            id="contract-upload"
+                            id="contract"
                             label={this.state.contract ? this.state.contract.name : "Upload Contract"}
                             custom
                             onChange={(e) => this.setState({ contract: e.target.files[0] })}
@@ -532,7 +576,7 @@ export default class EmployeeAdd extends Component {
                             Professional Certificates
                           </Form.Label>
                           <Form.File
-                            id="certificate-upload"
+                            id="certificate"
                             label={this.state.certificate ? this.state.certificate.name : "Upload Certificates"}
                             custom
                             onChange={(e) => this.setState({ certificate: e.target.files[0] })}
@@ -595,10 +639,10 @@ export default class EmployeeAdd extends Component {
                           </Form.Label>
                           <Form.Control
                             type="text"
-                            value={this.state.username}
+                            value={this.state.idNumber}
                             onChange={this.handleChange}
-                            name="username"
-                            placeholder="Enter Username"
+                            name="idNumber"
+                            placeholder="Enter Employee ID"
                             required
                           />
                         </Form.Group>
@@ -703,9 +747,9 @@ export default class EmployeeAdd extends Component {
                           <Form.Label className="text-muted required">Branch</Form.Label>
                           <Form.Control
                             type="text"
-                            value={this.state.iBan}
+                            value={this.state.branch}
                             onChange={this.handleChange}
-                            name="iBan"
+                            name="branch"
                             placeholder="Enter Branch"
                           />
                         </Form.Group>

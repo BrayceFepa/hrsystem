@@ -20,10 +20,6 @@ module.exports = (sequelize, Sequelize) => {
         values: ['Married', 'Single', 'Widowed'],
         allowNull: true
       },
-      fatherName: {
-        type: Sequelize.STRING,
-        allowNull: true
-      },
       idNumber: {
         type: Sequelize.STRING,
         allowNull: true
@@ -40,15 +36,23 @@ module.exports = (sequelize, Sequelize) => {
         type: Sequelize.STRING,
         allowNull: true
       },
-      mobile: {
-        type: Sequelize.STRING,
-        allowNull: true
-      },
       phone: {
         type: Sequelize.STRING,
         allowNull: true
       },
       emailAddress: {
+        type: Sequelize.STRING,
+        allowNull: true,
+        validate: {
+          isEmail: true
+        }
+      },
+      idCopy: {
+        type: Sequelize.STRING,
+        allowNull: true,
+        comment: 'Path or URL to the uploaded ID copy file'
+      },
+      emergencyContact: {
         type: Sequelize.STRING,
         allowNull: true
       }

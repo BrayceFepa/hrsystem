@@ -18,14 +18,14 @@ exports.create = (req, res) => {
     dateOfBirth: moment(req.body.dateOfBirth).format('YYYY-MM-DD'),
     gender: req.body.gender,
     maritalStatus: req.body.maritalStatus,
-    fatherName: req.body.fatherName,
     idNumber: req.body.idNumber,
     address: req.body.address,
     city: req.body.city,
     country: req.body.country,
-    mobile: req.body.mobile,
     phone: req.body.phone,
     emailAddress: req.body.emailAddress,
+    idCopy: req.body.idCopy, // This will be handled by file upload middleware
+    emergencyContact: req.body.emergencyContact,
     userId: req.body.userId
   };
 
