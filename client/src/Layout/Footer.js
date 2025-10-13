@@ -5,7 +5,7 @@ export default class Footer extends Component {
     return (
       <footer className="main-footer">
         <strong className="mr-1">
-          Copyright © 2020-2021 <a href="http://mantzarisvasilis.com">Vasilis Mantzaris</a>.
+          Copyright © 2025 
         </strong>
         All rights reserved.
         <div className="float-right d-none d-sm-inline-block">

@@ -48,12 +48,12 @@ export default class DepartmentAdd extends Component {
 
   render() {
     return (
-      <Card className="mb-3 secondary-card">
-          <Card.Header>
-            <b>Add Department</b>
-          </Card.Header>
-          <Card.Body>
-            <Card.Text>
+      <Card className="mb-3 border-danger">
+        <Card.Header className="bg-danger">
+          <b className="text-medium">Add Department</b>
+        </Card.Header>
+        <Card.Body>
+          <Card.Text>
               <Form onSubmit={this.onSubmit}>
                 <Form.Group controlId="formDepartmentName">
                   <Form.Label className="text-muted mb-2">
@@ -69,7 +69,7 @@ export default class DepartmentAdd extends Component {
                         required
                         />
                 </Form.Group>
-                <Button variant="primary" type="submit" className="mt-2">
+                <Button variant="danger" type="submit" className="mt-2">
                   Add
                 </Button>
               </Form>

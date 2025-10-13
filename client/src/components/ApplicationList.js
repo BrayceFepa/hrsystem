@@ -112,14 +112,13 @@ export default class ApplicationList extends Component {
       <div className="container-fluid pt-5">
         <div className="col-sm-12">
           <Card>
-            <Card.Header style={{ backgroundColor: "#515e73", color: "white" }}>
-              <div className="panel-title">
-                <strong>Application List</strong>
-              </div>
+            <Card.Header className="bg-danger text-white">
+              <strong>Application List</strong>
             </Card.Header>
             <Card.Body>
               <ThemeProvider theme={theme}>
                 <MaterialTable
+                
                     columns={[
                         {title: 'APP ID', field: 'id'},
                         {title: 'Full Name', field: 'user.fullName'},
@@ -159,7 +158,7 @@ export default class ApplicationList extends Component {
                     pageSize: 10,
                     pageSizeOptions: [10, 20, 30, 50, 75, 100]
                   }}
-                    title="Applications"
+                    title=""
                 />
               </ThemeProvider>
             </Card.Body>

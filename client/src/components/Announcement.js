@@ -130,7 +130,7 @@ export default class Announcement extends Component {
         <div className="row">
             <div className="col-sm-12">
                 <Card className="main-card">
-                    <Card.Header><strong>Add Announcement</strong></Card.Header>
+                    <Card.Header className="bg-danger"><strong>Add Announcement</strong></Card.Header>
                     <Card.Body>
                         <Card.Text>
                             <Form onSubmit={this.onSubmit}>
@@ -167,7 +167,7 @@ export default class Announcement extends Component {
                                         {this.pushDepartments()}
                                     </Form.Control>
                                 </Form.Group>
-                                <Button type="submit" size="sm" className="mt-1">Publish</Button>
+                                <Button type="submit" size="sm" className="mt-2 bg-danger border-danger">Publish</Button>
                             </Form>
                         </Card.Text>
                     </Card.Body>
@@ -177,42 +177,117 @@ export default class Announcement extends Component {
         <div className="row">
             <div className="col-sm-12">
             <Card className="main-card">
-                <Card.Header>
+                <Card.Header className="bg-danger">
                 <div className="panel-title">
                     <strong>Announcement List</strong>
                 </div>
                 </Card.Header>
                 <Card.Body>
-                    <ThemeProvider theme={theme}>
-                    <MaterialTable
-                            columns={[
-                                {title: 'ID', field: 'id'},
-                                {title: 'Title', field: 'announcementTitle'},
-                                {title: 'Description', field: 'announcementDescription'},
-                                {title: 'Created By', field: 'user.fullName'},
-                                {title: 'Department', field: 'department.departmentName'},
-                                {
-                                    title: 'Action',
-                                    render: rowData => (
-                                        <Form className="row">
-                                            <Button onClick={this.onDelete(rowData)} size="sm" variant="danger"><i className="fas fa-trash"></i>Delete</Button>
-                                        </Form>
-                                    )
-                                }
-                            ]}
-                            data={this.state.announcements}
-                            options={{
-                                rowStyle: (rowData, index) => {
-                                    if(index%2) {
-                                        return {backgroundColor: '#f2f2f2'}
-                                    }
-                                },
-                                pageSize: 8,
-                                pageSizeOptions: [5, 10, 20, 30, 50, 75, 100]
-                            }}
-                            title="Announcements"
-                    />
-                    </ThemeProvider>
+                <ThemeProvider theme={theme}>
+  <MaterialTable
+    columns={[
+      { 
+        title: 'ID', 
+        field: 'id',
+        width: 80,
+        headerStyle: { fontWeight: 'bold' }
+      },
+      { 
+        title: 'TITLE', 
+        field: 'announcementTitle',
+        headerStyle: { fontWeight: 'bold' },
+        cellStyle: { whiteSpace: 'nowrap' }
+      },
+      { 
+        title: 'DESCRIPTION', 
+        field: 'announcementDescription',
+        headerStyle: { fontWeight: 'bold' },
+        cellStyle: { maxWidth: 300, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }
+      },
+      { 
+        title: 'CREATED BY', 
+        field: 'user.fullName',
+        headerStyle: { fontWeight: 'bold' }
+      },
+      { 
+        title: 'DEPARTMENT', 
+        field: 'department.departmentName',
+        headerStyle: { fontWeight: 'bold' }
+      },
+      {
+        title: 'ACTIONS',
+        field: 'actions',
+        sorting: false,
+        headerStyle: { fontWeight: 'bold' },
+        cellStyle: { textAlign: 'center' },
+        render: rowData => (
+          <Button 
+            onClick={(e) => {
+              e.stopPropagation();
+              this.onDelete(rowData);
+            }} 
+            size="sm" 
+            variant="outline-danger"
+            className="action-button"
+          >
+            <i className="fas fa-trash mr-1"></i> Delete
+          </Button>
+        )
+      }
+    ]}
+    data={this.state.announcements}
+    options={{
+      headerStyle: {
+        backgroundColor: '#f8f9fa',
+        color: '#333',
+        fontSize: '14px',
+        fontWeight: '600',
+        padding: '12px 10px',
+        borderBottom: '1px solid #e0e0e0'
+      },
+      rowStyle: (rowData, index) => ({
+        backgroundColor: index % 2 ? '#f8f9fa' : '#fff',
+        '&:hover': {
+          backgroundColor: '#f1f3f5 !important',
+          cursor: 'pointer'
+        }
+      }),
+      pageSize: 10,
+      pageSizeOptions: [5, 10, 20, 50],
+      paginationType: 'stepped',
+      showFirstLastPageButtons: true,
+      showTitle: false,
+      search: true,
+      searchFieldVariant: 'outlined',
+      searchFieldStyle: {
+        marginBottom: '16px',
+        padding: '8px',
+        backgroundColor: '#fff'
+      },
+      actionsColumnIndex: -1,
+      emptyRowsWhenPaging: false,
+      toolbar: true
+    }}
+    localization={{
+      pagination: {
+        labelRowsSelect: 'rows',
+        labelDisplayedRows: '{from}-{to} of {count}'
+      },
+      toolbar: {
+        searchPlaceholder: 'Search announcements...'
+      },
+      body: {
+        emptyDataSourceMessage: 'No announcements found',
+        addTooltip: 'Add',
+        deleteTooltip: 'Delete',
+        editTooltip: 'Edit',
+        filterRow: {
+          filterTooltip: 'Filter'
+        }
+      }
+    }}
+  />
+</ThemeProvider>
                 </Card.Body>
             </Card>
             </div>

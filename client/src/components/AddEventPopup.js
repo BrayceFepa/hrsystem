@@ -81,48 +81,87 @@ export default class AddEventModel extends Component {
         size="md"
         aria-labelledby="contained-modal-title-vcenter"
         centered
+        className="shadow-lg"
       >
-        <Modal.Header closeButton>
-          <Modal.Title id="contained-modal-title-vcenter">
+        <Modal.Header closeButton className="bg-gradient-to-r from-red-600 to-red-800 text-white border-b border-red-500">
+          <Modal.Title id="contained-modal-title-vcenter" className="text-xl font-semibold">
             Add Event
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body>
-            {done ? <Redirect to="/" /> : <></>}
-            {showAlert ? (
-                <Alert variant="warning" className="m-1">
+        <Modal.Body className="py-4">
+            {done ? <Redirect to="/" /> : null}
+            {showAlert && (
+                <div className="mb-4 p-3 bg-yellow-50 text-yellow-700 rounded-md text-sm">
                     End Date should be after Start Date
-                </Alert>) : (<></>)
-            }
-            <Form onSubmit={this.onSubmit}>
-                <Form.Group controlId="formBasicEmail">
-                    <Form.Label className="required">Title</Form.Label>
-                    <Form.Control
+                </div>
+            )}
+            <Form onSubmit={this.onSubmit} className="space-y-4">
+                <div className="space-y-1">
+                    <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+                    Title <span className="text-red-500">*</span>
+                    </label>
+                    <input
                         type="text"
+                        id="title"
                         placeholder="Enter a Title"
-                        className="col-6"
+                        className="w-full px-3 py-2 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-0 focus:border-red-500 focus:ring-0"
                         name="title"
                         value={this.state.title}
                         onChange={this.handleChange}
+                        style={{
+                            borderColor: document.activeElement && document.activeElement.id === 'title' ? '#ef4444' : '#d1d5db',
+                            boxShadow: document.activeElement && document.activeElement.id === 'title' ? '0 0 0 2px rgba(239, 68, 68, 0.25)' : 'none',
+                            backgroundColor: 'white',
+                            borderRadius: '0.375rem'
+                        }}
+                        onFocus={(e) => {
+                            e.target.style.borderColor = '#ef4444';
+                            e.target.style.boxShadow = '0 0 0 2px rgba(239, 68, 68, 0.25)';
+                        }}
+                        onBlur={(e) => {
+                            e.target.style.borderColor = '#d1d5db';
+                            e.target.style.boxShadow = 'none';
+                        }}
                         required
                     />
-                </Form.Group>
+                </div>
 
-                <Form.Group controlId="formBasicPassword">
-                    <Form.Label>Description</Form.Label>
-                    <Form.Control
+                <div className="space-y-1">
+                    <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+                        Description <span className="text-red-500">*</span>
+                    </label>
+                    <input
                         type="text"
+                        id="description"
                         placeholder="Enter a Description"
-                        className="col-6"
+                        className="w-full px-3 py-2 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-0 focus:border-red-500 focus:ring-0"
                         name="description"
                         value={this.state.description}
                         onChange={this.handleChange}
+                        style={{
+                            borderColor: document.activeElement && document.activeElement.id === 'description' ? '#ef4444' : '#d1d5db',
+                            boxShadow: document.activeElement && document.activeElement.id === 'description' ? '0 0 0 2px rgba(239, 68, 68, 0.25)' : 'none',
+                            backgroundColor: 'white',
+                            borderRadius: '0.375rem'
+                        }}
+                        onFocus={(e) => {
+                            e.target.style.borderColor = '#ef4444';
+                            e.target.style.boxShadow = '0 0 0 2px rgba(239, 68, 68, 0.25)';
+                        }}
+                        onBlur={(e) => {
+                            e.target.style.borderColor = '#d1d5db';
+                            e.target.style.boxShadow = 'none';
+                        }}
                     />
-                </Form.Group>
+                </div>
 
-                <Form.Group controlId="formStartDate">
-                    <Form.Label className="required">Start Date</Form.Label>
+                <div className="space-y-1">
+                    <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">
+                        Start Date <span className="text-red-500">*</span>
+                    </label>
                     <DatePicker
+                        className="w-full px-3 py-2 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-0 focus:border-red-500 focus:ring-0"
+                        id="startDate"
                         selected={this.state.startDate}
                         onChange={newStartDate => this.setState({ startDate: newStartDate })}
                         showTimeSelect
@@ -130,17 +169,34 @@ export default class AddEventModel extends Component {
                         name="startDate"
                         timeIntervals={30}
                         timeCaption="time"
-                        dateFormat="yyyy-MM-dd HH:mm:ss"
-                        className="form-control ml-1"
+                        dateFormat="yyyy-MM-dd HH:mm"
                         placeholderText="Select Start Date"
                         autoComplete="off"
                         required
+                        style={{
+                            borderColor: document.activeElement && document.activeElement.id === 'startDate' ? '#ef4444' : '#d1d5db',
+                            boxShadow: document.activeElement && document.activeElement.id === 'startDate' ? '0 0 0 2px rgba(239, 68, 68, 0.25)' : 'none',
+                            backgroundColor: 'white',
+                            borderRadius: '0.375rem'
+                        }}
+                        onFocus={(e) => {
+                            e.target.style.borderColor = '#ef4444';
+                            e.target.style.boxShadow = '0 0 0 2px rgba(239, 68, 68, 0.25)';
+                        }}
+                        onBlur={(e) => {
+                            e.target.style.borderColor = '#d1d5db';
+                            e.target.style.boxShadow = 'none';
+                        }}
                     />
-                </Form.Group>
+                </div>
 
-                <Form.Group controlId="formEndDate">
-                    <Form.Label className="required">End Date</Form.Label>
+                <div className="space-y-1">
+                    <label htmlFor="endDate" className="block text-sm font-medium text-gray-700">
+                        End Date <span class="text-red-500">*</span>
+                    </label>
                     <DatePicker
+                        className="w-full px-3 py-2 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-0 focus:border-red-500 focus:ring-0"
+                        id="endDate"
                         selected={this.state.endDate}
                         onChange={newEndDate => this.setState({ endDate: newEndDate })}
                         showTimeSelect
@@ -148,23 +204,48 @@ export default class AddEventModel extends Component {
                         name="endDate"
                         timeIntervals={30}
                         timeCaption="time"
-                        dateFormat="yyyy-MM-dd HH:mm:ss"
-                        className="form-control ml-3"
+                        dateFormat="yyyy-MM-dd HH:mm"
                         placeholderText="Select End Date"
                         autoComplete="off"
                         required
+                        style={{
+                            borderColor: document.activeElement && document.activeElement.id === 'endDate' ? '#ef4444' : '#d1d5db',
+                            boxShadow: document.activeElement && document.activeElement.id === 'endDate' ? '0 0 0 2px rgba(239, 68, 68, 0.25)' : 'none',
+                            backgroundColor: 'white',
+                            borderRadius: '0.375rem'
+                        }}
+                        onFocus={(e) => {
+                            e.target.style.borderColor = '#ef4444';
+                            e.target.style.boxShadow = '0 0 0 2px rgba(239, 68, 68, 0.25)';
+                        }}
+                        onBlur={(e) => {
+                            e.target.style.borderColor = '#d1d5db';
+                            e.target.style.boxShadow = 'none';
+                        }}
                     />
-                </Form.Group>
+                </div>
 
-                <Form.Text className="mb-3 required"> Required Fields</Form.Text>
-                <Button variant="success" type="submit">
-                    Submit
-            </Button>
+                <div className="text-right text-sm text-gray-500 mb-3">
+                    <span className="text-red-500">*</span> Required Fields
+                </div>
+                
+                <div className="flex justify-end space-x-3 pt-2">
+                    <button 
+                        type="button"
+                        onClick={this.props.onHide} 
+                        className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                    >
+                        Close
+                    </button>
+                    <button 
+                        type="submit"
+                        className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                    >
+                        Submit
+                    </button>
+                </div>
             </Form>
         </Modal.Body>
-        <Modal.Footer>
-          <Button onClick={this.props.onHide}>Close</Button>
-        </Modal.Footer>
       </Modal>
     );
   }

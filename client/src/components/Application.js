@@ -68,7 +68,7 @@ export default class Application extends Component {
                 <Redirect to="/application-list" />
             ) : (<></>)}
             <Card className="mb-3 main-card">
-                <Card.Header>
+                <Card.Header className="bg-danger">
                     <b>Make Application</b>
                 </Card.Header>
                 <Card.Body>
@@ -124,7 +124,7 @@ export default class Application extends Component {
                                 onChange={this.handleChange}
                             />
                         </Form.Group>
-                        <Button variant="primary" type="submit" className="mt-2">
+                        <Button  type="submit" className="mt-2 bg-danger border-danger">
                         Add
                         </Button>
                     </Form>

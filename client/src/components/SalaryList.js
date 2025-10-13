@@ -68,7 +68,7 @@ export default class SalaryList extends Component {
         {this.state.viewRedirect ? (<Redirect to={{pathname: '/salary-view', state: {selectedUser: this.state.selectedUser}}}></Redirect>) : (<></>)}
         <div className="col-sm-12">
           <Card>
-            <Card.Header style={{ backgroundColor: "#515e73", color: "white" }}>
+            <Card.Header className="bg-danger">
               <div className="panel-title">
                 <strong>List of Employees and Their Salaries</strong>
               </div>
@@ -87,7 +87,7 @@ export default class SalaryList extends Component {
                       title: 'View',
                       render: rowData => (
                         <Form>
-                          <Button size="sm" variant="info" onClick={this.onView(rowData)}><i className="far fa-address-card"></i></Button>
+                          <Button size="sm" className="mr-2 bg-danger border-danger" variant="info" onClick={this.onView(rowData)}><i className="far fa-eye bg-danger"></i></Button>
                         </Form>
                       )
                     },
@@ -95,7 +95,7 @@ export default class SalaryList extends Component {
                       title: 'Action',
                       render: rowData => (
                         <>
-                          <Button size="sm" variant="info" className="mr-2" onClick={this.onEdit(rowData)}><i className="far fa-edit"></i>Edit</Button>
+                          <Button size="sm" variant="info" className="mr-2 bg-danger border-danger" onClick={this.onEdit(rowData)}><i className="far fa-edit"></i>Edit</Button>
                         </>
                       )
                     }
@@ -110,7 +110,7 @@ export default class SalaryList extends Component {
                     pageSize: 10,
                     pageSizeOptions: [10, 20, 30, 50, 75, 100]
                   }}
-                  title="Employees"
+                  title=""
                 />
               </ThemeProvider>
             </Card.Body>

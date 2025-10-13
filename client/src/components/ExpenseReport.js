@@ -68,25 +68,22 @@ export default class ExpenseReport extends Component {
     })
 
     const monthNames = ["January", "February", "March", "April", "May", "June",
-            "July", "August", "September", "October", "November", "December"
-        ];
-
+        "July", "August", "September", "October", "November", "December"];
+    
     return (
       <div className="container-fluid pt-4">
         <div className="row">
             <div className="col-sm-3"></div>
-            <div className="col-sm-9">
-                <h4>
-                    <a className="fa fa-plus mb-2 ml-2" href="/expense">
-                        Add Expense
-                    </a>
-                </h4>
+            <div className="col-sm-9 d-flex justify-content-end">
+                <a href="/expense" className="btn btn-danger btn-medium mb-2">
+                    <i className="fa fa-plus-circle mr-2"></i>
+                    Add New Expense
+                </a>
             </div>
         </div>
         <div className="row">
             <div className="col-sm-3">
                 <Card className="secondary-card">
-                    <Card.Header>Select Date</Card.Header>
                     <Card.Body>
                         <Card.Text>
                             <Form onSubmit={this.onSubmit}>
@@ -100,7 +97,7 @@ export default class ExpenseReport extends Component {
                                         dateFormat="MMM yyyy"
                                     />
                                 </Form.Group>
-                                <Button size="sm" type="submit">Search</Button>
+                                <Button size="sm" type="submit" className="bg-danger border-danger">Search</Button>
                             </Form>
                         </Card.Text>
                     </Card.Body>
@@ -108,7 +105,7 @@ export default class ExpenseReport extends Component {
             </div>
             <div className="col-sm-9">
                 <Card>
-                    <Card.Header style={{ backgroundColor: "#515e73", color: "white" }}>
+                    <Card.Header className="bg-danger">
                         <div className="panel-title">
                             <strong>Expenses</strong>
                         </div>
@@ -130,7 +127,7 @@ export default class ExpenseReport extends Component {
                             {
                                 title: 'Amount', 
                                 render: rowData => (
-                                    "€ " + rowData.amount
+                                    rowData.amount + " Birr "
                                 )
                             },
                             {accessor: 'cash', footer: "Total:" + 1}
@@ -145,7 +142,7 @@ export default class ExpenseReport extends Component {
                             pageSize: 10,
                             pageSizeOptions: [10, 20, 30, 50, 75, 100]
                         }}
-                        title="Expense Report"
+                        title=""
                         />
                     </ThemeProvider>
                     </Card.Body>

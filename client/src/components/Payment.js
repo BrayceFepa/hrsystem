@@ -256,7 +256,7 @@ export default class Payment extends Component {
 
             <div className="col-sm-12">
                 <Card className="main-card">
-                    <Card.Header>Manage Salary Details</Card.Header>
+                    <Card.Header className="bg-danger">Manage Salary Details</Card.Header>
                     <Card.Body>
                         <Card.Text>
                             <Form onSubmit={this.findPayments}>
@@ -300,7 +300,7 @@ export default class Payment extends Component {
                                     />
                                     </Form.Row>
                                 </Form.Group>
-                                <Button type="submit" className="mt-2" size="sm">Search</Button>
+                                <Button type="submit" className="mt-2 bg-danger border-danger" size="sm">Search</Button>
                             </Form>
                         </Card.Text>
                     </Card.Body>

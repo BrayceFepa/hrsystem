@@ -1,0 +1,20 @@
+/* Custom styles for the dashboard */
+.content-wrapper {
+  background-color: red !important;
+}
+
+/* If you want to change the content area only (not including the sidebar) */
+.content {
+  background-color: red !important;
+  min-height: calc(100vh - 57px); /* Adjust height as needed */
+}
+
+/* If you're using specific panel classes */
+.card, .panel, .box {
+  background-color: red !important;
+}
+
+/* For the main content area */
+.main-content {
+  background-color: red !important;
+}
