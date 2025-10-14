@@ -740,12 +740,12 @@ export default class EmployeeEdit extends Component {
                             <option value="">Choose...</option>
                             <option value="ROLE_EMPLOYEE">Employee</option>
                             <option value="ROLE_MANAGER">Manager</option>
+                            <option value="ROLE_HR">HR</option>
                             <option value="ROLE_ADMIN">Admin</option>
                           </Form.Control>
                         </Form.Group>
                         <Form.Group controlId="formActive">
                           <Form.Label className="text-muted required">
-                            Status
                           </Form.Label>
                           <Form.Control
                             as="select"

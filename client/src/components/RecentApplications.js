@@ -49,7 +49,7 @@ export default class RecentApplications extends React.Component {
                       <small style={{
                         color: (app.status === 'Approved' ? 'green' :
                                 app.status === 'Rejected' ? 'red' :
-                                'orange'
+                                '#FFD700'
                         )
                       }}>{app.status}</small>
                     </div>

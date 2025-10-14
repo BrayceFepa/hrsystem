@@ -1,8 +1,10 @@
 import React, { Component } from "react";
 import { BrowserRouter as Router, Route, Switch, Redirect } from "react-router-dom";
+import { ConfirmationProvider } from "./contexts/ConfirmationContext";
 import Header from "./Layout/Header";
 import Footer from "./Layout/Footer";
 import SidebarAdmin from "./Layout/SidebarAdmin";
+import SidebarHR from "./Layout/SidebarHR";
 import SidebarManager from "./Layout/SidebarManager";
 import SidebarEmployee from './Layout/SidebarEmployee'
 import Dashboard from "./components/Dashboard";
@@ -43,7 +45,7 @@ import JobListManager from './components/manager/JobList'
 export default class App extends Component {
   render() {
     return (
-      <>
+      <ConfirmationProvider>
         <Router>
             <Switch>
               <Route exact path="/login" component={LoginContainer} />
@@ -51,7 +53,7 @@ export default class App extends Component {
               <Route path="/" component={withAuth(DefaultContainer)} />
             </Switch>
         </Router>
-      </>
+      </ConfirmationProvider>
     )
   }
 }
@@ -74,6 +76,8 @@ const DefaultContainer = () => (
   <div>
     {JSON.parse(localStorage.getItem('user')).role === "ROLE_ADMIN" ? (
       AdminContainer()
+    ) : JSON.parse(localStorage.getItem('user')).role === "ROLE_HR" ? (
+      HRContainer()
     ) : JSON.parse(localStorage.getItem('user')).role === "ROLE_MANAGER" ? (
       ManagerContainer()
     ) : JSON.parse(localStorage.getItem('user')).role === "ROLE_EMPLOYEE" ? (
@@ -81,6 +85,26 @@ const DefaultContainer = () => (
     ) : null}
   </div>
 )
+
+const HRContainer = () => (
+  <div>
+    <Header />
+    <SidebarHR />
+    <Layout>
+      <Switch>
+        <Route exact path="/" component={withAuth(Dashboard)} />
+        <Route exact path="/employee-list" component={withAuth(EmployeeList)} />
+        <Route exact path="/employee-add" component={withAuth(EmployeeAdd)} />
+        <Route exact path="/employee-view" component={withAuth(EmployeeView)} />
+        <Route exact path="/employee-edit" component={withAuth(EmployeeEdit)} />
+        <Route exact path="/departments" component={withAuth(DepartmentList)} />
+        <Route exact path="/job-list" component={withAuth(JobList)} />
+        <Route exact path="/application-list" component={withAuth(ApplicationList)} />
+        <Route exact path="/application" component={withAuth(Application)} />
+      </Switch>
+    </Layout>
+  </div>
+);
 
 const AdminContainer = () => (
   <div>

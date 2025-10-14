@@ -70,7 +70,7 @@ export default class EmployeeAdd extends Component {
       // joiningDate: "",
       idCopy: null,
       contract: null,
-      certificate: null,
+      certificates: [],
       hasError: false,
       errMsg: "",
       completed: false,

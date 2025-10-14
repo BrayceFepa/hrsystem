@@ -135,7 +135,7 @@ export default class ApplicationList extends Component {
                             title: 'Status', 
                             field: 'status',
                             render: rowData => (
-                                <Button size="sm" variant={rowData.status==='Approved' ? "success" : rowData.status==='Pending' ? "warning" : "danger"}>{rowData.status}</Button>
+                        <Button size="sm" variant={rowData.status === 'Approved' ? "success" : rowData.status === 'Pending' ? "warning" : "danger"}>{rowData.status}</Button>
                             )
                         },
                         {
@@ -144,8 +144,8 @@ export default class ApplicationList extends Component {
                               rowData.user.id != JSON.parse(localStorage.getItem('user')).id ? (
                                 rowData.status==="Pending" ? (
                                   <>
-                                    <Button onClick={this.onApprove(rowData)} variant="success" size="sm" className="mr-2"><i className="fas fa-edit"></i>Approve</Button>
-                                    <Button onClick={this.onReject(rowData)} variant="danger" size="sm" className="ml-2"><i className="fas fa-trash"></i>Reject</Button>
+                              <Button onClick={this.onApprove(rowData)} variant="success" size="sm" className="mr-2" title="Approve"><i className="fas fa-check"></i></Button>
+                              <Button onClick={this.onReject(rowData)} variant="danger" size="sm" className="ml-2" title="Reject"><i className="fas fa-times"></i></Button>
                                   </>
                                 ) : null
                               ) : null
