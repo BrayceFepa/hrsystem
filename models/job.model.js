@@ -1,28 +1,52 @@
 module.exports = (sequelize, Sequelize) => {
-    const Job = sequelize.define("job", {
+  const Job = sequelize.define(
+    "job",
+    {
       id: {
         type: Sequelize.INTEGER,
         autoIncrement: true,
         primaryKey: true,
-        allowNull: false
+        allowNull: false,
       },
       jobTitle: {
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: false,
       },
       startDate: {
         type: Sequelize.DATE,
-        allowNull: false
+        allowNull: false,
       },
       endDate: {
         type: Sequelize.DATE,
-        allowNull: false
-      }
-    }, {
-        timestamps: false,
-        underscored: true,
-        freezeTableName: true,
-    });
-  
-    return Job;
-  };
+        allowNull: true,
+      },
+      empType: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+      empStatus: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+      contract: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+      certificate: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+      directSupervisor: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+    },
+    {
+      timestamps: false,
+      underscored: true,
+      freezeTableName: true,
+    }
+  );
+
+  return Job;
+};

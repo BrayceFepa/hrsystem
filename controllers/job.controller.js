@@ -1,9 +1,10 @@
 const db = require("../models");
 const Job = db.job;
 const Op = db.Sequelize.Op;
-const moment= require('moment')
+const moment = require("moment");
+const { clearCache } = require("../config/cache.config");
 
-// Create and Save a new User
+// Create and Save a new Job
 exports.create = (req, res) => {
   // Validate request
   if (!req.body) {
@@ -16,8 +17,17 @@ exports.create = (req, res) => {
   // Create a Job
   const newJob = {
     jobTitle: req.body.jobTitle,
-    startDate: moment(req.body.startDate).format('YYYY-MM-DD HH:mm:ss'),
-    endDate: moment(req.body.endDate).format('YYYY-MM-DD HH:mm:ss'),
+    startDate: moment(req.body.startDate).format("YYYY-MM-DD HH:mm:ss"),
+    endDate: req.body.endDate
+      ? moment(req.body.endDate).format("YYYY-MM-DD HH:mm:ss")
+      : null,
+    empType: req.body.empType || null,
+    empStatus: req.body.empStatus || null,
+    directSupervisor: req.body.directSupervisor || null,
+    contract:
+      req.files && req.files.contract ? req.files.contract[0].path : null,
+    certificate:
+      req.files && req.files.certificate ? req.files.certificate[0].path : null,
     userId: req.body.userId,
   };
 
@@ -25,41 +35,35 @@ exports.create = (req, res) => {
     where: {
       [Op.and]: [
         { userId: req.body.userId },
-        {startDate: {[Op.lte]: Date.now()}},
-        {endDate: 
-          {
-            [Op.or]: [
-              {[Op.gte]: Date.now()},
-              {[Op.is]: null}
-            ]
-          }
-        }
-      ]
-    }
+        { startDate: { [Op.lte]: Date.now() } },
+        {
+          endDate: {
+            [Op.or]: [{ [Op.gte]: Date.now() }, { [Op.is]: null }],
+          },
+        },
+      ],
+    },
   }).then((job) => {
     if (job) {
-
-      if(new Date(job.dataValues.endDate) > new Date(newJob.startDate)) {
+      if (new Date(job.dataValues.endDate) > new Date(newJob.startDate)) {
         job.dataValues.endDate = moment(newJob.startDate).subtract(1, "days");
       }
 
       Job.update(job.dataValues, {
         where: { id: job.dataValues.id },
-      })
-      .catch((err) => {
+      }).catch((err) => {
         res.status(500).send({
-          message:
-            err.message || "Some error occurred while creating the Job.",
+          message: err.message || "Some error occurred while creating the Job.",
         });
       });
-
     } else {
-      console.log('job not found')
-      
+      console.log("job not found");
     }
 
     Job.create(newJob)
       .then((data) => {
+        // Clear jobs cache
+        clearCache("/api/jobs");
         res.send(data);
       })
       .catch((err) => {
@@ -122,6 +126,8 @@ exports.update = (req, res) => {
   })
     .then((num) => {
       if (num == 1) {
+        // Clear jobs cache
+        clearCache("/api/jobs");
         res.send({
           message: "Job was updated successfully.",
         });
@@ -147,6 +153,8 @@ exports.delete = (req, res) => {
   })
     .then((num) => {
       if (num == 1) {
+        // Clear jobs cache
+        clearCache("/api/jobs");
         res.send({
           message: "Job was deleted successfully!",
         });
@@ -170,6 +178,8 @@ exports.deleteAll = (req, res) => {
     truncate: false,
   })
     .then((nums) => {
+      // Clear jobs cache
+      clearCache("/api/jobs");
       res.send({ message: `${nums} Jobs were deleted successfully!` });
     })
     .catch((err) => {
@@ -188,6 +198,8 @@ exports.deleteAllByUserId = (req, res) => {
     truncate: false,
   })
     .then((nums) => {
+      // Clear jobs cache
+      clearCache("/api/jobs");
       res.send({ message: `${nums} Jobs were deleted successfully!` });
     })
     .catch((err) => {

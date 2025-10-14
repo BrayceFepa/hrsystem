@@ -3,13 +3,15 @@ const Department = db.department;
 const User = db.user;
 const Job = db.job;
 const Op = db.Sequelize.Op;
+const { getPagination, getPagingData } = require("../utils/pagination");
+const { clearCache } = require("../config/cache.config");
 
 // Create and Save a new Department
 exports.create = (req, res) => {
   // Validate request
   if (!req.body) {
     res.status(400).send({
-      message: "Content can not be empty!"
+      message: "Content can not be empty!",
     });
     return;
   }
@@ -17,42 +19,53 @@ exports.create = (req, res) => {
   // Create a Department
   const department = {
     departmentName: req.body.departmentName,
-    organizationId: req.body.organizationId
+    organizationId: req.body.organizationId,
   };
 
   // Save Department in the database
   Department.create(department)
-    .then(data => {
+    .then((data) => {
+      // Clear departments cache
+      clearCache("/api/departments");
       res.send(data);
     })
-    .catch(err => {
+    .catch((err) => {
       res.status(500).send({
         message:
-          err.message || "Some error occurred while creating the Department."
+          err.message || "Some error occurred while creating the Department.",
       });
     });
 };
 
-// Retrieve all Departments from the database.
+// Retrieve all Departments from the database with pagination
 exports.findAll = (req, res) => {
-  Department.findAll({
-    include: [{
-      model: User,
-      include: {
-        model: Job,
+  const { page, size } = req.query;
+  const { limit, offset } = getPagination(page, size);
+
+  Department.findAndCountAll({
+    limit,
+    offset,
+    include: [
+      {
+        model: User,
         include: {
-          model: User
-        }
-      }
-    }]
+          model: Job,
+          include: {
+            model: User,
+          },
+        },
+      },
+    ],
+    distinct: true,
   })
-    .then(data => {
-      res.send(data);
+    .then((data) => {
+      const response = getPagingData(data, page || 1, limit);
+      res.send(response);
     })
-    .catch(err => {
+    .catch((err) => {
       res.status(500).send({
         message:
-          err.message || "Some error occurred while retrieving departments."
+          err.message || "Some error occurred while retrieving departments.",
       });
     });
 };
@@ -62,22 +75,24 @@ exports.findOne = (req, res) => {
   const id = req.params.id;
 
   Department.findByPk(id, {
-    include: [{
-      model: User,
-      include: {
-        model: Job,
+    include: [
+      {
+        model: User,
         include: {
-          model: User
-        }
-      }
-    }]
+          model: Job,
+          include: {
+            model: User,
+          },
+        },
+      },
+    ],
   })
-    .then(data => {
+    .then((data) => {
       res.send(data);
     })
-    .catch(err => {
+    .catch((err) => {
       res.status(500).send({
-        message: "Error retrieving Department with id=" + id
+        message: "Error retrieving Department with id=" + id,
       });
     });
 };
@@ -87,22 +102,24 @@ exports.update = (req, res) => {
   const id = req.params.id;
 
   Department.update(req.body, {
-    where: { id: id }
+    where: { id: id },
   })
-    .then(num => {
+    .then((num) => {
       if (num == 1) {
+        // Clear departments cache
+        clearCache("/api/departments");
         res.send({
-          message: "Department was updated successfully."
+          message: "Department was updated successfully.",
         });
       } else {
         res.send({
-          message: `Cannot update Department with id=${id}. Maybe Department was not found or req.body is empty!`
+          message: `Cannot update Department with id=${id}. Maybe Department was not found or req.body is empty!`,
         });
       }
     })
-    .catch(err => {
+    .catch((err) => {
       res.status(500).send({
-        message: "Error updating Department with id=" + id
+        message: "Error updating Department with id=" + id,
       });
     });
 };
@@ -112,34 +129,36 @@ exports.delete = (req, res) => {
   const id = req.params.id;
 
   User.findAll({
-    where: {departmentId: id}
-  })
-  .then(users => {
-    if(users) {
-      users.map(user => {
+    where: { departmentId: id },
+  }).then((users) => {
+    if (users) {
+      users.map((user) => {
         user.departmentId = null;
         user.save();
-      })
+      });
     }
-  })
+  });
 
   Department.destroy({
-    where: { id: id }
+    where: { id: id },
   })
-    .then(num => {
+    .then((num) => {
       if (num == 1) {
+        // Clear departments and users cache
+        clearCache("/api/departments");
+        clearCache("/api/users");
         res.send({
-          message: "Department was deleted successfully!"
+          message: "Department was deleted successfully!",
         });
       } else {
         res.send({
-          message: `Cannot delete Department with id=${id}. Maybe Tutorial was not found!`
+          message: `Cannot delete Department with id=${id}. Maybe Tutorial was not found!`,
         });
       }
     })
-    .catch(err => {
+    .catch((err) => {
       res.status(500).send({
-        message: "Could not delete Department with id=" + id
+        message: "Could not delete Department with id=" + id,
       });
     });
 };
@@ -148,15 +167,17 @@ exports.delete = (req, res) => {
 exports.deleteAll = (req, res) => {
   Department.destroy({
     where: {},
-    truncate: false
+    truncate: false,
   })
-    .then(nums => {
+    .then((nums) => {
+      // Clear departments cache
+      clearCache("/api/departments");
       res.send({ message: `${nums} Departments were deleted successfully!` });
     })
-    .catch(err => {
+    .catch((err) => {
       res.status(500).send({
         message:
-          err.message || "Some error occurred while removing all Departments."
+          err.message || "Some error occurred while removing all Departments.",
       });
     });
 };

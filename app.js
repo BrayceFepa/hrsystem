@@ -26,6 +26,9 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 // app.use(express.static(path.join(__dirname, "public")));
 
+// Serve uploaded files
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 // var corsOptions = {
 //   origin: 'http://localhost:3000',
 //   optionsSuccessStatus: 200
