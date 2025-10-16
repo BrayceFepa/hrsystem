@@ -4,7 +4,7 @@ import DatePicker from "react-datepicker";
 import axios from "axios";
 import moment from "moment";
 
-// Custom styles for file upload buttons
+// Custom styles for file upload buttons and form controls
 const customFileUploadStyles = `
   .custom-file-upload .custom-file-label::after {
     content: 'Browse';
@@ -26,6 +26,27 @@ const customFileUploadStyles = `
   
   .react-datepicker {
     z-index: 10 !important;
+  }
+  
+  /* Red border for active input fields */
+  .form-control:focus {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+  }
+  
+  .custom-select:focus {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+  }
+  
+  .custom-file-input:focus ~ .custom-file-label {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+  }
+  
+  .react-datepicker-wrapper input:focus {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
   }
 `;
 
@@ -70,7 +91,8 @@ export default class EmployeeAdd extends Component {
       // joiningDate: "",
       idCopy: null,
       contract: null,
-      certificates: [],
+      nationalIdNumber: "",
+      certificate: null,
       hasError: false,
       errMsg: "",
       completed: false,
@@ -85,10 +107,14 @@ export default class EmployeeAdd extends Component {
       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
     })
       .then((res) => {
-        this.setState({ departments: res.data });
+        // Check if response has items array, otherwise use empty array as fallback
+        const departments = Array.isArray(res.data?.items) ? res.data.items : [];
+        this.setState({ departments });
       })
       .catch((err) => {
-        console.log(err);
+        console.error("Error fetching departments:", err);
+        // Set empty array as fallback
+        this.setState({ departments: [] });
       });
   }
 
@@ -106,30 +132,31 @@ export default class EmployeeAdd extends Component {
     }
   };
 
-  handleFileUpload = (file, apiEndpoint, userId) => {
-    if (!file) return Promise.resolve();
-    
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('userId', userId);
-    
-    return axios({
-      method: 'post',
-      url: `/api/${apiEndpoint}`,
-      data: formData,
-      headers: {
-        'Content-Type': 'multipart/form-data',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
-    });
-  };
+handleFileUpload = (file, apiEndpoint, userId, fieldName = 'file') => {
+  if (!file) return Promise.resolve();
+  
+  const formData = new FormData();
+  formData.append(fieldName, file);
+  formData.append('userId', userId);
+  
+  return axios({
+    method: 'post',
+    url: `/api/${apiEndpoint}`,
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+      'Authorization': `Bearer ${localStorage.getItem('token')}`
+    }
+  });
+};
 
-  onSubmit = (e) => {
-    this.setState({ hasError: false, errorMsg: "", completed: false });
+onSubmit = (e) => {
+  e.preventDefault();
+  this.setState({ hasError: false, errorMsg: "", completed: false });
 
     let user = {
       username: this.state.username,
-      password: 1234,
+      password: this.state.password,
       fullname: this.state.firstName + " " + this.state.lastname,
       role: this.state.role,
       departmentId: this.state.departmentId,
@@ -138,101 +165,164 @@ export default class EmployeeAdd extends Component {
     };
 
     e.preventDefault();
+    
+    // Function to get error message from error response
+    const getErrorMessage = (error) => {
+      if (error.response) {
+        return error.response.data?.message || 'An error occurred while processing your request';
+      } else if (error.request) {
+        return 'No response received from server. Please check your connection.';
+      } else {
+        return error.message || 'An error occurred';
+      }
+    };
+
+    // 1. Create User
     axios({
       method: "post",
       url: "/api/users",
       data: user,
-      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem("token")}` 
+      },
     })
-      .then((res) => {
-        let userId = res.data.id;
+    .then((res) => {
+      const userData = res.data?.data || res.data; // Handle both { data: {...} } and direct response
+      const userId = userData.id;
 
-        let userPersonalInfo = {
-          dateOfBirth: this.state.dateOfBirth,
-          gender: this.state.gender,
-          maritalStatus: this.state.maritalStatus,
-          fatherName: this.state.fathername,
-          idNumber: this.state.idNumber,
-          address: this.state.address,
-          city: this.state.city,
-          country: this.state.country,
-          // mobile: this.state.mobile,
-          phone: this.state.phone,
-          emailAddress: this.state.email,
-          userId: userId,
-        };
+      if (!userId) {
+        throw new Error('User ID not found in response');
+      }
 
-        axios({
-          method: "post",
-          url: "/api/personalInformations",
-          data: userPersonalInfo,
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        })
-          .then((res) => {
-            let userFinancialInfo = {
-              bankName: this.state.bankName,
-              accountName: this.state.accountName,
-              accountNumber: this.state.accountNumber,
-              iban: this.state.iBan,
-              userId: userId,
-            };
+      // 2. Prepare Personal Information FormData
+      const personalInfoFormData = new FormData();
+      
+      // Add all personal info fields to formData
+      const personalInfoFields = {
+        dateOfBirth: this.state.dateOfBirth,
+        gender: this.state.gender,
+        maritalStatus: this.state.maritalStatus,
+        fatherName: this.state.fathername,
+        idNumber: this.state.idNumber,
+        address: this.state.address,
+        city: this.state.city,
+        country: this.state.country,
+        phone: this.state.phone,
+        emailAddress: this.state.email,
+        emergencyContact: this.state.emergencyContact,
+        userId: userId,
+        nationalIdNumber: this.state.nationalIdNumber,
+      };
 
-            axios({
-              method: "post",
-              url: "api/financialInformations",
-              data: userFinancialInfo,
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-              },
-            })
-              .then((res) => {
-                let job = {
-                  jobTitle: this.state.jobTitle,
-                  startDate: this.state.startDate,
-                  endDate: this.state.endDate,
-                  // joiningDate: this.state.joiningDate,
-                  userId: userId,
-                };
-                axios({
-                  method: "post",
-                  url: "api/jobs/",
-                  data: job,
-                  headers: {
-                    Authorization: `Bearer ${localStorage.getItem("token")}`,
-                  },
-                })
-                  .then((res) => {
-                    this.setState({ completed: true });
-                    window.scrollTo(0, 0);
-                  })
-                  .catch((err) => {
-                    this.setState({
-                      hasError: true,
-                      errMsg: err.response.data.message,
-                    });
-                    window.scrollTo(0, 0);
-                  });
-              })
-              .catch((err) => {
-                this.setState({
-                  hasError: true,
-                  errMsg: err.response.data.message,
-                });
-                window.scrollTo(0, 0);
-              });
-          })
-          .catch((err) => {
-            this.setState({
-              hasError: true,
-              errMsg: err.response.data.message,
-            });
-            window.scrollTo(0, 0);
-          });
-      })
-      .catch((err) => {
-        this.setState({ hasError: true, errMsg: err.response.data.message });
-        window.scrollTo(0, 0);
+      // Append all fields to formData
+      Object.entries(personalInfoFields).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+          personalInfoFormData.append(key, value);
+        }
       });
+
+      // Append ID copy file if exists
+      if (this.state.idCopy) {
+        personalInfoFormData.append('idCopy', this.state.idCopy);
+      }
+
+      // 3. Create Personal Information with file upload
+      return axios({
+        method: 'post',
+        url: '/api/personalInformations',
+        data: personalInfoFormData,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      }).then(() => userId); // Return userId for next then
+    })
+    .then((userId) => {
+      // 4. Create Financial Information
+      const userFinancialInfo = {
+        bankName: this.state.bankName,
+        accountName: this.state.accountName,
+        accountNumber: this.state.accountNumber,
+        branch: this.state.branch,  // Added branch field
+        iban: this.state.iBan,
+        userId: userId,
+      };
+
+      return Promise.all([
+        axios({
+          method: 'post',
+          url: '/api/financialInformations',
+          data: userFinancialInfo,
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}` 
+          },
+        }),
+        userId // Pass userId to next then
+      ]);
+    })
+    .then(([financialInfoRes, userId]) => {
+      // 5. Create Job with FormData to support file uploads
+      const jobFormData = new FormData();
+      
+      // Add all job fields to formData
+      const jobFields = {
+        jobTitle: this.state.jobTitle,
+        startDate: this.state.startDate,
+        endDate: this.state.endDate,
+        empType: this.state.empType,
+        empStatus: 'Active',
+        directSupervisor: this.state.directSupervisor, // Ensure directSupervisor is always sent
+        userId: userId,
+      };
+
+      // Append all job fields to formData
+      Object.entries(jobFields).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+          // Convert to string to ensure proper form data handling
+          jobFormData.append(key, String(value));
+        }
+      });
+
+      // Append contract file if exists
+      if (this.state.contract) {
+        jobFormData.append('contract', this.state.contract);
+      }
+
+      // Append certificate file if exists
+      if (this.state.certificate) {
+        jobFormData.append('certificate', this.state.certificate);
+      }
+
+      // Create job with file uploads
+      return axios({
+        method: 'post',
+        url: '/api/jobs',
+        data: jobFormData,
+        headers: { 
+          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${localStorage.getItem('token')}` 
+        },
+      });
+    })
+    .then(() => {
+      this.setState({ 
+        completed: true,
+        hasError: false,
+        errMsg: ""
+      });
+      window.scrollTo(0, 0);
+    })
+    .catch((err) => {
+      console.error("Error creating employee:", err);
+      this.setState({ 
+        hasError: true, 
+        errMsg: getErrorMessage(err),
+        completed: false
+      });
+      window.scrollTo(0, 0);
+    });
   };
 
   pushDepartments = () => {
@@ -273,7 +363,7 @@ export default class EmployeeAdd extends Component {
                 {/* Personal Details Card */}
                 <div className="col-sm-6">
                   <Card className="secondary-card">
-                    <Card.Header >Personal Details</Card.Header>
+                    <Card.Header className="bg-danger">Personal Details</Card.Header>
                     <Card.Body>
                       <Card.Text>
                         <Form.Group controlId="formFirstName">
@@ -283,8 +373,8 @@ export default class EmployeeAdd extends Component {
                           <Form.Control
                             type="text"
                             placeholder="Enter first Name"
-                            name="fistname"
-                            value={this.state.fistname}
+                            name="firstName"
+                            value={this.state.firstName}
                             onChange={this.handleChange}
                             required
                           />
@@ -384,8 +474,8 @@ export default class EmployeeAdd extends Component {
                           <Form.Control
                             type="text"
                             placeholder="Enter ID Number"
-                            name="idNumber"
-                            value={this.state.idNumber}
+                            name="nationalIdNumber"
+                            value={this.state.nationalIdNumber}
                             onChange={this.handleChange}
                             required
                           />
@@ -408,7 +498,7 @@ export default class EmployeeAdd extends Component {
                 </div>
                 <div className="col-sm-6">
                   <Card className="secondary-card">
-                    <Card.Header>Contact Details</Card.Header>
+                    <Card.Header className="bg-danger">Contact Details</Card.Header>
                     <Card.Body>
                       <Card.Text>
                         <Form.Group controlId="formAddress">
@@ -507,7 +597,7 @@ export default class EmployeeAdd extends Component {
               <div className="row">
                 <div className="col-sm-6">
                   <Card className="secondary-card">
-                    <Card.Header>Job</Card.Header>
+                    <Card.Header className="bg-danger">Job</Card.Header>
                     <Card.Body>
                       <Card.Text>
                         <Form.Group controlId="formJobTitle">
@@ -540,7 +630,19 @@ export default class EmployeeAdd extends Component {
                             <option value="Probation">Probation</option>
                           </Form.Control>
                         </Form.Group>
-                        <Form.Group controlId="formEmploymentStatus">
+                        <Form.Group controlId="formDirectSupervisor">
+                          <Form.Label className="text-muted required">
+                            Direct Supervisor
+                          </Form.Label>
+                          <Form.Control
+                            type="text"
+                            value={this.state.directSupervisor}
+                            onChange={this.handleChange}
+                            name="directSupervisor"
+                            placeholder="Enter Direct Supervisor"
+                          />
+                        </Form.Group>
+                        {/* <Form.Group controlId="formEmploymentStatus">
                           <Form.Label className="text-muted required">
                             Status
                           </Form.Label>
@@ -558,7 +660,7 @@ export default class EmployeeAdd extends Component {
                             <option value="Probation">Terminated</option>
                             <option value="On Leave">On Leave</option>
                           </Form.Control>
-                        </Form.Group>
+                        </Form.Group> */}
                         <Form.Group controlId="formContract">
                           <Form.Label className="text-muted required">
                             Employment Contract
@@ -630,7 +732,7 @@ export default class EmployeeAdd extends Component {
                 </div>
                 <div className="col-sm-6">
                   <Card className="secondary-card">
-                    <Card.Header>Official Status</Card.Header>
+                    <Card.Header className="bg-danger">Official Status</Card.Header>
                     <Card.Body>
                       <Card.Text>
                         <Form.Group controlId="formEmployeeId">
@@ -704,7 +806,7 @@ export default class EmployeeAdd extends Component {
               <div className="row">
                 <div className="col-sm-6">
                   <Card className="secondary-card">
-                    <Card.Header>Bank Information</Card.Header>
+                    <Card.Header className="bg-danger">Bank Information</Card.Header>
                     <Card.Body>
                       <Card.Text>
                         <Form.Group controlId="formBankName">

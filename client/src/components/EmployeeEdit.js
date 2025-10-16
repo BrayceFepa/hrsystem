@@ -71,11 +71,15 @@ export default class EmployeeEdit extends Component {
           jobTitle: '',
           startDate: null,
           endDate: null,
-          joiningDate: ''
+          empType: '',
+          empStatus: 'Active',
+          contract: null,
+          certificate: null,
+          directSupervisor: ''
         },
         idCopy: null,
-        contract: null,
-        certificate: null,
+        contractFile: null,
+        professionalCertificate: null,
         emergencyContact: '',
         hasError: false,
         errMsg: "",
@@ -120,7 +124,7 @@ export default class EmployeeEdit extends Component {
             headers: {Authorization: `Bearer ${localStorage.getItem('token')}`}
           })
           .then(res => {
-            this.setState({departments: res.data})
+            this.setState({departments: res.data.items || []})
           })
           .catch(err => {
             console.log(err)
@@ -143,11 +147,18 @@ export default class EmployeeEdit extends Component {
   handleChangeJob = (event) => {
     const { value, name } = event.target;
     this.setState(prevState => ({
-      job : {
+      job: {
         ...prevState.job,
         [name]: value
       },
     }));
+  };
+
+  handleFileChange = (event) => {
+    const { name, files } = event.target;
+    this.setState({
+      [name]: files[0]
+    });
   };
 
   handleChangeDepartment = (event) => {
@@ -215,12 +226,12 @@ export default class EmployeeEdit extends Component {
         dateOfBirth: moment(this.state.userPersonalInfo.dateOfBirth).format('YYYY-MM-DD'),
         gender: this.state.userPersonalInfo.gender,
         maritalStatus: this.state.userPersonalInfo.maritalStatus,
-        fatherName: this.state.userPersonalInfo.fatherName,
+        // fatherName: this.state.userPersonalInfo.fatherName,
         idNumber: this.state.userPersonalInfo.idNumber,
         address: this.state.userPersonalInfo.address,
         city: this.state.userPersonalInfo.city,
         country: this.state.userPersonalInfo.country,
-        mobile: this.state.userPersonalInfo.mobile,
+        // mobile: this.state.userPersonalInfo.mobile,
         phone: this.state.userPersonalInfo.phone,
         emailAddress: this.state.userPersonalInfo.emailAddress,
         userId: user_id
@@ -235,9 +246,9 @@ export default class EmployeeEdit extends Component {
       .then(res => {
         let userFinancialInfo = {
           bankName: this.state.userFinancialInfo.bankName,
-          accountName: this.state.userFinancialInfo.accountName,
+          // accountName: this.state.userFinancialInfo.accountName,
           accountNumber: this.state.userFinancialInfo.accountNumber,
-          iban: this.state.userFinancialInfo.iban,
+          // iban: this.state.userFinancialInfo.iban,
           userId: user_id
         }
 
@@ -252,7 +263,12 @@ export default class EmployeeEdit extends Component {
             let newJob = {
               jobTitle: this.state.job.jobTitle,
               startDate: this.state.job.startDate,
-              endDate: this.state.job.endDate
+              endDate: this.state.job.endDate,
+              empType: this.state.job.empType,
+              empStatus: this.state.job.empStatus,
+              contract: this.state.job.contract,
+              certificate: this.state.job.certificate,
+              directSupervisor: this.state.job.directSupervisor
             }
             axios({
               method: 'put',
@@ -316,7 +332,7 @@ export default class EmployeeEdit extends Component {
                 {/* Personal Details Card */}
                 <div className="col-sm-6">
                   <Card className="secondary-card">
-                    <Card.Header>Personal Details</Card.Header>
+                    <Card.Header className="bg-danger" >Personal Details</Card.Header>
                     <Card.Body>
                       <Card.Text>
                         <Form.Group controlId="formFirstName">
@@ -324,7 +340,7 @@ export default class EmployeeEdit extends Component {
                             First Name
                           </Form.Label>
                           <Form.Control
-                            type="text"
+                            className="form-control border-danger"
                             placeholder="Enter first name"
                             name="firstName"
                             value={this.state.user.fullName ? this.state.user.fullName.split(' ')[0] : ''}
@@ -339,6 +355,7 @@ export default class EmployeeEdit extends Component {
                               }));
                             }}
                             required
+                            autoFocus
                           />
                         </Form.Group>
 
@@ -347,7 +364,7 @@ export default class EmployeeEdit extends Component {
                             Last Name
                           </Form.Label>
                           <Form.Control
-                            type="text"
+                            className="form-control border-danger"
                             placeholder="Enter last name"
                             name="lastName"
                             value={this.state.user.fullName ? this.state.user.fullName.split(' ').slice(1).join(' ') : ''}
@@ -383,7 +400,7 @@ export default class EmployeeEdit extends Component {
                               dropdownMode="select"
                               name="dateOfBirth"
                               dateFormat="yyyy-MM-dd"
-                              className="form-control ml-1"
+                              className="form-control border-danger ml-1"
                               placeholderText="Select Date Of Birth"
                               autoComplete="off"
                               required
@@ -458,7 +475,7 @@ export default class EmployeeEdit extends Component {
                 </div>
                 <div className="col-sm-6">
                   <Card className="secondary-card">
-                    <Card.Header>Contact Details</Card.Header>
+                    <Card.Header className="bg-danger">Contact Details</Card.Header>
                     <Card.Body>
                       <Card.Text>
                         <Form.Group controlId="formPhysicalAddress">
@@ -500,7 +517,7 @@ export default class EmployeeEdit extends Component {
                             required
                           />
                         </Form.Group>
-                        <Form.Group controlId="formMobile">
+                        {/* <Form.Group controlId="formMobile">
                           <Form.Label className="text-muted required">
                             Mobile
                           </Form.Label>
@@ -512,7 +529,7 @@ export default class EmployeeEdit extends Component {
                             placeholder="Enter Mobile"
                             required
                           />
-                        </Form.Group>
+                        </Form.Group> */}
                         <Form.Group controlId="formPhone">
                           <Form.Label className="text-muted">
                             Phone
@@ -560,7 +577,7 @@ export default class EmployeeEdit extends Component {
               <div className="row">
                 <div className="col-sm-6">
                   <Card className="secondary-card">
-                    <Card.Header>Job Information</Card.Header>
+                    <Card.Header className="bg-danger">Job Information</Card.Header>
                     <Card.Body>
                       <Card.Text>
                         <Form.Group controlId="formJobTitle">
@@ -569,8 +586,10 @@ export default class EmployeeEdit extends Component {
                           </Form.Label>
                           <Form.Control
                             type="text"
+                            name="jobTitle"
                             value={this.state.job?.jobTitle || ''}
-                            disabled
+                            onChange={this.handleChangeJob}
+                            required
                           />
                         </Form.Group>
 
@@ -579,10 +598,18 @@ export default class EmployeeEdit extends Component {
                             Employment Type
                           </Form.Label>
                           <Form.Control
-                            type="text"
-                            value={this.state.job?.employmentType || 'N/A'}
-                            disabled
-                          />
+                            as="select"
+                            name="employmentType"
+                            value={this.state.job?.employmentType || ''}
+                            onChange={this.handleChangeJob}
+                            required
+                          >
+                            <option value="">Select Employment Type</option>
+                            <option value="Full-time">Full-time</option>
+                            <option value="Part-time">Part-time</option>
+                            <option value="Contract">Contract</option>
+                            <option value="Temporary">Temporary</option>
+                          </Form.Control>
                         </Form.Group>
 
                         <Form.Group controlId="formStatus">
@@ -590,20 +617,30 @@ export default class EmployeeEdit extends Component {
                             Status
                           </Form.Label>
                           <Form.Control
-                            type="text"
-                            value={this.state.job?.status || 'N/A'}
-                            disabled
-                          />
+                            as="select"
+                            name="status"
+                            value={this.state.job?.status || ''}
+                            onChange={this.handleChangeJob}
+                            required
+                          >
+                            <option value="">Select Status</option>
+                            <option value="Active">Active</option>
+                            <option value="On Leave">On Leave</option>
+                            <option value="Terminated">Terminated</option>
+                            <option value="Retired">Retired</option>
+                          </Form.Control>
                         </Form.Group>
 
                         <Form.Group controlId="formEmploymentContract">
                           <Form.Label className="text-muted required">
                             Employment Contract
                           </Form.Label>
-                          <Form.Control
-                            type="text"
-                            value={this.state.job?.employmentContract || 'N/A'}
-                            disabled
+                          <Form.File
+                            id="contract-upload"
+                            label={this.state.contract ? this.state.contract.name : "Upload Contract"}
+                            custom
+                            onChange={(e) => this.setState({ contract: e.target.files[0] })}
+                            className="custom-file-upload"
                           />
                         </Form.Group>
 
@@ -611,32 +648,48 @@ export default class EmployeeEdit extends Component {
                           <Form.Label className="text-muted required">
                             Start Date
                           </Form.Label>
-                          <Form.Control
-                            type="text"
-                            value={this.state.job?.startDate ? moment(this.state.job.startDate).format('D MMM YYYY') : 'N/A'}
-                            disabled
+                          <DatePicker
+                            selected={this.state.job?.startDate ? new Date(this.state.job.startDate) : null}
+                            onChange={(date) => this.setState(prevState => ({
+                              job: {
+                                ...prevState.job,
+                                startDate: date
+                              }
+                            }))}
+                            className="form-control"
+                            dateFormat="yyyy-MM-dd"
+                            placeholderText="Select start date"
+                            required
                           />
                         </Form.Group>
 
-                        {this.state.job?.endDate && (
-                          <Form.Group controlId="formEndDate">
-                            <Form.Label className="text-muted required">
-                              End Date
-                            </Form.Label>
-                            <Form.Control
-                              type="text"
-                              value={moment(this.state.job.endDate).format('D MMM YYYY')}
-                              disabled
-                            />
-                          </Form.Group>
-                        )}
+                        <Form.Group controlId="formEndDate">
+                          <Form.Label className="text-muted">
+                            End Date (if applicable)
+                          </Form.Label>
+                          <DatePicker
+                            selected={this.state.job?.endDate ? new Date(this.state.job.endDate) : null}
+                            onChange={(date) => this.setState(prevState => ({
+                              job: {
+                                ...prevState.job,
+                                endDate: date
+                              }
+                            }))}
+                            className="form-control"
+                            dateFormat="yyyy-MM-dd"
+                            placeholderText="Select end date"
+                            isClearable
+                            minDate={this.state.job?.startDate || null}
+                          />
+                        </Form.Group>
+
                       </Card.Text>
                     </Card.Body>
                   </Card>
                 </div>
                 <div className="col-sm-6">
                   <Card className="secondary-card">
-                    <Card.Header>Bank Information</Card.Header>
+                    <Card.Header className="bg-danger">Bank Information</Card.Header>
                     <Card.Body>
                       <Card.Text>
                         <Form.Group controlId="formBankName">
@@ -691,7 +744,7 @@ export default class EmployeeEdit extends Component {
                 </div>
                 <div className="col-sm-6">
                   <Card className="secondary-card">
-                    <Card.Header>Official Status</Card.Header>
+                    <Card.Header className="bg-danger">Official Status</Card.Header>
                     <Card.Body>
                       <Card.Text>
                         <Form.Group controlId="formEmployeeId">
@@ -746,6 +799,7 @@ export default class EmployeeEdit extends Component {
                         </Form.Group>
                         <Form.Group controlId="formActive">
                           <Form.Label className="text-muted required">
+                            Status
                           </Form.Label>
                           <Form.Control
                             as="select"

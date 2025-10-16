@@ -22,18 +22,28 @@ export default class EmployeeList extends Component {
     }
   }
 
-  componentDidMount() {
-    axios({
+  fetchUsers = (page = 0, pageSize = 10) => {
+    return axios({
       method: 'get',
-      url: '/api/users',
+      url: `/api/users?page=${page + 1}&size=${pageSize}`,
       headers: {Authorization: `Bearer ${localStorage.getItem('token')}`}
     })
     .then(res => {
-      this.setState({users: res.data})
-    })
-    .catch(err => {
-      console.log(err)
-    })
+      return {
+        data: res.data.items || [],
+        page: res.data.currentPage - 1, // Convert to 0-based index
+        totalCount: res.data.totalItems
+      };
+    });
+  };
+
+  componentDidMount() {
+    this.fetchUsers().then(({ data }) => {
+      this.setState({ users: data });
+    }).catch(err => {
+      console.error('Error fetching users:', err);
+      this.setState({ users: [] });
+    });
   }
 
   onView = (user) => {
@@ -202,7 +212,8 @@ export default class EmployeeList extends Component {
                       title: 'DEPARTMENT', 
                       field: 'department.departmentName',
                       headerStyle: { minWidth: '180px' },
-                      cellStyle: { color: '#475569' }
+                      cellStyle: { color: '#475569' },
+                      render: rowData => rowData.department?.departmentName || 'N/A'
                     },
                     {
                       title: 'JOB TITLE', 
@@ -211,20 +222,18 @@ export default class EmployeeList extends Component {
                       cellStyle: { color: '#475569' },
                       render: rowData => (
                         <span className="font-medium text-gray-800">
-                          {rowData.jobs.map((job, index) => {
-                            if(new Date(job.startDate).setHours(0) <= Date.now() && new Date(job.endDate).setHours(24) >= Date.now()) {
-                              return job.jobTitle;
-                            }
-                            return null;
-                          }).filter(Boolean).join(', ')}
+                          {rowData.jobs?.length > 0 
+                            ? rowData.jobs[0].jobTitle || 'N/A'
+                            : 'N/A'}
                         </span>
                       )
                     },
                     {
                       title: 'MOBILE', 
-                      field: 'user_personal_info.mobile',
+                      field: 'user_personal_info.phone',
                       headerStyle: { minWidth: '140px' },
-                      cellStyle: { color: '#475569' }
+                      cellStyle: { color: '#475569' },
+                      render: rowData => rowData.user_personal_info?.phone || 'N/A'
                     },
                     {
                       title: 'STATUS', 

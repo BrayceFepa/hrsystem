@@ -2,6 +2,7 @@
   "name": "thesis_fullstack",
   "version": "1.0.0",
   "description": "",
+  "proxy": "http://localhost:3002/",
   "main": "app.js",
   "scripts": {
     "client-install": "npm install --prefix client",
