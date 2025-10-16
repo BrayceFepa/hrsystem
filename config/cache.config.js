@@ -35,12 +35,20 @@ const cacheMiddleware = (duration = 300) => {
     const originalSend = res.send;
 
     // Override send function to cache the response
-    res.send = function (data) {
-      // Cache the response
-      cache.set(key, data, duration);
+    res.send = function (body) {
+      // Only cache if the response is JSON and has a successful status code
+      if (res.get('Content-Type')?.includes('application/json') && res.statusCode >= 200 && res.statusCode < 300) {
+        try {
+          // Ensure we're caching a clean, serializable object
+          const data = typeof body === 'string' ? JSON.parse(body) : body;
+          cache.set(key, JSON.parse(JSON.stringify(data)), duration);
+        } catch (error) {
+          console.error('Error caching response:', error);
+        }
+      }
 
       // Call original send function
-      originalSend.call(this, data);
+      originalSend.call(this, body);
     };
 
     next();
