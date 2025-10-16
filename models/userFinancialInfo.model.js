@@ -1,93 +1,105 @@
 module.exports = (sequelize, Sequelize) => {
-    const UserFinancialInfo = sequelize.define("user_financial_info", {
+  const UserFinancialInfo = sequelize.define(
+    "user_financial_info",
+    {
       id: {
         type: Sequelize.INTEGER,
         autoIncrement: true,
         primaryKey: true,
-        allowNull: false
+        allowNull: false,
       },
       employmentType: {
         type: Sequelize.ENUM,
-        values: ['Full Time', 'Part Time'],
-        allowNull: true
+        values: ["Full Time", "Part Time"],
+        allowNull: true,
       },
       salaryBasic: {
         type: Sequelize.INTEGER,
-        allowNull: true
+        allowNull: true,
       },
       salaryGross: {
         type: Sequelize.INTEGER,
-        allowNull: true
+        allowNull: true,
       },
       salaryNet: {
-          type: Sequelize.INTEGER,
-          allowNull: true
+        type: Sequelize.INTEGER,
+        allowNull: true,
       },
       allowanceHouseRent: {
         type: Sequelize.INTEGER,
-        allowNull: true
+        allowNull: true,
       },
       allowanceMedical: {
         type: Sequelize.INTEGER,
-        allowNull: true
+        allowNull: true,
       },
       allowanceSpecial: {
         type: Sequelize.INTEGER,
-        allowNull: true
+        allowNull: true,
       },
       allowanceFuel: {
         type: Sequelize.INTEGER,
-        allowNull: true
+        allowNull: true,
       },
       allowancePhoneBill: {
         type: Sequelize.INTEGER,
-        allowNull: true
+        allowNull: true,
       },
       allowanceOther: {
         type: Sequelize.INTEGER,
-        allowNull: true
+        allowNull: true,
       },
       allowanceTotal: {
         type: Sequelize.INTEGER,
-        allowNull: true
+        allowNull: true,
       },
       deductionProvidentFund: {
         type: Sequelize.INTEGER,
-        allowNull: true
+        allowNull: true,
       },
       deductionTax: {
         type: Sequelize.INTEGER,
-        allowNull: true
+        allowNull: true,
       },
       deductionOther: {
         type: Sequelize.INTEGER,
-        allowNull: true
+        allowNull: true,
       },
       deductionTotal: {
         type: Sequelize.INTEGER,
-        allowNull: true
+        allowNull: true,
       },
       bankName: {
         type: Sequelize.STRING,
-        allowNull: true
+        allowNull: true,
       },
       accountName: {
         type: Sequelize.STRING,
-        allowNull: true
+        allowNull: true,
       },
       accountNumber: {
         type: Sequelize.STRING,
-        allowNull: true
+        allowNull: true,
       },
       iban: {
         type: Sequelize.STRING,
-        allowNull: true
-      }
-    }, {
-        timestamps: false,
-        freezeTableName: true,
-        underscored: true
-    });
-  
-    return UserFinancialInfo;
-  };
+        allowNull: true,
+      },
+      branch: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+      nationalIdNumber: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+    },
+    {
+      timestamps: false,
+      freezeTableName: true,
+      underscored: true,
+    }
+  );
+
+  return UserFinancialInfo;
+};

@@ -31,6 +31,8 @@ exports.create = (req, res) => {
     accountName: req.body.accountName,
     accountNumber: req.body.accountNumber,
     iban: req.body.iban,
+    branch: req.body.branch,
+    nationalIdNumber: req.body.nationalIdNumber,
     userId: req.body.userId,
   };
 
@@ -53,11 +55,9 @@ exports.create = (req, res) => {
           });
         });
     } else {
-      res
-        .status(403)
-        .send({
-          message: "Financial Information Already Exists for this User",
-        });
+      res.status(403).send({
+        message: "Financial Information Already Exists for this User",
+      });
     }
   });
 };
