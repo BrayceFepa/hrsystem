@@ -2098,7 +2098,7 @@ phone: "string"                  // Optional
 emailAddress: "string"           // Optional
 emergencyContact: "string"       // Optional (emergency contact details)
 idCopy: File                     // Optional (PDF or Image, max 5MB)
-nationalIdNumber: "string"       // Optional (SSN/Tax ID/National ID)
+nationalIdNumber: "string"       // Optional (SSN/Tax ID/National ID) //nationalIdNumber added
 userId: number                   // Required
 ```
 
