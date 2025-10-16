@@ -31,6 +31,7 @@ exports.create = (req, res) => {
     emailAddress: req.body.emailAddress || null,
     emergencyContact: req.body.emergencyContact || null,
     idCopy: req.files && req.files.idCopy ? req.files.idCopy[0].path : null,
+    nationalIdNumber: req.body.nationalIdNumber || null,
     userId: req.body.userId,
   };
 

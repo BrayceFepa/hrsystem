@@ -2098,6 +2098,7 @@ phone: "string"                  // Optional
 emailAddress: "string"           // Optional
 emergencyContact: "string"       // Optional (emergency contact details)
 idCopy: File                     // Optional (PDF or Image, max 5MB)
+nationalIdNumber: "string"       // Optional (SSN/Tax ID/National ID)
 userId: number                   // Required
 ```
 
@@ -2119,6 +2120,7 @@ phone            | text  | +0987654321
 emailAddress     | text  | john@example.com
 emergencyContact | text  | Jane Doe - +1987654321
 idCopy           | file  | id_document.pdf
+nationalIdNumber | text  | 123-45-6789
 userId           | text  | 1
 ```
 
@@ -2140,6 +2142,7 @@ userId           | text  | 1
   "emailAddress": "john@example.com",
   "emergencyContact": "Jane Doe - +1987654321",
   "idCopy": "uploads/personal-info-files/idCopy-1234567890-123456789.pdf",
+  "nationalIdNumber": "123-45-6789",
   "userId": 1
 }
 ```
@@ -2358,7 +2361,6 @@ Creates new financial information for a user.
   "accountNumber": "string",           // Optional
   "iban": "string",                    // Optional
   "branch": "string",                  // Optional
-  "nationalIdNumber": "string",        // Optional
   "userId": number                     // Required
 }
 ```
@@ -2388,7 +2390,6 @@ Creates new financial information for a user.
   "accountNumber": "1234567890",
   "iban": "US64SVBKUS6S3300958879",
   "branch": "Downtown Branch",
-  "nationalIdNumber": "123-45-6789",
   "userId": 1
 }
 ```
@@ -2465,7 +2466,6 @@ Retrieves financial information for a specific user.
     "accountNumber": "1234567890",
     "iban": "US64SVBKUS6S3300958879",
     "branch": "Downtown Branch",
-    "nationalIdNumber": "123-45-6789",
     "userId": 1
   }
 ]
@@ -2499,7 +2499,6 @@ Retrieves a single financial information record by its ID.
   "accountNumber": "1234567890",
   "iban": "US64SVBKUS6S3300958879",
   "branch": "Downtown Branch",
-  "nationalIdNumber": "123-45-6789",
   "userId": 1,
   "user": {
     "id": 1,
@@ -2545,8 +2544,7 @@ Updates an existing financial information record.
   "accountName": "string",             // Optional
   "accountNumber": "string",           // Optional
   "iban": "string",                    // Optional
-  "branch": "string",                  // Optional
-  "nationalIdNumber": "string"         // Optional
+  "branch": "string"                   // Optional
 }
 ```
 

@@ -62,6 +62,10 @@ module.exports = (sequelize, Sequelize) => {
         type: Sequelize.STRING,
         allowNull: true,
       },
+      nationalIdNumber: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
     },
     {
       timestamps: false,

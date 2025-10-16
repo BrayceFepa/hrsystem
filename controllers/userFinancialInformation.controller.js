@@ -32,7 +32,6 @@ exports.create = (req, res) => {
     accountNumber: req.body.accountNumber,
     iban: req.body.iban,
     branch: req.body.branch,
-    nationalIdNumber: req.body.nationalIdNumber,
     userId: req.body.userId,
   };
 

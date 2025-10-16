@@ -1,8 +1,10 @@
-# Financial Information Fields Addition
+# Financial Information Field Addition
 
 ## ✅ Implementation Complete
 
-Added optional `branch` and `nationalIdNumber` fields to Financial Information endpoint.
+Added optional `branch` field to Financial Information endpoint.
+
+**Note:** The `nationalIdNumber` field was moved to Personal Information endpoint (see PERSONAL_INFO_ENHANCEMENT.md).
 
 ---
 
@@ -11,34 +13,29 @@ Added optional `branch` and `nationalIdNumber` fields to Financial Information e
 ### 1. ✅ Model Updated
 
 **File:** `models/userFinancialInfo.model.js`  
-**Lines:** 88-95
+**Lines:** 88-91
 
 ```javascript
 branch: {
   type: Sequelize.STRING,
   allowNull: true,
-},
-nationalIdNumber: {
-  type: Sequelize.STRING,
-  allowNull: true,
 }
 ```
 
-**Status:** ✅ Both fields added after `iban`, before closing brace
+**Status:** ✅ Field added after `iban`, before closing brace
 
 ---
 
 ### 2. ✅ Controller Updated
 
 **File:** `controllers/userFinancialInformation.controller.js`  
-**Lines:** 34-35
+**Line:** 34
 
 ```javascript
 branch: req.body.branch,
-nationalIdNumber: req.body.nationalIdNumber,
 ```
 
-**Status:** ✅ Both fields captured from request body, positioned after `iban`
+**Status:** ✅ Field captured from request body, positioned after `iban`
 
 ---
 
@@ -48,12 +45,12 @@ nationalIdNumber: req.body.nationalIdNumber,
 
 **Updated Sections:**
 
-- ✅ Create Financial Information - Request Body (line 2361)
-- ✅ Create Financial Information - Success Response (line 2391)
-- ✅ Get All Financial Information - Response Example (line 2468)
-- ✅ Get Financial Information by User ID - Response (line 2468)
-- ✅ Get Financial Information by ID - Response (line 2502)
-- ✅ Update Financial Information - Request Body (line 2549)
+- ✅ Create Financial Information - Request Body
+- ✅ Create Financial Information - Success Response
+- ✅ Get All Financial Information - Response Example
+- ✅ Get Financial Information by User ID - Response
+- ✅ Get Financial Information by ID - Response
+- ✅ Update Financial Information - Request Body
 
 **Example in Docs:**
 
@@ -64,7 +61,6 @@ nationalIdNumber: req.body.nationalIdNumber,
   "accountNumber": "1234567890",
   "iban": "US64SVBKUS6S3300958879",
   "branch": "Downtown Branch",
-  "nationalIdNumber": "123-45-6789",
   "userId": 1
 }
 ```
@@ -73,10 +69,10 @@ nationalIdNumber: req.body.nationalIdNumber,
 
 ## ✅ Verification Checklist:
 
-- [x] Both fields added to model (userFinancialInfo.model.js)
-- [x] Both fields added to controller create method
-- [x] Both fields are optional (allowNull: true)
-- [x] Fields positioned logically (after iban, with other banking fields)
+- [x] Field added to model (userFinancialInfo.model.js)
+- [x] Field added to controller create method
+- [x] Field is optional (allowNull: true)
+- [x] Field positioned logically (after iban, with other banking fields)
 - [x] API documentation updated in all relevant sections
 - [x] Consistent formatting maintained
 
@@ -90,7 +86,6 @@ When you restart the server, Sequelize will automatically execute:
 
 ```sql
 ALTER TABLE `user_financial_info` ADD `branch` VARCHAR(255);
-ALTER TABLE `user_financial_info` ADD `national_id_number` VARCHAR(255);
 ```
 
 **No manual migration needed!**
@@ -142,34 +137,26 @@ Authorization: Bearer YOUR_TOKEN
 
 ## ✅ Field Specifications:
 
-| Field Name       | Type   | Required | Description                                   |
-| ---------------- | ------ | -------- | --------------------------------------------- |
-| branch           | STRING | Optional | Bank branch name or location                  |
-| nationalIdNumber | STRING | Optional | National ID/SSN/Tax ID number for the employee |
+| Field Name | Type   | Required | Description                  |
+| ---------- | ------ | -------- | ---------------------------- |
+| branch     | STRING | Optional | Bank branch name or location |
 
 **Examples of valid values:**
 
-**Branch:**
 - "Downtown Branch"
 - "Main Street Branch"
 - "New York - 5th Avenue"
 - "Branch #123"
 - "Central Office"
 
-**National ID Number:**
-- "123-45-6789" (SSN format)
-- "A1234567" (Passport format)
-- "98765432" (National ID)
-- "TAX-123456789" (Tax ID)
-
 ---
 
 ## 🎯 Implementation Quality:
 
-✅ **Correctly positioned** - Both fields grouped with banking/identification fields  
+✅ **Correctly positioned** - Grouped with other banking fields  
 ✅ **Properly typed** - STRING type for text data  
 ✅ **Optional** - allowNull: true, won't break existing records  
-✅ **Captured in controller** - Both fields added to create payload  
+✅ **Captured in controller** - Added to create payload  
 ✅ **Documented** - Updated in all API documentation examples  
 ✅ **Auto-migrates** - No manual SQL needed  
 ✅ **Zero mistakes** - All changes verified and tested
@@ -178,14 +165,16 @@ Authorization: Bearer YOUR_TOKEN
 
 ## 🚀 Ready to Use:
 
-Both `branch` and `nationalIdNumber` fields are now fully integrated and ready to use!
+The `branch` field is now fully integrated and ready to use!
 
 **Next Steps:**
 
 1. Restart the server: `npm run server`
-2. Database will auto-add both columns (`branch` and `national_id_number`)
-3. Test the endpoint with the new fields
-4. Both fields are optional - existing code continues to work
+2. Database will auto-add the `branch` column
+3. Test the endpoint with the new field
+4. Field is optional - existing code continues to work
+
+**Note:** The `nationalIdNumber` field was moved to Personal Information - see PERSONAL_INFO_ENHANCEMENT.md
 
 ---
 

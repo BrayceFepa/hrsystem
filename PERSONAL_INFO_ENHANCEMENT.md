@@ -14,8 +14,9 @@ Enhanced the personal information creation endpoint to support emergency contact
 
 ```javascript
 {
-  emergencyContact: STRING,  // Emergency contact details (name, phone, relationship)
-  idCopy: STRING            // File path to ID document (passport, driver's license, etc.)
+  emergencyContact: STRING,    // Emergency contact details (name, phone, relationship)
+  idCopy: STRING,             // File path to ID document (passport, driver's license, etc.)
+  nationalIdNumber: STRING    // National ID/SSN/Tax ID number
 }
 ```
 
@@ -60,6 +61,7 @@ const userPersonalInformation = {
   emailAddress: req.body.emailAddress || null,
   emergencyContact: req.body.emergencyContact || null, // NEW
   idCopy: req.files?.idCopy?.[0].path || null, // NEW - File upload
+  nationalIdNumber: req.body.nationalIdNumber || null, // NEW
   userId: req.body.userId,
 };
 ```
@@ -143,6 +145,7 @@ phone: +0987654321
 emailAddress: john@example.com
 emergencyContact: Jane Doe - +1987654321 (Sister)   ✨ NEW
 idCopy: [FILE: id_document.pdf]                      ✨ NEW
+nationalIdNumber: 123-45-6789                        ✨ NEW
 userId: 1
 ```
 
@@ -183,6 +186,7 @@ curl -X POST http://localhost:3002/api/personalInformations \
   -F "emailAddress=john@example.com" \
   -F "emergencyContact=Jane Doe - +1987654321" \
   -F "idCopy=@/path/to/id_document.pdf" \
+  -F "nationalIdNumber=123-45-6789" \
   -F "userId=1"
 ```
 
@@ -197,6 +201,7 @@ formData.append("mobile", "+1234567890");
 formData.append("emailAddress", "john@example.com");
 formData.append("emergencyContact", "Jane Doe - +1987654321");
 formData.append("idCopy", idCopyFile); // File object
+formData.append("nationalIdNumber", "123-45-6789");
 formData.append("userId", "1");
 
 fetch("http://localhost:3002/api/personalInformations", {
@@ -377,7 +382,7 @@ const fileUrl = `http://localhost:3002/${idCopyPath}`;
 
 ## Summary
 
-✅ **Added 2 new optional fields** to personal information model  
+✅ **Added 3 new optional fields** to personal information model  
 ✅ **File upload support** for ID documents  
 ✅ **Security validation** for file types and sizes  
 ✅ **Cache invalidation** on data changes  

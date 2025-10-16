@@ -89,11 +89,6 @@ module.exports = (sequelize, Sequelize) => {
         type: Sequelize.STRING,
         allowNull: true,
       },
-      // nationalIdNumber is the national id number of the employee
-      nationalIdNumber: {
-        type: Sequelize.STRING,
-        allowNull: true,
-      },
     },
     {
       timestamps: false,
