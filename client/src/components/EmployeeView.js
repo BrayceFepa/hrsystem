@@ -9,34 +9,11 @@ export default class EmployeeView extends Component {
     super(props);
 
     this.state = {
-      user: {},
-      department: {
-        departmentName: null
-      },
-      job: {
-        jobTitle: null,
-        employmentType: null,
-        status: null,
-        employmentContract: null,
-        professionalCertificates: null,
-        startDate: null,
-        endDate: null
-      },
-      userPersonalInfo: {
-        dateOfBirth: null,
-        gender: null,
-        maritalStatus: null,
-        fatherName: null,
-        country: null,
-        address: null,
-        mobile: null,
-        emailAddress: null
-      },
-      userFinancialInfo: {
-        bankName: null,
-        accountName: null,
-        accountNumber: null,
-        iban: null
+      user: {
+        user_personal_info: {},
+        user_financial_info: {},
+        department: {},
+        jobs: []
       },
       falseRedirect: false,
       editRedirect: false
@@ -44,43 +21,34 @@ export default class EmployeeView extends Component {
   }
 
   componentDidMount() {
-      if(this.props.location.state) {
-          axios({
-              method: 'get',
-              url: 'api/users/' + this.props.location.state.selectedUser.id,
-              headers: {Authorization: `Bearer ${localStorage.getItem('token')}`}
-          })
-          .then(res => {
-              let user = res.data
-                this.setState({user: user}, () => {
-                    if(user.jobs) {
-                        let jobs = user.jobs
-                        jobs.map(job => {
-                            if(new Date(job.startDate) <= Date.now() && new Date(job.endDate) >= Date.now()) {
-                                this.setState({job: job})
-                            }
-                        })
-                    }
-                    if(user.department) {
-                        this.setState({department: user.department})
-                    }
-                    if(user.user_personal_info) {
-                        if(user.user_personal_info.dateOfBirth) {
-                            user.user_personal_info.dateOfBirth = moment(user.user_personal_info.dateOfBirth).format('D MMM YYYY')
-                        }
-                        this.setState({userPersonalInfo: user.user_personal_info})
-                    }
-                    if(user.user_financial_info) {
-                        this.setState({userFinancialInfo: user.user_financial_info})
-                    }
-                })
-          })
-          .catch(err => {
-              console.log(err)
-          })
-      } else {
-          this.setState({falseRedirect: true})
-      }
+    if (this.props.location.state) {
+      axios({
+        method: 'get',
+        url: 'api/users/' + this.props.location.state.selectedUser.id,
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      })
+        .then(res => {
+          const user = res.data;
+          // Format date of birth if it exists
+          if (user.user_personal_info?.dateOfBirth) {
+            user.user_personal_info.dateOfBirth = moment(user.user_personal_info.dateOfBirth).format('D MMM YYYY');
+          }
+          // Format job start and end dates if they exist
+          if (user.jobs && user.jobs.length > 0) {
+            user.jobs = user.jobs.map(job => ({
+              ...job,
+              formattedStartDate: job.startDate ? moment(job.startDate).format('D MMM YYYY') : null,
+              formattedEndDate: job.endDate ? moment(job.endDate).format('D MMM YYYY') : null
+            }));
+          }
+          this.setState({ user });
+        })
+        .catch(err => {
+          console.error('Error fetching user data:', err);
+        });
+    } else {
+      this.setState({ falseRedirect: true });
+    }
   }
 
   onEdit = () => {
@@ -133,20 +101,36 @@ export default class EmployeeView extends Component {
                                                         <div className="row g-3">
                                                             <div className="col-md-6 mb-2">
                                                                 <div className="d-flex align-items-center">
-                                                                    <span className="text-muted me-2" style={{minWidth: '80px'}}>Employee ID:</span>
+                                                                    <span className="text-muted me-2" style={{minWidth: '100px'}}>Employee ID:</span>
                                                                     <span className="fw-medium">{this.state.user.id}</span>
                                                                 </div>
                                                             </div>
                                                             <div className="col-md-6 mb-2">
                                                                 <div className="d-flex align-items-center">
-                                                                    <span className="text-muted me-2" style={{minWidth: '80px'}}>Department:</span>
-                                                                    <span className="fw-medium">{this.state.department.departmentName}</span>
+                                                                    <span className="text-muted me-2" style={{minWidth: '100px'}}>Username:</span>
+                                                                    <span className="fw-medium">{this.state.user.username || 'N/A'}</span>
                                                                 </div>
                                                             </div>
                                                             <div className="col-md-6 mb-2">
                                                                 <div className="d-flex align-items-center">
-                                                                    <span className="text-muted me-2" style={{minWidth: '80px'}}>Job Title:</span>
-                                                                    <span className="fw-medium">{this.state.job.jobTitle}</span>
+                                                                    <span className="text-muted me-2" style={{minWidth: '100px'}}>Department:</span>
+                                                                    <span className="fw-medium">{this.state.user.department?.departmentName || 'N/A'}</span>
+                                                                </div>
+                                                            </div>
+                                                            <div className="col-md-6 mb-2">
+                                                                <div className="d-flex align-items-center">
+                                                                    <span className="text-muted me-2" style={{minWidth: '100px'}}>Job Title:</span>
+                                                                    <span className="fw-medium">
+                                                                        {this.state.user.jobs?.[0]?.jobTitle || 'N/A'}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                            <div className="col-md-6 mb-2">
+                                                                <div className="d-flex align-items-center">
+                                                                    <span className="text-muted me-2" style={{minWidth: '100px'}}>Status:</span>
+                                                                    <span className={`badge ${this.state.user.active ? 'bg-success' : 'bg-secondary'}`}>
+                                                                        {this.state.user.active ? 'Active' : 'Inactive'}
+                                                                    </span>
                                                                 </div>
                                                             </div>
                                                             <div className="col-md-6 mb-2">
@@ -170,7 +154,7 @@ export default class EmployeeView extends Component {
                                     <Row>
                                         <Col sm={6}>
                                             <Card className="secondary-card emp-view">
-                                                <Card.Header>Personal Details</Card.Header>
+                                                <Card.Header className="bg-danger">Personal Details</Card.Header>
                                                 <Card.Body>
                                                     <Card.Text id="emp-view-personal">
                                                         <Form.Group as={Row}>
@@ -178,7 +162,7 @@ export default class EmployeeView extends Component {
                                                                 Date of Birth: 
                                                             </Form.Label>
                                                             <span>
-                                                                {this.state.userPersonalInfo.dateOfBirth}
+                                                                {this.state.user.user_personal_info?.dateOfBirth || 'N/A'}
                                                             </span>
                                                         </Form.Group>
                                                         <Form.Group as={Row}>
@@ -186,7 +170,7 @@ export default class EmployeeView extends Component {
                                                                 Gender: 
                                                             </Form.Label>
                                                             <span>
-                                                                {this.state.userPersonalInfo.gender}
+                                                                {this.state.user.user_personal_info?.gender || 'N/A'}
                                                             </span>
                                                         </Form.Group>
                                                         <Form.Group as={Row}>
@@ -194,36 +178,59 @@ export default class EmployeeView extends Component {
                                                                 Marital Status: 
                                                             </Form.Label>
                                                             <span>
-                                                                {this.state.userPersonalInfo.maritalStatus}
+                                                                {this.state.user.user_personal_info?.maritalStatus || 'N/A'}
                                                             </span>
                                                         </Form.Group>
-                                                        <Form.Group as={Row}>
+                                                        {/* <Form.Group as={Row}>
                                                             <Form.Label className="label">
-                                                            National ID / Passport number:
+                                                                Father's Name: 
                                                             </Form.Label>
                                                             <span>
-                                                                {this.state.userPersonalInfo.nationalIdNo}
+                                                                {this.state.user.user_personal_info?.fatherName || 'N/A'}
+                                                            </span>
+                                                        </Form.Group> */}
+                                                        <Form.Group as={Row}>
+                                                            <Form.Label className="label">
+                                                                National ID / Passport number:
+                                                            </Form.Label>
+                                                            <span>
+                                                                {this.state.user.user_personal_info?.idNumber || 'N/A'}
                                                             </span>
                                                         </Form.Group>
                                                         <Form.Group as={Row}>
                                                             <Form.Label className="label">
+                                                                Emergency Contact:
+                                                            </Form.Label>
+                                                            <span>
+                                                                {this.state.user.user_personal_info?.emergencyContact || 'N/A'}
+                                                            </span>
+                                                        </Form.Group>
+                                                        {/* <Form.Group as={Row}>
+                                                            <Form.Label className="label">
+                                                                Branch:
+                                                            </Form.Label>
+                                                            <span>
+                                                                {this.state.user.user_financial_info?.branch || 'N/A'}
+                                                            </span>
+                                                        </Form.Group> */}
+                                                        <Form.Group as={Row} className="mb-3">
+                                                            <Form.Label className="label fw-bold">
                                                                 ID/Passport Copy:
                                                             </Form.Label>
-                                                            <span>
-                                                                {this.state.userPersonalInfo.idCopy ? (
+                                                            <div className="d-flex align-items-center">
+                                                                {this.state.user.user_personal_info?.idCopy ? (
                                                                     <a 
-                                                                        href={`${process.env.REACT_APP_API_URL}/uploads/${this.state.userPersonalInfo.idCopy}`} 
+                                                                        href={`${process.env.REACT_APP_API_URL}/${this.state.user.user_personal_info.idCopy.replace(/\\/g, '/')}`} 
                                                                         target="_blank" 
                                                                         rel="noopener noreferrer"
+                                                                        className="btn btn-outline-danger btn-sm me-2 ml-2"
                                                                     >
-                                                                        <img 
-                                                                            src={`${process.env.REACT_APP_API_URL}/uploads/${this.state.userPersonalInfo.idCopy}`} 
-                                                                            alt="ID/Passport Copy" 
-                                                                            style={{maxWidth: '150px', maxHeight: '100px', border: '1px solid #ddd', padding: '5px'}}
-                                                                        />
+                                                                        <i className="far fa-id-card me-1"></i> View ID/Passport
                                                                     </a>
-                                                                ) : 'No file uploaded'}
-                                                            </span>
+                                                                ) : (
+                                                                    <span className="text-muted">No file uploaded</span>
+                                                                )}
+                                                            </div>
                                                         </Form.Group>
                                                     </Card.Text>
                                                 </Card.Body>
@@ -231,7 +238,7 @@ export default class EmployeeView extends Component {
                                         </Col>
                                         <Col sm={6}>
                                             <Card className="secondary-card emp-view">
-                                                <Card.Header>Contact Details</Card.Header>
+                                                <Card.Header className="bg-danger">Contact Details</Card.Header>
                                                 <Card.Body>
                                                     <Card.Text id="emp-view-contact">
                                                         <Form.Group as={Row}>
@@ -239,7 +246,8 @@ export default class EmployeeView extends Component {
                                                                 Location: 
                                                             </Form.Label>
                                                             <span>
-                                                                {this.state.userPersonalInfo.country}, {this.state.userPersonalInfo.city}
+                                                                {[this.state.user.user_personal_info?.city, this.state.user.user_personal_info?.country]
+                                                                    .filter(Boolean).join(', ') || 'N/A'}
                                                             </span>
                                                         </Form.Group>
                                                         <Form.Group as={Row}>
@@ -247,15 +255,15 @@ export default class EmployeeView extends Component {
                                                                 Address: 
                                                             </Form.Label>
                                                             <span>
-                                                                {this.state.userPersonalInfo.address}
+                                                                {this.state.user.user_personal_info?.address || 'N/A'}
                                                             </span>
                                                         </Form.Group>
                                                         <Form.Group as={Row}>
                                                             <Form.Label className="label">
-                                                                Mobile: 
+                                                                Phone: 
                                                             </Form.Label>
                                                             <span>
-                                                                {this.state.userPersonalInfo.mobile} {this.state.userPersonalInfo.phone ? (' (' + this.state.userPersonalInfo.phone + ')') : null} 
+                                                                {this.state.user.user_personal_info?.phone || 'N/A'}
                                                             </span>
                                                         </Form.Group>
                                                         <Form.Group as={Row}>
@@ -263,15 +271,15 @@ export default class EmployeeView extends Component {
                                                                 Email Address: 
                                                             </Form.Label>
                                                             <span>
-                                                                {this.state.userPersonalInfo.emailAddress}
+                                                                {this.state.user.user_personal_info?.emailAddress || 'N/A'}
                                                             </span>
                                                         </Form.Group>
                                                         <Form.Group as={Row}>
                                                             <Form.Label className="label">
-                                                            Emergency Contact: 
+                                                                Emergency Contact: 
                                                             </Form.Label>
                                                             <span>
-                                                                {this.state.userPersonalInfo.emergencyContact}
+                                                                {this.state.user.user_personal_info?.emergencyContact || 'N/A'}
                                                             </span>
                                                         </Form.Group>
                                                     </Card.Text>
@@ -282,31 +290,31 @@ export default class EmployeeView extends Component {
                                     <Row>
                                         <Col sm={6}>
                                             <Card className="secondary-card">
-                                                <Card.Header>Official Status</Card.Header>
+                                                <Card.Header className="bg-danger">Official Status</Card.Header>
                                                 <Card.Body>
                                                     <Card.Text id="emp-view-official-status">
-                                                        <Form.Group as={Row}>
+                                                        {/* <Form.Group as={Row}>
                                                             <Form.Label className="label">
                                                                 Employee ID:
                                                             </Form.Label>
                                                             <span>
                                                                 {this.state.user.id || 'N/A'}
                                                             </span>
-                                                        </Form.Group>
-                                                        <Form.Group as={Row}>
+                                                        </Form.Group> */}
+                                                        {/* <Form.Group as={Row}>
                                                             <Form.Label className="label">
                                                                 Password:
                                                             </Form.Label>
                                                             <span>
                                                                 ********
                                                             </span>
-                                                        </Form.Group>
+                                                        </Form.Group> */}
                                                         <Form.Group as={Row}>
                                                             <Form.Label className="label">
                                                                 Department:
                                                             </Form.Label>
                                                             <span>
-                                                                {this.state.department.departmentName || 'N/A'}
+                                                                {this.state.user.department?.departmentName || 'N/A'}
                                                             </span>
                                                         </Form.Group>
                                                         <Form.Group as={Row}>
@@ -324,7 +332,7 @@ export default class EmployeeView extends Component {
                                         </Col>
                                         <Col sm={6}>
                                             <Card className="secondary-card">
-                                                <Card.Header>Bank Information</Card.Header>
+                                                <Card.Header className="bg-danger">Bank Information</Card.Header>
                                                 <Card.Body>
                                                     <Card.Text id="emp-view-bank">
                                                         <Form.Group as={Row}>
@@ -332,15 +340,23 @@ export default class EmployeeView extends Component {
                                                                 Bank Name: 
                                                             </Form.Label>
                                                             <span>
-                                                                {this.state.userFinancialInfo.bankName}
+                                                                {this.state.user.user_financial_info?.bankName || 'N/A'}
                                                             </span>
                                                         </Form.Group>
+                                                        {/* <Form.Group as={Row}>
+                                                            <Form.Label className="label">
+                                                                Account Name: 
+                                                            </Form.Label>
+                                                            <span>
+                                                                {this.state.user.user_financial_info?.accountName || 'N/A'}
+                                                            </span>
+                                                        </Form.Group> */}
                                                         <Form.Group as={Row}>
                                                             <Form.Label className="label">
                                                                 Account Number: 
                                                             </Form.Label>
                                                             <span>
-                                                                {this.state.userFinancialInfo.accountNumber}
+                                                                {this.state.user.user_financial_info?.accountNumber || 'N/A'}
                                                             </span>
                                                         </Form.Group>
                                                         <Form.Group as={Row}>
@@ -348,83 +364,113 @@ export default class EmployeeView extends Component {
                                                                 Branch: 
                                                             </Form.Label>
                                                             <span>
-                                                                {this.state.userFinancialInfo.branch}
+                                                                {this.state.user.user_financial_info?.branch || 'N/A'}
                                                             </span>
                                                         </Form.Group>
-                                                        {/* <Form.Group as={Row}>
-                                                            <Form.Label className="label">
-                                                                IBAN: 
-                                                            </Form.Label>
-                                                            <span>
-                                                                {this.state.userFinancialInfo.iban}
-                                                            </span>
-                                                        </Form.Group> */}
                                                     </Card.Text>
                                                 </Card.Body>
                                             </Card>
                                         </Col>
                                         <Col sm={6}>
                                         <Card className="secondary-card">
-                                            <Card.Header>Job</Card.Header>
+                                            <Card.Header className="bg-danger">Job</Card.Header>
                                             <Card.Body>
                                                 <Card.Text id="emp-view-job">
-                                                    <Form.Group as={Row}>
-                                                        <Form.Label className="label">
-                                                            Job Title:
-                                                        </Form.Label>
-                                                        <span>
-                                                            {this.state.job.jobTitle}
-                                                        </span>
-                                                    </Form.Group>
-                                                    <Form.Group as={Row}>
-                                                        <Form.Label className="label">
-                                                            Employment Type:
-                                                        </Form.Label>
-                                                        <span>
-                                                            {this.state.job.employmentType}
-                                                        </span>
-                                                    </Form.Group>
-                                                    <Form.Group as={Row}>
-                                                        <Form.Label className="label">
-                                                            Status:
-                                                        </Form.Label>
-                                                        <span>
-                                                            {this.state.job.status}
-                                                        </span>
-                                                    </Form.Group>
-                                                    <Form.Group as={Row}>
-                                                        <Form.Label className="label">
-                                                            Employment Contract:
-                                                        </Form.Label>
-                                                        <span>
-                                                            {this.state.job.employmentContract}
-                                                        </span>
-                                                    </Form.Group>
-                                                    <Form.Group as={Row}>
-                                                        <Form.Label className="label">
-                                                            Professional Certificates:
-                                                        </Form.Label>
-                                                        <span>
-                                                            {this.state.job.professionalCertificates}
-                                                        </span>
-                                                    </Form.Group>
-                                                    <Form.Group as={Row}>
-                                                        <Form.Label className="label">
-                                                            Start Date:
-                                                        </Form.Label>
-                                                        <span>
-                                                            {this.state.job.startDate ? moment(this.state.job.startDate).format('D MMM YYYY') : 'N/A'}
-                                                        </span>
-                                                    </Form.Group>
-                                                    {this.state.job.endDate && (
-                                                        <Form.Group as={Row}>
-                                                            <Form.Label className="label">
-                                                                End Date:
-                                                            </Form.Label>
-                                                            <span>
-                                                                {moment(this.state.job.endDate).format('D MMM YYYY')}
-                                                            </span>
-                                                        </Form.Group>
+                                                    {this.state.user.jobs?.length > 0 ? (
+                                                        this.state.user.jobs.map((job, index) => (
+                                                            <React.Fragment key={index}>
+                                                                <Form.Group as={Row}>
+                                                                    <Form.Label className="label">
+                                                                        Job Title:
+                                                                    </Form.Label>
+                                                                    <span>
+                                                                        {job.jobTitle || 'N/A'}
+                                                                    </span>
+                                                                </Form.Group>
+                                                                <Form.Group as={Row}>
+                                                                    <Form.Label className="label">
+                                                                        Employment Type:
+                                                                    </Form.Label>
+                                                                    <span>
+                                                                        {job.empType || 'N/A'}
+                                                                    </span>
+                                                                </Form.Group>
+                                                                <Form.Group as={Row}>
+                                                                    <Form.Label className="label">
+                                                                        Status:
+                                                                    </Form.Label>
+                                                                    <span>
+                                                                        {job.empStatus || 'N/A'}
+                                                                    </span>
+                                                                </Form.Group>
+                                                                <Form.Group as={Row}>
+                                                                    <Form.Label className="label">
+                                                                        Direct Supervisor:
+                                                                    </Form.Label>
+                                                                    <span>
+                                                                        {job.directSupervisor || 'N/A'}
+                                                                    </span>
+                                                                </Form.Group>
+                                                                <Form.Group as={Row}>
+                                                                    <Form.Label className="label fw-bold">
+                                                                        Employment Contract:
+                                                                    </Form.Label>
+                                                                    <div className="d-flex align-items-center">
+                                                                        {job.contract ? (
+                                                                            <a 
+                                                                                href={`${process.env.REACT_APP_API_URL}/${job.contract.replace(/\\/g, '/')}`}
+                                                                                target="_blank"
+                                                                                rel="noopener noreferrer"
+                                                                                className="btn btn-outline-danger btn-sm me-2 ml-2"
+                                                                            >
+                                                                                <i className="fa fa-file-contract me-1 "></i> View Contract
+                                                                            </a>
+                                                                        ) : (
+                                                                            <span className="text-muted">No contract uploaded</span>
+                                                                        )}
+                                                                    </div>
+                                                                </Form.Group>
+                                                                <Form.Group as={Row} className="mb-3">
+                                                                    <Form.Label className="label fw-bold">
+                                                                        Professional Certificate:
+                                                                    </Form.Label>
+                                                                    <div className="d-flex align-items-center">
+                                                                        {job.certificate ? (
+                                                                            <a 
+                                                                                href={`${process.env.REACT_APP_API_URL}/${job.certificate.replace(/\\/g, '/')}`}
+                                                                                target="_blank"
+                                                                                rel="noopener noreferrer"
+                                                                                className="btn btn-outline-danger btn-sm me-2 ml-2"
+                                                                            >
+                                                                                <i className="fas fa-certificate me-1"></i> View Certificate
+                                                                            </a>
+                                                                        ) : (
+                                                                            <span className="text-muted">No certificate uploaded</span>
+                                                                        )}
+                                                                    </div>
+                                                                </Form.Group>
+                                                                <Form.Group as={Row}>
+                                                                    <Form.Label className="label">
+                                                                        Start Date:
+                                                                    </Form.Label>
+                                                                    <span>
+                                                                        {job.formattedStartDate || 'N/A'}
+                                                                    </span>
+                                                                </Form.Group>
+                                                                {job.endDate && (
+                                                                    <Form.Group as={Row}>
+                                                                        <Form.Label className="label">
+                                                                            End Date:
+                                                                        </Form.Label>
+                                                                        <span>
+                                                                            {job.formattedEndDate}
+                                                                        </span>
+                                                                    </Form.Group>
+                                                                )}
+                                                            </React.Fragment>
+                                                        ))
+                                                    ) : (
+                                                        <p>No job information available</p>
                                                     )}
                                                 </Card.Text>
                                             </Card.Body>

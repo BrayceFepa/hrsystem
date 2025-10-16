@@ -11,40 +11,108 @@ import { FiEdit2, FiTrash2, FiEye } from 'react-icons/fi';
 export default class EmployeeList extends Component {
   
   constructor(props) {
-    super(props)
+    super(props);
+    this.defaultPageSize = 10;
+    this.maxPageSize = 100; // Match backend's max page size
 
     this.state = {
       users: [],
+      totalCount: 0,
+      pageSize: this.defaultPageSize,
+      currentPage: 0,
       selectedUser: null,
       viewRedirect: false,
       editRedirect: false,
-      deleteModal: false
-    }
+      deleteModal: false,
+      isLoading: false,
+      error: null
+    };
   }
 
-  fetchUsers = (page = 0, pageSize = 10) => {
+  fetchUsers = (page, pageSize) => {
+    // Ensure pageSize is within valid range (1-100)
+    const validPageSize = Math.min(Math.max(1, pageSize), this.maxPageSize);
+    const validPage = Math.max(0, page); // Ensure page is not negative
+    
+    // Update state with validated values
+    this.setState({ 
+      isLoading: true,
+      error: null,
+      pageSize: validPageSize,
+      currentPage: validPage
+    });
+
     return axios({
       method: 'get',
-      url: `/api/users?page=${page + 1}&size=${pageSize}`,
-      headers: {Authorization: `Bearer ${localStorage.getItem('token')}`}
+      url: `/api/users?page=${validPage + 1}&size=${validPageSize}`, // Convert to 1-based for backend
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      timeout: 10000 // 10 second timeout
     })
     .then(res => {
+      if (!res.data) {
+        throw new Error('No data received from server');
+      }
+      
+      const responseData = {
+        users: res.data.items || [],
+        totalCount: res.data.totalItems || 0,
+        currentPage: Math.max(0, (res.data.currentPage || 1) - 1), // Convert to 0-based
+        pageSize: res.data.pageSize || validPageSize,
+        totalPages: res.data.totalPages || 0,
+        hasNextPage: res.data.hasNextPage || false,
+        hasPrevPage: res.data.hasPrevPage || false
+      };
+
+      this.setState({
+        ...responseData,
+        isLoading: false
+      });
+
+      // Return data in format expected by MaterialTable
       return {
-        data: res.data.items || [],
-        page: res.data.currentPage - 1, // Convert to 0-based index
-        totalCount: res.data.totalItems
+        data: responseData.users,
+        page: responseData.currentPage,
+        totalCount: responseData.totalCount
+      };
+    })
+    .catch(err => {
+      console.error('Error fetching users:', err);
+      const errorMessage = err.response?.data?.message || 'Failed to fetch users. Please try again.';
+      this.setState({ 
+        isLoading: false, 
+        error: errorMessage 
+      });
+      
+      // Return empty data to prevent MaterialTable errors
+      return { 
+        data: [], 
+        page: 0, 
+        totalCount: 0 
       };
     });
   };
 
+  handlePageChange = (page, pageSize) => {
+    return this.fetchUsers(page, pageSize);
+  };
+
+  handlePageSizeChange = (pageSize) => {
+    // Reset to first page when changing page size
+    return this.fetchUsers(0, pageSize);
+  };
+
   componentDidMount() {
-    this.fetchUsers().then(({ data }) => {
-      this.setState({ users: data });
-    }).catch(err => {
-      console.error('Error fetching users:', err);
-      this.setState({ users: [] });
-    });
+    this.fetchUsers(0, this.state.pageSize);
   }
+
+  handlePageChange = (page, pageSize) => {
+    this.fetchUsers(page, pageSize);
+  };
+
+  handlePageSizeChange = (pageSize) => {
+    this.fetchUsers(0, pageSize);
+
+  };
 
   onView = (user) => {
     return (event) => {
@@ -159,9 +227,18 @@ export default class EmployeeList extends Component {
                     components={{
                       Container: props => <div {...props} style={{ width: '100%', margin: 0, padding: 0 }} />
                     }}
+                    data={query => {
+                      return this.fetchUsers(query.page, query.pageSize)
+                        .then(result => ({
+                          data: result.data,
+                          page: result.page,
+                          totalCount: result.totalCount,
+                        }));
+                    }}
+                    isLoading={this.state.isLoading}
                     options={{
                       ...this.state.tableOptions,
-                      pageSize: 10,
+                      pageSize: this.state.pageSize,
                       pageSizeOptions: [5, 10, 20, 50],
                       padding: 'dense',
                       tableLayout: 'auto',
@@ -170,7 +247,29 @@ export default class EmployeeList extends Component {
                         position: 'sticky',
                         top: 0,
                         backgroundColor: '#fff',
-                        zIndex: 1,
+                        zIndex: 10,
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                        borderBottom: '1px solid #e2e8f0',
+                      },
+                      rowStyle: {
+                        backgroundColor: '#fff',
+                        '&:hover': {
+                          backgroundColor: '#f8fafc',
+                        },
+                      },
+                      header: {
+                        position: 'sticky',
+                        top: 0,
+                        zIndex: 10,
+                        backgroundColor: '#fff',
+                      },
+                      toolbar: {
+                        position: 'sticky',
+                        top: 0,
+                        zIndex: 10,
+                        backgroundColor: '#fff',
+                        padding: '8px 0',
+                        borderBottom: '1px solid #e2e8f0',
                       },
                       header: {
                         padding: '0 16px',
@@ -193,7 +292,13 @@ export default class EmployeeList extends Component {
                       searchFieldAlignment: 'right',
                       searchAutoFocus: true,
                       showTitle: false,
-                      toolbar: true
+                      toolbar: true,
+                      paging: true,
+                      pageSize: this.state.pageSize,
+                      page: this.state.currentPage,
+                      totalCount: this.state.totalCount,
+                      onChangePage: (page, pageSize) => this.handlePageChange(page, pageSize),
+                      onChangeRowsPerPage: (pageSize) => this.handlePageSizeChange(pageSize),
                     }}
                     columns={[
                     {
