@@ -2357,6 +2357,8 @@ Creates new financial information for a user.
   "accountName": "string",             // Optional
   "accountNumber": "string",           // Optional
   "iban": "string",                    // Optional
+  "branch": "string",                  // Optional
+  "nationalIdNumber": "string",        // Optional
   "userId": number                     // Required
 }
 ```
@@ -2385,6 +2387,8 @@ Creates new financial information for a user.
   "accountName": "John Doe",
   "accountNumber": "1234567890",
   "iban": "US64SVBKUS6S3300958879",
+  "branch": "Downtown Branch",
+  "nationalIdNumber": "123-45-6789",
   "userId": 1
 }
 ```
@@ -2422,6 +2426,7 @@ Retrieves all financial information records.
     "accountName": "John Doe",
     "accountNumber": "1234567890",
     "iban": "US64SVBKUS6S3300958879",
+    "branch": "Downtown Branch",
     "userId": 1,
     "user": {
       "id": 1,
@@ -2459,6 +2464,8 @@ Retrieves financial information for a specific user.
     "accountName": "John Doe",
     "accountNumber": "1234567890",
     "iban": "US64SVBKUS6S3300958879",
+    "branch": "Downtown Branch",
+    "nationalIdNumber": "123-45-6789",
     "userId": 1
   }
 ]
@@ -2491,6 +2498,8 @@ Retrieves a single financial information record by its ID.
   "accountName": "John Doe",
   "accountNumber": "1234567890",
   "iban": "US64SVBKUS6S3300958879",
+  "branch": "Downtown Branch",
+  "nationalIdNumber": "123-45-6789",
   "userId": 1,
   "user": {
     "id": 1,
@@ -2535,7 +2544,9 @@ Updates an existing financial information record.
   "bankName": "string",                // Optional
   "accountName": "string",             // Optional
   "accountNumber": "string",           // Optional
-  "iban": "string"                     // Optional
+  "iban": "string",                    // Optional
+  "branch": "string",                  // Optional
+  "nationalIdNumber": "string"         // Optional
 }
 ```
 
