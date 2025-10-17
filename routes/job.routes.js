@@ -7,29 +7,29 @@ const { cacheMiddleware } = require("../config/cache.config");
 
 const job = require("../controllers/job.controller.js");
 
-// Create a new Job (with file uploads)
+// Create a new Job (Admin or HR)
 router.post(
   "/",
   withAuth.verifyToken,
-  withAuth.withRoleAdmin,
+  withAuth.withRoleAdminOrHR,
   uploadJobFiles,
   job.create
 );
 
-//Retrieve all Jobs (with 5 minute cache)
+//Retrieve all Jobs (Admin, Manager, or HR)
 router.get(
   "/",
   withAuth.verifyToken,
-  withAuth.withRoleAdminOrManager,
+  withAuth.withRoleAdminOrManagerOrHR,
   cacheMiddleware(300),
   job.findAll
 );
 
-//Retrieve all Jobs by User Id (with 5 minute cache)
+//Retrieve all Jobs by User Id (Admin, Manager, or HR)
 router.get(
   "/user/:id",
   withAuth.verifyToken,
-  withAuth.withRoleAdminOrManager,
+  withAuth.withRoleAdminOrManagerOrHR,
   cacheMiddleware(300),
   job.findAllByUserId
 );
@@ -37,16 +37,21 @@ router.get(
 //Retrieve a single Job with an id (with 10 minute cache)
 router.get("/:id", withAuth.verifyToken, cacheMiddleware(600), job.findOne);
 
-// Update a Job with an id
-router.put("/:id", withAuth.verifyToken, withAuth.withRoleAdmin, job.update);
+// Update a Job with an id (Admin or HR)
+router.put(
+  "/:id",
+  withAuth.verifyToken,
+  withAuth.withRoleAdminOrHR,
+  job.update
+);
 
-// Delete a Job with an id
+// Delete a Job with an id (Admin only)
 router.delete("/:id", withAuth.verifyToken, withAuth.withRoleAdmin, job.delete);
 
-// Delete all Jobs
+// Delete all Jobs (Admin only)
 router.delete("/", withAuth.verifyToken, withAuth.withRoleAdmin, job.deleteAll);
 
-// Delete all Jobs by User Id
+// Delete all Jobs by User Id (Admin only)
 router.delete(
   "/user/:id",
   withAuth.verifyToken,

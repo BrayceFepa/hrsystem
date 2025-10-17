@@ -5,11 +5,11 @@ const withAuth = require("../withAuth");
 
 const application = require("../controllers/application.controller.js");
 
-// Retrieve all applications
+// Retrieve all applications (Admin, Manager, or HR)
 router.get(
   "/",
   withAuth.verifyToken,
-  withAuth.withRoleAdminOrManager,
+  withAuth.withRoleAdminOrManagerOrHR,
   application.findAll
 );
 
@@ -30,11 +30,11 @@ router.get(
   application.getUserHistory
 );
 
-// Get leave usage reports (Admin only)
+// Get leave usage reports (Admin or HR)
 router.get(
   "/reports",
   withAuth.verifyToken,
-  withAuth.withRoleAdmin,
+  withAuth.withRoleAdminOrHR,
   application.getReports
 );
 
@@ -70,15 +70,15 @@ router.get(
 //Retrieve a single Application with an id
 router.get("/:id", withAuth.verifyToken, application.findOne);
 
-// Update a Application with an id
+// Update a Application with an id (Admin, Manager, or HR)
 router.put(
   "/:id",
   withAuth.verifyToken,
-  withAuth.withRoleAdminOrManager,
+  withAuth.withRoleAdminOrManagerOrHR,
   application.update
 );
 
-// Delete all Applications
+// Delete all Applications (Admin only)
 router.delete(
   "/",
   withAuth.verifyToken,
@@ -86,14 +86,15 @@ router.delete(
   application.deleteAll
 );
 
+// Delete single application (Admin, Manager, or HR)
 router.delete(
   "/:id",
   withAuth.verifyToken,
-  withAuth.withRoleAdminOrManager,
+  withAuth.withRoleAdminOrManagerOrHR,
   application.delete
 );
 
-// Delete all Application by User Id
+// Delete all Application by User Id (Admin only)
 router.delete(
   "/user/:id",
   withAuth.verifyToken,

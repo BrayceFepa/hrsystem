@@ -6,24 +6,24 @@ const { cacheMiddleware } = require("../config/cache.config");
 
 const financialInformation = require("../controllers/userFinancialInformation.controller");
 
-// Create a new User Financial Information
+// Create a new User Financial Information (Admin OR Finance)
 router.post(
   "/",
   withAuth.verifyToken,
-  withAuth.withRoleAdmin,
+  withAuth.withRoleAdminOrFinance,
   financialInformation.create
 );
 
-// Retrieve all User Financial Information (with 5 minute cache)
+// Retrieve all User Financial Information (Admin OR Finance)
 router.get(
   "/",
   withAuth.verifyToken,
-  withAuth.withRoleAdminOrManager,
+  withAuth.withRoleAdminOrFinance,
   cacheMiddleware(300),
   financialInformation.findAll
 );
 
-// Retrieve User Financial Information by User Id (with 5 minute cache)
+// Retrieve User Financial Information by User Id (Admin OR Finance OR Employee for own data)
 router.get(
   "/user/:id",
   withAuth.verifyToken,
@@ -31,19 +31,20 @@ router.get(
   financialInformation.findByUserId
 );
 
-// Retrieve a single User Financial Information with an id (with 10 minute cache)
+// Retrieve a single User Financial Information with an id (Admin OR Finance)
 router.get(
   "/:id",
   withAuth.verifyToken,
+  withAuth.withRoleAdminOrFinance,
   cacheMiddleware(600),
   financialInformation.findOne
 );
 
-// Update a User Financial Information with an id
+// Update a User Financial Information with an id (Admin OR Finance)
 router.put(
   "/:id",
   withAuth.verifyToken,
-  withAuth.withRoleAdmin,
+  withAuth.withRoleAdminOrFinance,
   financialInformation.update
 );
 
