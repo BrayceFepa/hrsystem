@@ -74,12 +74,18 @@ export default class Announcement extends Component {
     }
 
     pushDepartments = () => {
-        let items= []
-        // items.push(<option key={584390} value="all">All departments</option>)
-        this.state.departments.map((dept, index) => {
-            items.push(<option key={index} value={dept.id}>{dept.departmentName}</option>)
-        })
-        return items
+        let items = [];
+        // Add the default "All Departments" option
+        items.push(<option key="all" value="all">All Departments</option>);
+        
+        // Safely map over departments if it's an array
+        if (Array.isArray(this.state.departments)) {
+            this.state.departments.forEach((dept, index) => {
+                items.push(<option key={dept.id} value={dept.id}>{dept.departmentName}</option>);
+            });
+        }
+        
+        return items;
     }
 
     onSubmit = (event) => {

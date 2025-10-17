@@ -78,7 +78,17 @@ export default class Application extends Component {
             <b>Make Application</b>
           </Card.Header>
           <Card.Body>
+            <Card.Title>General Leave Notification Guidelines</Card.Title>
             <Card.Text>
+              <Alert className="mb-4" style={{ backgroundColor: '#fff3cd' }}>
+                <ul className="mb-0">
+                  <li>All employees <strong>must notify</strong> their team leader and HR <strong>before 9:00 AM</strong> on the day they take any leave (except planned Annual Leave).</li>
+                  <li>Employees must fill out the leave form completely and include the reason for the leave.</li>
+                  <li>For <strong>Annual Leave / Holiday / Vacation</strong>, employees must submit their leave request at least <strong>2 months in advance</strong>.</li>
+                  <li><strong>Business Leave</strong> applies when an employee needs to be out of the office for work-related reasons such as farm sourcing, client visits, or other field assignments. Employees must first discuss and get approval from their team leader. After approval, inform HR before the day of the business leave.</li>
+                  <li>HR will notify the entire staff by updating all relevant calendars and staff groups immediately after leave approval or notification. This ensures smooth planning and coordination.</li>
+                </ul>
+              </Alert>
               <Form onSubmit={this.onSubmit}>
                 <Form.Group controlId="formDepartmentName">
                   <Form.Label>

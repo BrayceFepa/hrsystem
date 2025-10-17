@@ -289,6 +289,26 @@ export default class JobList extends Component {
             <div className="container-fluid pt-2">
                 <div className="row">
                     <div className="col-12 mb-4">
+                        <Card className="shadow-sm border-0 rounded-3 mb-4">
+                            <Card.Header className="bg-info bg-opacity-10 border-0 py-3">
+                                <h5 className="mb-0 fw-semibold text-info">
+                                    <i className="bi bi-info-circle me-2"></i>
+                                    Leave Notification Guidelines
+                                </h5>
+                            </Card.Header>
+                            <Card.Body className="small">
+                                <p className="mb-2"><strong>General Leave Notification Guidelines:</strong></p>
+                                <ul className="mb-0">
+                                    <li>All employees must notify their team leader and HR before 9:00 AM on the day they take any leave (except planned Annual Leave).</li>
+                                    <li>Employees must fill out the leave form completely and include the reason for the leave.</li>
+                                    <li>For Annual Leave / Holiday / Vacation, employees must submit their leave request at least 2 months in advance.</li>
+                                    <li>Business Leave applies when an employee needs to be out of the office for work-related reasons such as farm sourcing, client visits, or other field assignments.</li>
+                                    <li>Employees must first discuss and get approval from their team leader for Business Leave. After approval, inform HR before the day of the business leave.</li>
+                                    <li>HR will notify the entire staff by updating all relevant calendars and staff groups immediately after leave approval or notification. This ensures smooth planning and coordination.</li>
+                                </ul>
+                            </Card.Body>
+                        </Card>
+
                         <Card className="shadow-sm border-0 rounded-3">
                             <Card.Header className="bg-white border-0 py-3">
                                 <h5 className="mb-0 fw-semibold text-danger">
