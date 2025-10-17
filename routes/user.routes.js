@@ -9,20 +9,20 @@ const user = require("../controllers/user.controller.js");
 // Create a new user
 router.post("/", user.create);
 
-// Retrieve all Users (with 5 minute cache)
+// Retrieve all Users (Admin, Manager, or HR)
 router.get(
   "/",
   withAuth.verifyToken,
-  withAuth.withRoleAdminOrManager,
+  withAuth.withRoleAdminOrManagerOrHR,
   cacheMiddleware(300),
   user.findAll
 );
 
-//Retreive user count (with 5 minute cache)
+//Retreive user count (Admin, Manager, or HR)
 router.get(
   "/total",
   withAuth.verifyToken,
-  withAuth.withRoleAdminOrManager,
+  withAuth.withRoleAdminOrManagerOrHR,
   cacheMiddleware(300),
   user.findTotal
 );
@@ -46,12 +46,17 @@ router.get(
 //Retrieve a single User with an id (with 10 minute cache)
 router.get("/:id", withAuth.verifyToken, cacheMiddleware(600), user.findOne);
 
-// Update a User with id
-router.put("/:id", withAuth.verifyToken, withAuth.withRoleAdmin, user.update);
+// Update a User with id (Admin or HR)
+router.put(
+  "/:id",
+  withAuth.verifyToken,
+  withAuth.withRoleAdminOrHR,
+  user.update
+);
 
 router.put("/changePassword/:id", withAuth.verifyToken, user.changePassword);
 
-// Delete a User with id
+// Delete a User with id (Admin only)
 router.delete(
   "/:id",
   withAuth.verifyToken,
@@ -59,7 +64,7 @@ router.delete(
   user.delete
 );
 
-// Delete all Users
+// Delete all Users (Admin only)
 router.delete(
   "/",
   withAuth.verifyToken,
@@ -67,7 +72,7 @@ router.delete(
   user.deleteAll
 );
 
-//Delete all Users by Department Id
+//Delete all Users by Department Id (Admin only)
 router.delete(
   "/department/:id",
   withAuth.verifyToken,

@@ -6,19 +6,19 @@ const { cacheMiddleware } = require("../config/cache.config");
 
 const department = require("../controllers/department.controller.js");
 
-// Create a new Department
+// Create a new Department (Admin or HR)
 router.post(
   "/",
   withAuth.verifyToken,
-  withAuth.withRoleAdmin,
+  withAuth.withRoleAdminOrHR,
   department.create
 );
 
-//Retrieve all Departments (with 5 minute cache)
+//Retrieve all Departments (Admin, Manager, or HR)
 router.get(
   "/",
   withAuth.verifyToken,
-  withAuth.withRoleAdminOrManager,
+  withAuth.withRoleAdminOrManagerOrHR,
   cacheMiddleware(300),
   department.findAll
 );
@@ -31,15 +31,15 @@ router.get(
   department.findOne
 );
 
-// Update a Department with an id
+// Update a Department with an id (Admin, Manager, or HR)
 router.put(
   "/:id",
   withAuth.verifyToken,
-  withAuth.withRoleAdminOrManager,
+  withAuth.withRoleAdminOrManagerOrHR,
   department.update
 );
 
-// Delete a Department with an id
+// Delete a Department with an id (Admin only)
 router.delete(
   "/:id",
   withAuth.verifyToken,
@@ -47,7 +47,7 @@ router.delete(
   department.delete
 );
 
-// Delete all Departments
+// Delete all Departments (Admin only)
 router.delete(
   "/",
   withAuth.verifyToken,
