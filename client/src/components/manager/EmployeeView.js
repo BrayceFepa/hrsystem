@@ -11,70 +11,148 @@ export default class EmployeeView extends Component {
     this.state = {
       user: {},
       department: {
-        departmentName: null
+        departmentName: 'N/A'
       },
-      job: {
-        jobTitle: null,
+      currentJob: {
+        jobTitle: 'N/A',
+        empType: 'N/A',
+        empStatus: 'N/A',
+        startDate: 'N/A',
+        endDate: 'N/A',
+        directSupervisor: 'N/A'
       },
       userPersonalInfo: {
-        dateOfBirth: null,
-        gender: null,
-        maritalStatus: null,
-        fatherName: null,
-        country: null,
-        address: null,
-        mobile: null,
-        emailAddress: null
+        dateOfBirth: 'N/A',
+        gender: 'N/A',
+        maritalStatus: 'N/A',
+        fatherName: 'N/A',
+        country: 'N/A',
+        city: 'N/A',
+        address: 'N/A',
+        phone: 'N/A',
+        mobile: 'N/A',
+        emailAddress: 'N/A',
+        emergencyContact: 'N/A',
+        idNumber: 'N/A',
+        nationalIdNumber: 'N/A'
       },
       userFinancialInfo: {
-        bankName: null,
-        accountName: null,
-        accountNumber: null,
-        iban: null
+        bankName: 'N/A',
+        accountName: 'N/A',
+        accountNumber: 'N/A',
+        branch: 'N/A',
+        iban: 'N/A',
+        employmentType: 'N/A',
+        salaryBasic: 'N/A',
+        salaryGross: 'N/A',
+        salaryNet: 'N/A'
       },
       falseRedirect: false,
-      editRedirect: false
+      editRedirect: false,
+      loading: true
     };
   }
 
   componentDidMount() {
-      if(this.props.location.state) {
-          axios({
-              method: 'get',
-              url: 'api/users/' + this.props.location.state.selectedUser.id,
-              headers: {Authorization: `Bearer ${localStorage.getItem('token')}`}
-          })
-          .then(res => {
-              let user = res.data
-                this.setState({user: user}, () => {
-                    if(user.jobs) {
-                        let jobs = user.jobs
-                        jobs.map(job => {
-                            if(new Date(job.startDate) <= Date.now() && new Date(job.endDate) >= Date.now()) {
-                                this.setState({job: job})
-                            }
-                        })
-                    }
-                    if(user.department) {
-                        this.setState({department: user.department})
-                    }
-                    if(user.user_personal_info) {
-                        if(user.user_personal_info.dateOfBirth) {
-                            user.user_personal_info.dateOfBirth = moment(user.user_personal_info.dateOfBirth).format('D MMM YYYY')
-                        }
-                        this.setState({userPersonalInfo: user.user_personal_info})
-                    }
-                    if(user.user_financial_info) {
-                        this.setState({userFinancialInfo: user.user_financial_info})
-                    }
-                })
-          })
-          .catch(err => {
-              console.log(err)
-          })
-      } else {
-          this.setState({falseRedirect: true})
-      }
+    if (this.props.location?.state?.selectedUser?.id) {
+      axios({
+        method: 'get',
+        url: `api/users/${this.props.location.state.selectedUser.id}`,
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      })
+      .then(res => {
+        const user = res.data;
+        const currentDate = new Date();
+        
+        // Find current or most recent job
+        let currentJob = {
+          jobTitle: 'N/A',
+          empType: 'N/A',
+          empStatus: 'N/A',
+          startDate: 'N/A',
+          endDate: 'N/A',
+          directSupervisor: 'N/A'
+        };
+
+        if (user.jobs && user.jobs.length > 0) {
+          // Try to find current job
+          const activeJobs = user.jobs.filter(job => {
+            const startDate = new Date(job.startDate);
+            const endDate = job.endDate ? new Date(job.endDate) : new Date('9999-12-31');
+            return startDate <= currentDate && endDate >= currentDate;
+          });
+
+          if (activeJobs.length > 0) {
+            // Get the most recent active job
+            currentJob = activeJobs.reduce((latest, current) => {
+              return new Date(current.startDate) > new Date(latest.startDate) ? current : latest;
+            });
+          } else {
+            // If no current job, get the most recent job
+            const sortedJobs = [...user.jobs].sort((a, b) => 
+              new Date(b.startDate) - new Date(a.startDate)
+            );
+            currentJob = sortedJobs[0] || currentJob;
+          }
+        }
+
+        // Format dates
+        if (currentJob.startDate) {
+          currentJob.startDate = moment(currentJob.startDate).format('D MMM YYYY');
+        }
+        if (currentJob.endDate) {
+          currentJob.endDate = moment(currentJob.endDate).format('D MMM YYYY');
+        } else {
+          currentJob.endDate = 'Present';
+        }
+
+        // Format personal info
+        const userPersonalInfo = {
+          ...this.state.userPersonalInfo,
+          ...user.user_personal_info
+        };
+
+        if (userPersonalInfo.dateOfBirth) {
+          userPersonalInfo.dateOfBirth = moment(userPersonalInfo.dateOfBirth).format('D MMM YYYY');
+        }
+
+        // Format financial info
+        const userFinancialInfo = {
+          ...this.state.userFinancialInfo,
+          ...user.user_financial_info
+        };
+
+        // Format salary values
+        const formatCurrency = (value) => {
+          return value ? `$${parseFloat(value).toLocaleString()}` : 'N/A';
+        };
+
+        if (userFinancialInfo.salaryBasic) {
+          userFinancialInfo.salaryBasic = formatCurrency(userFinancialInfo.salaryBasic);
+        }
+        if (userFinancialInfo.salaryGross) {
+          userFinancialInfo.salaryGross = formatCurrency(userFinancialInfo.salaryGross);
+        }
+        if (userFinancialInfo.salaryNet) {
+          userFinancialInfo.salaryNet = formatCurrency(userFinancialInfo.salaryNet);
+        }
+
+        this.setState({
+          user,
+          currentJob,
+          department: user.department || this.state.department,
+          userPersonalInfo,
+          userFinancialInfo,
+          loading: false
+        });
+      })
+      .catch(err => {
+        console.error('Error fetching employee data:', err);
+        this.setState({ loading: false });
+      });
+    } else {
+      this.setState({ falseRedirect: true });
+    }
   }
 
   onEdit = () => {
@@ -89,7 +167,7 @@ export default class EmployeeView extends Component {
             <Row>
                 <Col sm={12}>
                     <Card>
-                        <Card.Header style={{ backgroundColor: "#515e73", color: "white", fontSize: '17px' }}>Employee Detail </Card.Header>
+                        <Card.Header className="bg-danger">Employee Detail </Card.Header>
                         <Card.Body>
                             <Card.Title><strong>{this.state.user.fullName}</strong></Card.Title>
                             <Card.Text>
@@ -101,10 +179,17 @@ export default class EmployeeView extends Component {
                                         <Col className="pt-4" lg={9}>
                                             <div className="emp-view-list">
                                                 <ul>
-                                                    <li><span>Employee ID: </span> {this.state.user.id}</li>
-                                                    <li><span>Department: </span> {this.state.department.departmentName}</li>
-                                                    <li><span>Job Title: </span> {this.state.job.jobTitle}</li>
-                                                    <li><span>Role: </span>{this.state.user.role==='ROLE_ADMIN' ? 'Admin' : this.state.user.role==='ROLE_MANAGER' ? 'Manager' : 'Employee'}</li>
+                                                    <li><span>Username: </span> {this.state.user.username || 'N/A'}</li>
+                                                    <li><span>Employee ID: </span> {this.state.user.id || 'N/A'}</li>
+                                                    <li><span>Department: </span> {this.state.department?.departmentName || 'N/A'}</li>
+                                                    <li><span>Job Title: </span> {this.state.currentJob.jobTitle}</li>
+                                                    <li><span>Employment Type: </span> {this.state.currentJob.empType}</li>
+                                                    <li><span>Status: </span> {this.state.currentJob.empStatus}</li>
+                                                    {/* <li><span>Role: </span> {
+                                                        this.state.user.role === 'ROLE_ADMIN' ? 'Admin' : 
+                                                        this.state.user.role === 'ROLE_MANAGER' ? 'Manager' : 
+                                                        'Employee'}
+                                                    </li> */}
                                                 </ul>
                                             </div>
                                         </Col>
@@ -112,7 +197,7 @@ export default class EmployeeView extends Component {
                                     <Row>
                                         <Col sm={6}>
                                             <Card className="secondary-card emp-view">
-                                                <Card.Header>Personal Details</Card.Header>
+                                                <Card.Header className="bg-danger">Personal Details</Card.Header>
                                                 <Card.Body>
                                                     <Card.Text id="emp-view-personal">
                                                         <Form.Group as={Row}>
@@ -139,21 +224,21 @@ export default class EmployeeView extends Component {
                                                                 {this.state.userPersonalInfo.maritalStatus}
                                                             </span>
                                                         </Form.Group>
-                                                        <Form.Group as={Row}>
+                                                        {/* <Form.Group as={Row}>
                                                             <Form.Label className="label">
                                                                 Father's Name: 
                                                             </Form.Label>
                                                             <span>
                                                                 {this.state.userPersonalInfo.fatherName}
                                                             </span>
-                                                        </Form.Group>
+                                                        </Form.Group> */}
                                                     </Card.Text>
                                                 </Card.Body>
                                             </Card>
                                         </Col>
                                         <Col sm={6}>
                                             <Card className="secondary-card emp-view">
-                                                <Card.Header>Contact Details</Card.Header>
+                                                <Card.Header className="bg-danger">Contact Details</Card.Header>
                                                 <Card.Body>
                                                     <Card.Text id="emp-view-contact">
                                                         <Form.Group as={Row}>
@@ -193,10 +278,11 @@ export default class EmployeeView extends Component {
                                             </Card>
                                         </Col>
                                     </Row>
+                                    {/* Bank Information Section - Commented out
                                     <Row>
                                         <Col cm={6}>
                                             <Card className="secondary-card">
-                                                <Card.Header>Bank Information</Card.Header>
+                                                <Card.Header className="bg-danger">Bank Information</Card.Header>
                                                 <Card.Body>
                                                     <Card.Text id="emp-view-bank">
                                                         <Form.Group as={Row}>
@@ -209,26 +295,10 @@ export default class EmployeeView extends Component {
                                                         </Form.Group>
                                                         <Form.Group as={Row}>
                                                             <Form.Label className="label">
-                                                                Account Name: 
+                                                                Branch: 
                                                             </Form.Label>
                                                             <span>
-                                                                {this.state.userFinancialInfo.accountName}
-                                                            </span>
-                                                        </Form.Group>
-                                                        <Form.Group as={Row}>
-                                                            <Form.Label className="label">
-                                                                Mobile: 
-                                                            </Form.Label>
-                                                            <span>
-                                                                {this.state.userFinancialInfo.accountNumber}
-                                                            </span>
-                                                        </Form.Group>
-                                                        <Form.Group as={Row}>
-                                                            <Form.Label className="label">
-                                                                IBAN: 
-                                                            </Form.Label>
-                                                            <span>
-                                                                {this.state.userFinancialInfo.iban}
+                                                                {this.state.userFinancialInfo.branch}
                                                             </span>
                                                         </Form.Group>
                                                     </Card.Text>
@@ -238,6 +308,7 @@ export default class EmployeeView extends Component {
                                         <Col sm={6}>
                                         </Col>
                                     </Row>
+                                    */}
                                 </Col>
                             </Card.Text>
                         </Card.Body>

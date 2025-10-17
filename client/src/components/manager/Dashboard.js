@@ -67,7 +67,7 @@ export default class DashboardManager extends Component {
           <div className="col-md-4 col-sm-6 col-xs-12">
             <Infobox
               title="Department Expenses"
-              description={this.state.totalExpenses + "€"}
+              description={this.state.totalExpenses + "Birr"}
               color="bg-warning"
               icon="fa fa-shopping-cart"
             />

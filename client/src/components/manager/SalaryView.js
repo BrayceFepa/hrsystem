@@ -51,7 +51,7 @@ export default class SalaryView extends Component {
                 <Row>
                     <Col sm={12}>
                         <Card>
-                            <Card.Header style={{ backgroundColor: "#515e73", color: "white", fontSize: '17px' }}>Employee Salary Detail</Card.Header>
+                            <Card.Header className="bg-danger">Employee Salary Detail</Card.Header>
                             <Card.Body>
                                 <Card.Title><strong>{this.state.user.fullName}</strong></Card.Title>
                                 <Card.Text>
@@ -64,9 +64,9 @@ export default class SalaryView extends Component {
                                                 <div className="emp-view-list">
                                                     <ul>
                                                         <li><span>Employee ID: </span> {this.state.user.id}</li>
-                                                        <li><span>Department: </span> {this.state.user.department.departmentName}</li>
-                                                        <li><span>Job Title: </span> {this.state.currentJobTitle}</li>
-                                                        <li><span>Role: </span>{this.state.user.role==='ROLE_ADMIN' ? 'Admin' : this.state.user.role==='ROLE_MANAGER' ? 'Manager' : 'Employee'}</li>
+                                                        <li><span>Department: </span> {this.state.user.department?.departmentName || 'N/A'}</li>
+                                                        <li><span>Job Title: </span> {this.state.user.jobs?.[0]?.jobTitle || 'N/A'}</li>
+                                                        <li><span>Role: </span>{this.state.user.role === 'ROLE_ADMIN' ? 'Admin' : this.state.user.role === 'ROLE_MANAGER' ? 'Manager' : 'Employee'}</li>
                                                     </ul>
                                                 </div>
                                             </Col>
@@ -74,7 +74,7 @@ export default class SalaryView extends Component {
                                         <Row className="pt-4">
                                             <Col sm={6}>
                                                 <Card className="secondary-card sal-view">
-                                                    <Card.Header>Salary Details</Card.Header>
+                                                    <Card.Header className="bg-danger">Salary Details</Card.Header>
                                                     <Card.Body>
                                                         <Card.Text id="sal-view-details">
                                                             <Form.Group as={Row}>
@@ -82,7 +82,7 @@ export default class SalaryView extends Component {
                                                                     Employment Type: 
                                                                 </Form.Label>
                                                                 <span>
-                                                                    {this.state.user.user_financial_info.employmentType}
+                                                                    {this.state.user.jobs?.[0]?.empType || 'N/A'}
                                                                 </span>
                                                             </Form.Group>
                                                             <Form.Group as={Row}>
@@ -90,7 +90,7 @@ export default class SalaryView extends Component {
                                                                     Basic Salary: 
                                                                 </Form.Label>
                                                                 <span>
-                                                                    € {this.state.user.user_financial_info.salaryBasic}
+                                                                    $ {this.state.user.user_financial_info.salaryBasic}
                                                                 </span>
                                                             </Form.Group>
                                                         </Card.Text>
@@ -99,7 +99,7 @@ export default class SalaryView extends Component {
                                             </Col>
                                             <Col sm={6}>
                                                 <Card className="secondary-card sal-view">
-                                                    <Card.Header>Allowances</Card.Header>
+                                                    <Card.Header className="bg-danger">Allowances</Card.Header>
                                                     <Card.Body>
                                                         <Card.Text id="sal-view-allowances">
                                                             <Form.Group as={Row}>
@@ -107,7 +107,7 @@ export default class SalaryView extends Component {
                                                                     House Rent Allowance: 
                                                                 </Form.Label>
                                                                 <span>
-                                                                    € {this.state.user.user_financial_info.allowanceHouseRent}
+                                                                    $ {this.state.user.user_financial_info.allowanceHouseRent}
                                                                 </span>
                                                             </Form.Group>
                                                             <Form.Group as={Row}>
@@ -115,7 +115,7 @@ export default class SalaryView extends Component {
                                                                     Medical Allowance: 
                                                                 </Form.Label>
                                                                 <span>
-                                                                    € {this.state.user.user_financial_info.allowanceMedical}
+                                                                    $ {this.state.user.user_financial_info.allowanceMedical}
                                                                 </span>
                                                             </Form.Group>
                                                             <Form.Group as={Row}>
@@ -123,7 +123,7 @@ export default class SalaryView extends Component {
                                                                     Special Allowance: 
                                                                 </Form.Label>
                                                                 <span>
-                                                                    € {this.state.user.user_financial_info.allowanceSpecial}
+                                                                    $ {this.state.user.user_financial_info.allowanceSpecial}
                                                                 </span>
                                                             </Form.Group>
                                                             <Form.Group as={Row}>
@@ -131,7 +131,7 @@ export default class SalaryView extends Component {
                                                                     Fuel Allowance: 
                                                                 </Form.Label>
                                                                 <span>
-                                                                    € {this.state.user.user_financial_info.allowanceFuel}
+                                                                    $ {this.state.user.user_financial_info.allowanceFuel}
                                                                 </span>
                                                             </Form.Group>
                                                             <Form.Group as={Row}>
@@ -139,7 +139,7 @@ export default class SalaryView extends Component {
                                                                     Phone Bill Allowance: 
                                                                 </Form.Label>
                                                                 <span>
-                                                                    € {this.state.user.user_financial_info.allowancePhoneBill}
+                                                                    $ {this.state.user.user_financial_info.allowancePhoneBill}
                                                                 </span>
                                                             </Form.Group>
                                                             <Form.Group as={Row}>
@@ -147,7 +147,7 @@ export default class SalaryView extends Component {
                                                                     Other Allowance: 
                                                                 </Form.Label>
                                                                 <span>
-                                                                    € {this.state.user.user_financial_info.allowanceOther}
+                                                                    $ {this.state.user.user_financial_info.allowanceOther}
                                                                 </span>
                                                             </Form.Group>
                                                             <Form.Group as={Row}>
@@ -155,7 +155,7 @@ export default class SalaryView extends Component {
                                                                     Total Allowance: 
                                                                 </Form.Label>
                                                                 <span>
-                                                                    € {this.state.user.user_financial_info.allowanceTotal}
+                                                                    $ {this.state.user.user_financial_info.allowanceTotal}
                                                                 </span>
                                                             </Form.Group>
                                                         </Card.Text>
@@ -166,7 +166,7 @@ export default class SalaryView extends Component {
                                         <Row>
                                             <Col cm={6}>
                                                 <Card className="secondary-card">
-                                                    <Card.Header>Deductions</Card.Header>
+                                                    <Card.Header className="bg-danger">Deductions</Card.Header>
                                                     <Card.Body>
                                                         <Card.Text id="sal-view-deductions">
                                                             <Form.Group as={Row}>
@@ -174,7 +174,7 @@ export default class SalaryView extends Component {
                                                                     Tax Deduction: 
                                                                 </Form.Label>
                                                                 <span>
-                                                                    € {this.state.user.user_financial_info.deductionTax}
+                                                                    $ {this.state.user.user_financial_info.deductionTax}
                                                                 </span>
                                                             </Form.Group>
                                                             <Form.Group as={Row}>
@@ -182,7 +182,7 @@ export default class SalaryView extends Component {
                                                                     Other Deduction: 
                                                                 </Form.Label>
                                                                 <span>
-                                                                    € {this.state.user.user_financial_info.deductionOther}
+                                                                    $ {this.state.user.user_financial_info.deductionOther}
                                                                 </span>
                                                             </Form.Group>
                                                             <Form.Group as={Row}>
@@ -190,7 +190,7 @@ export default class SalaryView extends Component {
                                                                     Total Deduction: 
                                                                 </Form.Label>
                                                                 <span>
-                                                                    € {this.state.user.user_financial_info.deductionTotal}
+                                                                    $ {this.state.user.user_financial_info.deductionTotal}
                                                                 </span>
                                                             </Form.Group>
                                                         </Card.Text>
@@ -199,7 +199,7 @@ export default class SalaryView extends Component {
                                             </Col>
                                             <Col sm={6}>
                                             <Card className="secondary-card">
-                                                    <Card.Header>Total Salary Details</Card.Header>
+                                                    <Card.Header className="bg-danger">Total Salary Details</Card.Header>
                                                     <Card.Body>
                                                         <Card.Text id="sal-view-total">
                                                             <Form.Group as={Row}>
@@ -207,7 +207,7 @@ export default class SalaryView extends Component {
                                                                     Gross Salary: 
                                                                 </Form.Label>
                                                                 <span>
-                                                                    € {this.state.user.user_financial_info.salaryGross}
+                                                                    $ {this.state.user.user_financial_info.salaryGross}
                                                                 </span>
                                                             </Form.Group>
                                                             <Form.Group as={Row}>
@@ -215,7 +215,7 @@ export default class SalaryView extends Component {
                                                                     Total Deduction: 
                                                                 </Form.Label>
                                                                 <span>
-                                                                    € {this.state.user.user_financial_info.deductionTotal}
+                                                                    $ {this.state.user.user_financial_info.deductionTotal}
                                                                 </span>
                                                             </Form.Group>
                                                             <Form.Group as={Row}>
@@ -223,7 +223,7 @@ export default class SalaryView extends Component {
                                                                     Net Salary: 
                                                                 </Form.Label>
                                                                 <span>
-                                                                    € {this.state.user.user_financial_info.salaryNet}
+                                                                    $ {this.state.user.user_financial_info.salaryNet}
                                                                 </span>
                                                             </Form.Group>
                                                         </Card.Text>

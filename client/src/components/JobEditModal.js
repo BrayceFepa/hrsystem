@@ -23,12 +23,23 @@ export default class JobEditModal extends Component {
   }
 
   componentDidMount() {
+    const { data } = this.props;
+    
+    // Parse dates safely, defaulting to current date if invalid
+    const startDate = data.startDate && moment(data.startDate).isValid() 
+      ? moment(data.startDate).toDate() 
+      : new Date();
+      
+    const endDate = data.endDate && moment(data.endDate).isValid() 
+      ? moment(data.endDate).toDate() 
+      : moment().add(1, 'month').toDate();
+
     this.setState({
-      id: this.props.data.id,
-      jobTitle: this.props.data.jobTitle,
-      startDate: moment(this.props.data.startDate).toDate(),
-      endDate: moment(this.props.data.endDate).toDate(),
-      departmentId: this.props.data.user?.departmentId
+      id: data.id,
+      jobTitle: data.jobTitle || '',
+      startDate,
+      endDate,
+      departmentId: data.user?.departmentId || null
     });
   }
 

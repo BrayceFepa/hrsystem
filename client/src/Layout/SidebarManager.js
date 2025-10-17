@@ -1,33 +1,55 @@
 import React, { Component } from "react";
 import { loadTree } from '../menuTreeHelper';
 import { NavLink } from 'react-router-dom';
-// import './SidebarManager.css';
 
 export default class SidebarManager extends Component {
-
   constructor(props) {
     super(props);
-
     this.state = {
-      user: {}
-    }
+      user: {},
+      collapsed: localStorage.getItem('sidebarCollapsed') === 'true'
+    };
+    this.toggleSidebar = this.toggleSidebar.bind(this);
   }
 
   componentDidMount() {
-    let userData = JSON.parse(localStorage.getItem('user'))
+    try {
+      const storedData = localStorage.getItem('user');
+      console.log('Stored user data:', storedData); // Debug log
+      
+      if (storedData) {
+        const userData = JSON.parse(storedData);
+        console.log('Parsed user data:', userData); // Debug log
+        
+        // Handle both direct user object and nested user object
+        const user = userData.user || userData;
+        console.log('Extracted user:', user); // Debug log
+        
+        if (user) {
+          this.setState({ user });
+        }
+      }
+    } catch (error) {
+      console.error('Error parsing user data:', error);
+    }
+    
     loadTree();
   }
 
+  toggleSidebar() {
+    const newState = !this.state.collapsed;
+    this.setState({ collapsed: newState });
+    localStorage.setItem('sidebarCollapsed', newState);
+  }
+
   render() {
+    const { collapsed } = this.state;
+    const sidebarClass = `main-sidebar sidebar-white elevation-4 ${collapsed ? 'sidebar-collapse' : ''}`;
+
     return (
-      <aside className="main-sidebar sidebar-white elevation-4">
-        {/* Brand Logo */}
-        {/* <a href="/" className="brand-link">
-          <span className="brand-text font-weight-bold ml-1" style={{color: '#6c757d'}}>HRMS Manager</span>
-        </a> */}
-                <div className="sidebar-overlay" onClick={this.toggleSidebar}></div>
-        {/* <aside className={sidebarClass}> */}
-          {/* Brand Logo */}
+      <>
+        <div className="sidebar-overlay" onClick={this.toggleSidebar}></div>
+        <aside className={sidebarClass}>
           <div className="brand-link d-flex justify-content-between align-items-center">
             <div className="d-flex align-items-center">
               <img 
@@ -41,121 +63,59 @@ export default class SidebarManager extends Component {
               onClick={this.toggleSidebar}
               style={{padding: '0.5rem'}}
             >
-              {/* <i className={`fa fa-${collapsed ? 'bars' : 'times'}`} /> */}
+              <i className={`fa fa-${collapsed ? 'bars' : 'times'}`} />
             </button>
           </div>
-        {/* Sidebar */}
-        <div className="sidebar">
-          {/* Sidebar user panel (optional) */}
-          <div className="user-panel mt-3 pb-3 mb-3 d-flex">
-            <div className="image">
-              <img
-                src={process.env.PUBLIC_URL + '/user-64.png'}
-                className="img-circle elevation-2"
-                alt="User Image"
-              />
+          
+          <div className="sidebar">
+            <div className="user-panel mt-3 pb-3 mb-3 d-flex">
+              <div className="image">
+                <img
+                  src={process.env.PUBLIC_URL + '/user-64.png'}
+                  className="img-circle elevation-2"
+                  alt="User"
+                />
+              </div>
+              {!collapsed && (
+                <div className="info">
+                  <a href="#" className="d-block text-danger text-bold">
+                    {this.state.user.fullname || 'User'}
+                  </a>
+                </div>
+              )}
             </div>
-            <div className="info">
-              <a href="#" className="d-block">
-                {this.state.user.fullname || ''}
-              </a>
-            </div>
+
+            <nav className="mt-2">
+              <ul className="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
+                <li className="nav-item">
+                  <NavLink exact to="/" className="nav-link">
+                    <i className="nav-icon fas fa-tachometer-alt" />
+                    <p>Dashboard</p>
+                  </NavLink>
+                </li>
+                <li className="nav-item">
+                  <NavLink exact to="/employee-list" className="nav-link">
+                    <i className="nav-icon fas fa-users" />
+                    <p>My Employees</p>
+                  </NavLink>
+                </li>
+                <li className="nav-item">
+                  <NavLink to="/job-list" className="nav-link">
+                    <i className="nav-icon fas fa-briefcase" />
+                    <p>Job List</p>
+                  </NavLink>
+                </li>
+                <li className="nav-item">
+                  <NavLink exact to="/announcement" className="nav-link">
+                    <i className="nav-icon fa fa-bell" />
+                    <p>Announcements</p>
+                  </NavLink>
+                </li>
+              </ul>
+            </nav>
           </div>
-          {/* Sidebar Menu */}
-          <nav className="mt-2">
-            <ul
-              className="nav nav-pills nav-sidebar flex-column"
-              data-widget="treeview"
-              role="menu"
-              data-accordion="false"
-            >
-              {/* Add icons to the links using the .nav-icon class
-         with font-awesome or any other icon font library */}
-              <li className="nav-item">
-                <NavLink exact to="/" className="nav-link">
-                  <i className="nav-icon fas fa-tachometer-alt" />
-                  <p>
-                    Dashboard
-                    {/* <span className="right badge badge-success">Home</span> */}
-                  </p>
-                </NavLink>
-              </li>
-              <li className="nav-item">
-                <NavLink exact to="/employee-list" className="nav-link">
-                  <i className="nav-icon fas fa-users" />
-                  <p>
-                    My Employees
-                  </p>
-                </NavLink>
-              </li>
-              <li className="nav-item">
-                <NavLink to="/job-list" className="nav-link">
-                  <i className="nav-icon fas fa-briefcase" />
-                  <p>
-                    Job List
-                  </p>
-                </NavLink>
-              </li>
-              <li className="nav-item has-treeview">
-                <NavLink to="/fake-url" className="nav-link" activeClassName="nav-link">
-                  <i className="nav-icon fa fa-rocket" />
-                  <p>
-                    Applications
-                    <i className="right fas fa-angle-left" />
-                  </p>
-                </NavLink>
-                <ul className="nav nav-treeview">
-                  <li className="nav-item">
-                    <NavLink to="/application" className="nav-link">
-                      <i className="fa fa-plus nav-icon" />
-                      <p>Add Application</p>
-                    </NavLink>
-                  </li>
-                  <li className="nav-item">
-                    <NavLink to="/application-list" className="nav-link">
-                      <i className="fas fa-list-ul nav-icon" />
-                      <p>Application List</p>
-                    </NavLink>
-                  </li>
-                </ul>
-              </li>
-              <li className="nav-item has-treeview">
-                <NavLink to="/fake-url" className="nav-link" activeClassName="nav-link">
-                  <i className="nav-icon fas fa-money-bill" />
-                  <p>
-                    Expense Management
-                    <i className="right fas fa-angle-left" />
-                  </p>
-                </NavLink>
-                <ul className="nav nav-treeview">
-                  <li className="nav-item">
-                    <NavLink to="/expense" className="nav-link">
-                      <i className="fas fa-shopping-cart nav-icon" />
-                      <p>Make Expense</p>
-                    </NavLink>
-                  </li>
-                  <li className="nav-item">
-                    <NavLink to="/expense-report" className="nav-link">
-                      <i className="fas fa-file-invoice nav-icon" />
-                      <p>Expense Report</p>
-                    </NavLink>
-                  </li>
-                </ul>
-              </li>
-              <li className="nav-item">
-                <NavLink exact to="/announcement" className="nav-link">
-                  <i className="nav-icon fa fa-bell" />
-                  <p>
-                    Announcements
-                  </p>
-                </NavLink>
-              </li>
-            </ul>
-          </nav>
-          {/* /.sidebar-menu */}
-        </div>
-        {/* /.sidebar */}
-      </aside>
+        </aside>
+      </>
     );
   }
 }
