@@ -216,11 +216,15 @@ async function seedDatabase() {
       const username = generateUsername(firstName, lastName, i);
       const fullName = `${firstName} ${lastName}`;
 
-      // Assign roles: 2 admins, 5 managers, rest employees
+      // Assign roles: 2 admins, 5 managers, 2 HR, 2 Finance, rest employees
       let role = "ROLE_EMPLOYEE";
       if (i === 0) role = "ROLE_ADMIN";
       else if (i === 1) role = "ROLE_ADMIN";
       else if (i < 7) role = "ROLE_MANAGER";
+      else if (i === 7) role = "ROLE_HR";
+      else if (i === 8) role = "ROLE_HR";
+      else if (i === 9) role = "ROLE_FINANCE";
+      else if (i === 10) role = "ROLE_FINANCE";
 
       const user = await db.user.create({
         username: username,
@@ -372,6 +376,14 @@ async function seedDatabase() {
     console.log(
       `   - Managers: ${
         createdUsers.filter((u) => u.role === "ROLE_MANAGER").length
+      }`
+    );
+    console.log(
+      `   - HR: ${createdUsers.filter((u) => u.role === "ROLE_HR").length}`
+    );
+    console.log(
+      `   - Finance: ${
+        createdUsers.filter((u) => u.role === "ROLE_FINANCE").length
       }`
     );
     console.log(
