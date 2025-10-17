@@ -14,10 +14,8 @@ export default class DepartmentList extends Component {
 
     constructor(props) {
         super(props)
-
         this.state = {
             departments: [],
-            jobs: [],
             selectedDepartment: null,
             hasError: false,
             errorMsg: '',
@@ -25,19 +23,47 @@ export default class DepartmentList extends Component {
             showEditModel: false,
             showAlertModel: false,
             showDeleteConfirm: false,
-            departmentToDelete: null
+            departmentToDelete: null,
+            totalItems: 0,
+            currentPage: 1,
+            pageSize: 10,
+            totalPages: 1
         }
     }
 
     componentDidMount() {
+        this.fetchDepartments();
+    }
+
+    fetchDepartments = (page = 1, pageSize = 10) => {
         axios({
             method: 'get',
-            url: '/api/departments',
+            url: `/api/departments?page=${page}&pageSize=${pageSize}`,
             headers: {Authorization: `Bearer ${localStorage.getItem('token')}`}
         })
         .then(res => {
-            this.setState({departments: res.data})
+            this.setState({
+                departments: res.data.items,
+                totalItems: res.data.totalItems,
+                currentPage: res.data.currentPage - 1, // Material-Table uses 0-based index
+                pageSize: res.data.pageSize,
+                totalPages: res.data.totalPages
+            });
         })
+        .catch(err => {
+            this.setState({ 
+                hasError: true, 
+                errorMsg: err.response?.data?.message || 'Failed to fetch departments' 
+            });
+        });
+    }
+
+    onDepartmentAdded = () => {
+        this.fetchDepartments(this.state.currentPage + 1, this.state.pageSize);
+    }
+
+    onDepartmentUpdated = () => {
+        this.fetchDepartments(this.state.currentPage + 1, this.state.pageSize);
     }
 
     onEdit (department) {
@@ -93,7 +119,7 @@ export default class DepartmentList extends Component {
       <div className="container-fluid pt-2">
         <div className="row">
             <div className="col-sm-12">
-                <AddDepartment />
+                <AddDepartment onDepartmentAdded={this.onDepartmentAdded} />
             </div>
         </div>
         <div className="row">
@@ -107,7 +133,53 @@ export default class DepartmentList extends Component {
                     <Card.Body className="p-4">
                     <ThemeProvider theme={theme}>
                     <MaterialTable
+                                title={null}
                                 className="shadow-sm rounded-lg overflow-hidden border border-gray-200"
+                                data={this.state.departments}
+                                options={{
+                                    showTitle: false,
+                                    search: true,
+                                    pageSize: this.state.pageSize || 10,
+                                    pageSizeOptions: [5, 10, 20, 50],
+                                    paginationType: 'stepped',
+                                    showFirstLastPageButtons: true,
+                                    emptyRowsWhenPaging: false,
+                                    headerStyle: {
+                                        backgroundColor: '#f8fafc',
+                                        color: '#1e293b',
+                                        fontWeight: '600',
+                                        fontSize: '0.875rem',
+                                        padding: '12px 16px',
+                                        borderBottom: '1px solid #e2e8f0'
+                                    },
+                                    rowStyle: {
+                                        backgroundColor: '#fff',
+                                        '&:hover': {
+                                            backgroundColor: '#f8fafc'
+                                        }
+                                    }
+                                }}
+                                onChangePage={(page, pageSize) => this.fetchDepartments(page + 1, pageSize)}
+                                onChangeRowsPerPage={pageSize => this.fetchDepartments(1, pageSize)}
+                                localization={{
+                                    pagination: {
+                                        labelDisplayedRows: '{from}-{to} of {count}',
+                                        labelRowsSelect: 'rows',
+                                        firstTooltip: 'First Page',
+                                        previousTooltip: 'Previous Page',
+                                        nextTooltip: 'Next Page',
+                                        lastTooltip: 'Last Page',
+                                        labelRowsPerPage: 'Rows per page:'
+                                    },
+                                    toolbar: {
+                                        searchTooltip: 'Search departments',
+                                        searchPlaceholder: 'Search...',
+                                        nRowsSelected: '{0} row(s) selected'
+                                    },
+                                    header: {
+                                        actions: 'Actions'
+                                    }
+                                }}
                             columns={[
                                 {
                                     title: 'DEPT ID',
@@ -125,7 +197,8 @@ export default class DepartmentList extends Component {
                                         borderBottom: '1px solid #f1f5f9',
                                         color: '#334155',
                                         fontSize: '0.875rem'
-                                    }
+                                    },
+                                    width: '10%'
                                 },
                                 {
                                     title: 'Department Name',
@@ -144,11 +217,12 @@ export default class DepartmentList extends Component {
                                         color: '#334155',
                                         fontSize: '0.875rem',
                                         fontWeight: '500'
-                                    }
+                                    },
+                                    width: '40%'
                                 },
                                 {
-                                    title: 'Employees', 
-                                    field: 'jobs',
+                                    title: 'Employees',
+                                    field: 'users',
                                     headerStyle: {
                                         backgroundColor: '#f8fafc',
                                         color: '#1e293b',
@@ -161,16 +235,16 @@ export default class DepartmentList extends Component {
                                     cellStyle: {
                                         padding: '12px 16px',
                                         borderBottom: '1px solid #f1f5f9',
-                                        textAlign: 'center'
+                                        textAlign: 'center',
+                                        color: '#4b5563',
+                                        fontWeight: '500'
                                     },
                                     render: dept => (
-                                        <NavLink 
-                                            to={{ pathname: '/job-list', state: {selectedDepartment: dept.id} }}
-                                            className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
-                                        >
-                                            View Employes
-                                        </NavLink>
-                                    )
+                                        <span className="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                                            {dept.users?.length || 0}
+                                        </span>
+                                    ),
+                                    width: '15%'
                                 },
                                 {
                                     title: 'Actions',
@@ -204,65 +278,27 @@ export default class DepartmentList extends Component {
                                             >
                                                 <i className="fas fa-trash mr-1"></i> Delete
                                             </button>
-                                            </div>
-                                    )
+                                        </div>
+                                    ),
+                                    width: '25%'
                                 }
                             ]}
                             data={this.state.departments}
-                            options={{
-                                rowStyle: (rowData, index) => {
-                                    if(index%2) {
-                                        return {backgroundColor: '#f2f2f2'}
-                                    }
-                                },
-                                pageSize: 10,
-                                pageSizeOptions: [5, 10, 20, 30, 50, 75, 100],
-                                paginationType: 'stepped',
-                                showFirstLastPageButtons: true,
-                                showTitle: true,
-                                toolbar: true,
-                                search: true,
-                                searchFieldAlignment: 'right',
-                                searchFieldVariant: 'outlined',
-                                searchFieldStyle: {
-                                    padding: '4px 8px',
-                                    height: '32px',
-                                    fontSize: '0.875rem',
-                                    borderRadius: '0.375rem',
-                                    borderColor: '#e2e8f0',
-                                    '&:focus': {
-                                        borderColor: '#93c5fd',
-                                        boxShadow: '0 0 0 1pxrgb(244, 43, 43)',
-                                        outline: 'none'
-                                    }
-                                },
-                                header: true,
-                                padding: 'dense',
-                                emptyRowsWhenPaging: false,
-                                actionsColumnIndex: -1,
-                                addRowPosition: 'first',
-                                sorting: true,
-                                draggable: false
-                            }}
-                            title={
-                                <div className="flex justify-between items-center">
-                                    {/* <span className="text-lg font-semibold text-gray-800">Departments</span>
-                                    <AddDepartment onDepartmentAdded={this.onDepartmentAdded} /> */}
-                                </div>
-                            }
-                            components={{
-                                Container: props => (
-                                    <div className="rounded-lg overflow-hidden border border-gray-200">
-                                        {props.children}
-                                    </div>
-                                )
-                            }}
+                            page={this.state.currentPage}
+                            totalCount={this.state.totalItems}
+                            onChangePage={(event, page) => this.fetchDepartments(page + 1, this.state.pageSize)}
+                            onChangeRowsPerPage={(event) => this.fetchDepartments(1, event.target.value)}
                     />
                     </ThemeProvider>
                 </Card.Body>
             </Card>
             {this.state.showEditModel ? (
-                <EditDepartmentModal show={true} onHide={closeEditModel} data={this.state.selectedDepartment} />
+                <EditDepartmentModal 
+                    show={true} 
+                    onHide={closeEditModel} 
+                    data={this.state.selectedDepartment} 
+                    onDepartmentUpdated={this.onDepartmentUpdated}
+                />
             ) : this.state.showAlertModel ? (
                 <AlertModal show={this.state.showAlertModel} onHide={closeAlertModel} />
             ) : this.state.showDeleteConfirm ? (
