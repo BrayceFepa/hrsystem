@@ -44,19 +44,23 @@ export default class SalaryDetails extends Component {
             headers: {Authorization: `Bearer ${localStorage.getItem('token')}`}
         })
         .then(res => {
-            this.setState({departments: res.data}, () => {
-                if(this.props.location.state) {
-                    this.setState({selectedDepartment: this.props.location.state.selectedUser.departmentId}, () => {
-                        this.fetchData()
-                    })
-                    this.setState({selectedUser: this.props.location.state.selectedUser.id}, () => {
-                        this.pushChanges()
-                    })
+            const departments = res.data?.items || [];
+            this.setState({ departments }, () => {
+                if (this.props.location?.state?.selectedUser) {
+                    const { departmentId, id } = this.props.location.state.selectedUser;
+                    this.setState({
+                        selectedDepartment: departmentId,
+                        selectedUser: id
+                    }, () => {
+                        this.fetchData();
+                        this.pushChanges();
+                    });
                 }
-            })
+            });
         })
         .catch(err => {
-            console.log(err)
+            console.error('Error fetching departments:', err);
+            this.setState({ departments: [] });
         })
     }
 
