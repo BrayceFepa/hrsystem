@@ -36,28 +36,32 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Use alter: true to update tables without losing data
 // Automatically fix any datetime issues
-db.sequelize.sync({ alter: true }).then(() => {
+db.sequelize.sync({ alter: true }).then(async () => {
   console.log("✅ Database synced successfully");
 
-  // Automatically fix any existing invalid datetime values
-  const Application = db.application;
-  const LeaveBalance = db.leaveBalance;
+  try {
+    // Fix application table - handle '0000-00-00 00:00:00' values using raw SQL
+    await db.sequelize.query(`
+      UPDATE application 
+      SET created_at = NOW(), updated_at = NOW() 
+      WHERE created_at = '0000-00-00 00:00:00' OR created_at IS NULL
+    `);
+    console.log("✅ Application table timestamps fixed");
+  } catch (err) {
+    console.log("Application table already has valid timestamps");
+  }
 
-  // Fix application table
-  Application.update(
-    { created_at: new Date(), updated_at: new Date() },
-    { where: { created_at: null } }
-  ).catch((err) =>
-    console.log("Application table already has valid timestamps")
-  );
-
-  // Fix leave_balance table
-  LeaveBalance.update(
-    { created_at: new Date(), updated_at: new Date() },
-    { where: { created_at: null } }
-  ).catch((err) =>
-    console.log("Leave balance table already has valid timestamps")
-  );
+  try {
+    // Fix leave_balance table - handle '0000-00-00 00:00:00' values using raw SQL
+    await db.sequelize.query(`
+      UPDATE leave_balance 
+      SET created_at = NOW(), updated_at = NOW() 
+      WHERE created_at = '0000-00-00 00:00:00' OR created_at IS NULL
+    `);
+    console.log("✅ Leave balance table timestamps fixed");
+  } catch (err) {
+    console.log("Leave balance table already has valid timestamps");
+  }
 
   console.log("✅ Database ready!");
 });
