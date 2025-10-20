@@ -5,7 +5,7 @@ const withAuth = require("../withAuth");
 
 const application = require("../controllers/application.controller.js");
 
-// Retrieve all applications (Admin, Manager, or HR)
+// Retrieve all applications (Admin, Manager, or HR only)
 router.get(
   "/",
   withAuth.verifyToken,

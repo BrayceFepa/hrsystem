@@ -967,32 +967,71 @@ Creates a new leave application.
 
 ### Get All Applications
 
-Retrieves all applications.
+Retrieves all applications (Admin/Manager/HR only).
 
 **Endpoint:** `GET /api/applications`
 
-**Authentication:** Admin or Manager
+**Authentication:** Admin, Manager, or HR
+
+**Query Parameters:**
+
+- `page` (number, optional) - Page number (default: 1)
+- `size` (number, optional) - Items per page (default: 10)
+- `status` (string, optional) - Filter by status: "Approved" | "Rejected" | "Pending"
+- `type` (string, optional) - Filter by leave type
+- `startDate` (date, optional) - Filter by start date (YYYY-MM-DD)
+- `endDate` (date, optional) - Filter by end date (YYYY-MM-DD)
+
+**Example Requests:**
+
+```
+GET /api/applications?page=1&size=20
+GET /api/applications?status=Pending
+GET /api/applications?type=Annual Leave&page=1&size=10
+GET /api/applications?startDate=2024-01-01&endDate=2024-12-31
+```
 
 **Success Response (200):**
 
 ```json
-[
-  {
-    "id": 1,
-    "reason": "Family vacation",
-    "startDate": "2024-03-15T00:00:00.000Z",
-    "endDate": "2024-03-20T00:00:00.000Z",
-    "status": "Pending",
-    "type": "Normal",
-    "userId": 1,
-    "user": {
+{
+  "totalItems": 100,
+  "items": [
+    {
       "id": 1,
-      "username": "john_doe",
-      "fullName": "John Doe"
+      "name": "John Doe",
+      "positionTitle": "Software Engineer",
+      "reason": "Family vacation",
+      "startDate": "2024-03-15T00:00:00.000Z",
+      "endDate": "2024-03-20T00:00:00.000Z",
+      "numberOfDays": 6,
+      "status": "Pending",
+      "type": "Annual Leave",
+      "approvedBy": null,
+      "businessLeavePurpose": null,
+      "businessLeaveDestination": null,
+      "deductedFromBalance": true,
+      "userId": 1,
+      "createdAt": "2024-03-01T10:00:00.000Z",
+      "updatedAt": "2024-03-01T10:00:00.000Z",
+      "user": {
+        "id": 1,
+        "username": "john_doe",
+        "fullName": "John Doe",
+        "departmentId": 1
+      }
     }
-  }
-]
+  ],
+  "totalPages": 5,
+  "currentPage": 1
+}
 ```
+
+**Notes:**
+
+- This endpoint shows ALL applications from all users
+- Only accessible by Admin, Manager, or HR roles
+- For employees to see their own applications, use `GET /api/applications/user/:id`
 
 ---
 
@@ -1089,7 +1128,7 @@ Retrieves recent applications for a specific user.
 
 ### Get Applications by User
 
-Retrieves all applications for a specific user.
+Retrieves all applications for a specific user. **This is the endpoint employees should use to see their own applications.**
 
 **Endpoint:** `GET /api/applications/user/:id`
 
@@ -1099,22 +1138,66 @@ Retrieves all applications for a specific user.
 
 - `id` (number) - User ID
 
+**Query Parameters:**
+
+- `page` (number, optional) - Page number (default: 1)
+- `size` (number, optional) - Items per page (default: 10)
+- `status` (string, optional) - Filter by status: "Approved" | "Rejected" | "Pending"
+- `type` (string, optional) - Filter by leave type
+- `startDate` (date, optional) - Filter by start date (YYYY-MM-DD)
+- `endDate` (date, optional) - Filter by end date (YYYY-MM-DD)
+
+**Example Requests:**
+
+```
+GET /api/applications/user/1
+GET /api/applications/user/1?page=1&size=10
+GET /api/applications/user/1?status=Pending
+GET /api/applications/user/1?type=Annual Leave&page=1&size=20
+```
+
 **Success Response (200):**
 
 ```json
-[
-  {
-    "id": 1,
-    "reason": "Vacation",
-    "startDate": "2024-03-15T00:00:00.000Z",
-    "endDate": "2024-03-20T00:00:00.000Z",
-    "status": "Approved",
-    "type": "Normal",
-    "userId": 1,
-    "user": {...}
-  }
-]
+{
+  "totalItems": 15,
+  "items": [
+    {
+      "id": 1,
+      "name": "John Doe",
+      "positionTitle": "Software Engineer",
+      "reason": "Vacation",
+      "startDate": "2024-03-15T00:00:00.000Z",
+      "endDate": "2024-03-20T00:00:00.000Z",
+      "numberOfDays": 6,
+      "status": "Approved",
+      "type": "Annual Leave",
+      "approvedBy": "Jane Manager",
+      "businessLeavePurpose": null,
+      "businessLeaveDestination": null,
+      "deductedFromBalance": true,
+      "userId": 1,
+      "createdAt": "2024-03-01T10:00:00.000Z",
+      "updatedAt": "2024-03-02T14:00:00.000Z",
+      "user": {
+        "id": 1,
+        "username": "john_doe",
+        "fullName": "John Doe",
+        "departmentId": 1
+      }
+    }
+  ],
+  "totalPages": 2,
+  "currentPage": 1
+}
 ```
+
+**Notes:**
+
+- **Recommended endpoint for employees** to view their own leave applications
+- Supports pagination and filtering
+- Any authenticated user can access this endpoint
+- Shows only applications for the specified user ID
 
 ---
 
