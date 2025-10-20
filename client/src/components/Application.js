@@ -5,15 +5,17 @@ import DatePicker from 'react-datepicker'
 import axios from "axios";
 
 export default class Application extends Component {
+
   constructor(props) {
     super(props);
-
     this.state = {
       type: "",
       startDate: null,
       endDate: null,
       reason: "",
       approvedBy: "",
+      businessLeavePurpose: "",
+      businessLeaveDestination: "",
       hasError: false,
       errMsg: "",
       completed: false
@@ -21,10 +23,32 @@ export default class Application extends Component {
   }
 
   validateForm = () => {
-    const { type, startDate, endDate, reason, approvedBy } = this.state;
-    return type && startDate && endDate && reason && approvedBy;
-  };
+    const { type, startDate, endDate, reason, approvedBy, businessLeavePurpose, businessLeaveDestination } = this.state;
 
+    // Basic validation
+    if (!type || !startDate || !endDate || !reason || !approvedBy) {
+      return false;
+    }
+
+    // Additional validation for Business Leave
+    if (type === "business_leave" && (!businessLeavePurpose || !businessLeaveDestination)) {
+      return false;
+    }
+
+    return true;
+  };
+  mapLeaveTypeToApi = (type) => {
+    const typeMap = {
+      'sick_with_document': 'Sick Leave with document',
+      'sick_home': 'Sick Leave without document',
+      'remote_work': 'Remote Work',
+      'annual_leave': 'Annual Leave',
+      'bereavement': 'Bereavement Leave',
+      'unexcused_absence': 'Unexcused Absence',
+      'business_leave': 'Business Leave'
+    };
+    return typeMap[type] || type;
+  };
   handleChange = (event) => {
     const { value, name } = event.target;
     this.setState({
@@ -33,32 +57,56 @@ export default class Application extends Component {
   };
 
   onSubmit = (e) => {
-    e.preventDefault()
+    e.preventDefault();
+    this.setState({ hasError: false, errMsg: "", completed: false });
 
-    this.setState({ hasError: false, errorMsg: "", completed: false });
+    const userId = JSON.parse(localStorage.getItem('user')).id;
+    const {
+      type,
+      startDate,
+      endDate,
+      reason,
+      approvedBy,
+      businessLeavePurpose,
+      businessLeaveDestination
+    } = this.state;
 
-    let userId = JSON.parse(localStorage.getItem('user')).id
+    // Format dates to YYYY-MM-DD
+    const formatDate = (date) => {
+      return date ? new Date(date).toISOString().split('T')[0] : null;
+    };
 
-    let application = {
-      type: this.state.type,
-      startDate: this.state.startDate,
-      endDate: this.state.endDate,
-      status: 'Pending',
-      reason: this.state.reason,
-      userId: userId
+    const application = {
+      userId,
+      type: this.mapLeaveTypeToApi(type),
+      startDate: formatDate(startDate),
+      endDate: formatDate(endDate),
+      reason,
+      approvedBy,
+      ...(type === 'business_leave' && {
+        businessLeavePurpose,
+        businessLeaveDestination
+      })
     };
 
     axios({
       method: "post",
       url: "/api/applications",
       data: application,
-      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        'Content-Type': 'application/json'
+      },
     })
       .then((res) => {
-        this.setState({ completed: true })
+        this.setState({ completed: true });
       })
       .catch((err) => {
-        this.setState({ hasError: true, errMsg: err.response.data.message });
+        const errorMsg = err.response?.data?.message || 'An error occurred while submitting the application';
+        this.setState({
+          hasError: true,
+          errMsg: errorMsg
+        });
         window.scrollTo(0, 0);
       });
   };
@@ -103,13 +151,13 @@ export default class Application extends Component {
                     required
                   >
                     <option value="">Choose one</option>
-                    <option value="sick_with_document">Sick Leave (With hospital/clinic document)</option>
-                    <option value="sick_home">Sick Leave (Rest at home, no hospital/clinic visit) - will deduct from your Annual Leave balance</option>
-                    <option value="remote_work">Remote Work / Home Office</option>
-                    <option value="annual_leave">Annual Leave / Vacation / Holiday - will deduct from your Annual Leave Balance</option>
-                    <option value="bereavement">Bereavement Leave (Funeral Leave)</option>
-                    <option value="unexcused_absence">Unexcused Absence (only selected by HR/Supervisor)</option>
-                    <option value="business_leave">Business Leave (Field Work / Official Work Travel)</option>
+                    <option value="sick_with_document">Sick Leave with document</option>
+                    <option value="sick_home">Sick Leave without document (deducts from annual leave)</option>
+                    <option value="remote_work">Remote Work</option>
+                    <option value="annual_leave">Annual Leave (deducts from annual leave balance)</option>
+                    <option value="bereavement">Bereavement Leave</option>
+                    <option value="unexcused_absence">Unexcused Absence (HR/Supervisor only)</option>
+                    <option value="business_leave">Business Leave (Field Work / Official Travel)</option>
                   </Form.Control>
                 </Form.Group>
                 <Form.Group>
@@ -152,8 +200,36 @@ export default class Application extends Component {
                     onChange={this.handleChange}
                   />
                 </Form.Group>
-                <Button type="submit" className="mt-2 bg-danger border-danger">
-                  Submit
+                {this.state.type === 'business_leave' && (
+                  <>
+                    <Form.Group>
+                      <Form.Label>Business Purpose <span className="text-danger">*</span></Form.Label>
+                      <Form.Control
+                        as="textarea"
+                        rows={2}
+                        name="businessLeavePurpose"
+                        value={this.state.businessLeavePurpose}
+                        onChange={this.handleChange}
+                      />
+                    </Form.Group>
+
+                    <Form.Group>
+                      <Form.Label>Business Destination <span className="text-danger">*</span></Form.Label>
+                      <Form.Control
+                        type="text"
+                        name="businessLeaveDestination"
+                        value={this.state.businessLeaveDestination}
+                        onChange={this.handleChange}
+                      />
+                    </Form.Group>
+                  </>
+                )}
+                <Button
+                  type="submit"
+                  className="mt-3 bg-danger border-danger"
+                  disabled={!this.validateForm()}
+                >
+                  Submit Application
                 </Button>
               </Form>
             </Card.Text>

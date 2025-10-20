@@ -41,6 +41,7 @@ import withAuth from "./withAuth";
 import Login from "./components/Login";
 import JobList from "./components/JobList";
 import JobListManager from './components/manager/JobList'
+import SidebarFinance from './Layout/SidebarFinance';
 
 export default class App extends Component {
   render() {
@@ -82,6 +83,8 @@ const DefaultContainer = () => (
       ManagerContainer()
     ) : JSON.parse(localStorage.getItem('user')).role === "ROLE_EMPLOYEE" ? (
       EmployeeContainer()
+    ) : JSON.parse(localStorage.getItem('user')).role === "ROLE_FINANCE" ? (
+      FinanceContainer()
     ) : null}
   </div>
 )
@@ -105,6 +108,26 @@ const HRContainer = () => (
     </Layout>
   </div>
 );
+
+const FinanceContainer = () => (
+  <div>
+    <Header />
+    <SidebarFinance />
+    <Layout>
+      <Switch>
+        <Route exact path="/" component={withAuth(Dashboard)} />
+        <Route exact path="/employee-list" component={withAuth(EmployeeList)} />
+        <Route exact path="/salary-details" component={withAuth(SalaryDetails)} />
+        <Route exact path="/salary-list" component={withAuth(SalaryList)} />
+        <Route exact path="/salary-view" component={withAuth(SalaryView)} />
+        <Route exact path="/payment" component={withAuth(Payment)} />
+        <Route exact path="/expense" component={withAuth(Expense)} />
+        <Route exact path="/expense-report" component={withAuth(ExpenseReport)} />
+        <Route exact path="/announcement" component={withAuth(Announcement)} />
+      </Switch>
+    </Layout>
+  </div>
+)
 
 const AdminContainer = () => (
   <div>

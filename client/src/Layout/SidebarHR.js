@@ -1,7 +1,6 @@
 import React, { Component } from "react";
 import { loadTree } from '../menuTreeHelper';
 import { NavLink } from 'react-router-dom';
-import './SidebarAdmin.css';
 
 export default class SidebarHR extends Component {
 
@@ -35,6 +34,13 @@ export default class SidebarHR extends Component {
     const { pathname } = window.location;
     const menuItems = this.getMenuItems();
     
+    // Reset active menu if we're on the dashboard
+    if (pathname === '/' || pathname === '/dashboard') {
+      this.setState({ activeMenu: 'dashboard' });
+      return;
+    }
+    
+    // Check child items first
     for (const item of menuItems) {
       if (item.children) {
         const activeChild = item.children.find(child => 
@@ -46,8 +52,14 @@ export default class SidebarHR extends Component {
           this.setState({ activeMenu: item.id });
           return;
         }
-      } else if (item.to && (pathname === item.to || 
-                 (item.to !== '/' && pathname.startsWith(item.to)))) {
+      }
+    }
+    
+    // Check top-level items
+    for (const item of menuItems) {
+      if (item.to && 
+          item.to !== '/' && 
+          (pathname === item.to || pathname.startsWith(item.to + '/'))) {
         this.setState({ activeMenu: item.id });
         return;
       }
@@ -142,7 +154,7 @@ export default class SidebarHR extends Component {
                     className="nav-link"
                     activeClassName="active"
                   >
-                    <i className={`far fa-${child.icon} nav-icon`} />
+                    <i className={`fas fa-${child.icon} nav-icon`} />
                     <p>{child.title}</p>
                   </NavLink>
                 </li>
@@ -168,21 +180,40 @@ export default class SidebarHR extends Component {
     const { collapsed, user } = this.state;
     
     return (
-      <aside className={`main-sidebar sidebar-dark-primary elevation-4 ${collapsed ? 'sidebar-collapse' : ''}`}>
-        <a href="#" className="brand-link">
-          <span className="brand-text font-weight-light">HR System</span>
-        </a>
+      <aside className="main-sidebar sidebar-white elevation-4">
+        <div className="brand-link d-flex justify-content-between align-items-center">
+          <div className="d-flex align-items-center">
+            <img 
+              src={process.env.PUBLIC_URL + '/Logo.png'} 
+              alt="CHIP CHIP HRMS Logo" 
+              className="brand-image"
+            />
+          </div>
+          <button 
+            className="btn btn-link text-white" 
+            onClick={this.toggleSidebar}
+            style={{padding: '0.5rem'}}
+          >
+          </button>
+        </div>
 
         <div className="sidebar">
           <div className="user-panel mt-3 pb-3 mb-3 d-flex">
             <div className="image">
-              <i className="fas fa-user-circle fa-2x img-circle elevation-2" style={{ color: '#fff' }} />
+              <img
+                src={process.env.PUBLIC_URL + '/user-64.png'}
+                className="img-circle elevation-2"
+                alt="User"
+                style={{ width: '2.1rem', height: '2.1rem' }}
+              />
             </div>
             <div className="info">
-              <a href="#" className="d-block">
+              <a href="#" className="d-block" style={{ color: '#4b4b4b' }}>
                 {user.firstName} {user.lastName}
               </a>
-              <small className="text-muted">HR</small>
+              <a href="#" className="d-block" style={{ fontSize: '0.8rem', color: '#6c757d' }}>
+                HR Department
+              </a>
             </div>
           </div>
 

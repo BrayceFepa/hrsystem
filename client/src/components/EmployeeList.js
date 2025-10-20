@@ -8,6 +8,10 @@ import { ThemeProvider } from '@material-ui/core';
 import { createMuiTheme } from '@material-ui/core/styles';
 import { FiEdit2, FiTrash2, FiEye } from 'react-icons/fi';
 
+// Create a cancel token source
+const CancelToken = axios.CancelToken;
+let cancel;
+
 export default class EmployeeList extends Component {
 
   constructor(props) {
@@ -30,37 +34,50 @@ export default class EmployeeList extends Component {
   }
 
 fetchUsers = (page, pageSize) => {
+  // Cancel previous request if it exists
+  if (cancel) {
+    cancel('Operation canceled due to new request');
+  }
+
   const validPageSize = Math.min(Math.max(1, pageSize), this.maxPageSize);
   const validPage = Math.max(0, page);
   const apiPage = validPage + 1; // Convert to 1-based for backend
 
-  this.setState({
-    isLoading: true,
-    error: null,
-    pageSize: validPageSize,
-    currentPage: validPage
-  });
+  // Only update loading state if component is still mounted
+  if (this._isMounted) {
+    this.setState({
+      isLoading: true,
+      error: null,
+      pageSize: validPageSize,
+      currentPage: validPage
+    });
+  }
 
   return axios({
     method: 'get',
     url: `/api/users?page=${apiPage}&size=${validPageSize}`,
     headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-    timeout: 10000
+    timeout: 10000,
+    cancelToken: new CancelToken(function executor(c) {
+      // An executor function receives a cancel function as a parameter
+      cancel = c;
+    })
   })
-    .then(res => {
-      if (!res.data) {
-        throw new Error('No data received from server');
-      }
+  .then(res => {
+    if (!res.data) {
+      throw new Error('No data received from server');
+    }
 
-      const response = {
-        items: res.data.items || [],
-        totalItems: res.data.totalItems || 0,
-        currentPage: res.data.currentPage || 1,
-        totalPages: res.data.totalPages || 0,
-        pageSize: res.data.pageSize || validPageSize
-      };
+    const response = {
+      items: res.data.items || [],
+      totalItems: res.data.totalItems || 0,
+      currentPage: res.data.currentPage || 1,
+      totalPages: res.data.totalPages || 0,
+      pageSize: res.data.pageSize || validPageSize
+    };
 
-      // Update component state
+    // Only update state if component is still mounted
+    if (this._isMounted) {
       this.setState({
         users: response.items,
         totalCount: response.totalItems,
@@ -68,28 +85,47 @@ fetchUsers = (page, pageSize) => {
         pageSize: response.pageSize,
         isLoading: false
       });
+    }
 
-      // Return data in format expected by MaterialTable
-      return {
-        data: response.items,
-        page: response.currentPage - 1,
-        totalCount: response.totalItems
-      };
-    })
-    .catch(err => {
-      console.error('Error fetching users:', err);
-      const errorMessage = err.response?.data?.message || 'Failed to fetch users. Please try again.';
-      this.setState({
-        isLoading: false,
-        error: errorMessage
-      });
-      return {
-        data: [],
-        page: 0,
-        totalCount: 0
-      };
-    });
+    // Return data in format expected by MaterialTable
+    return {
+      data: response.items,
+      page: response.currentPage - 1,
+      totalCount: response.totalItems,
+      hasNextPage: (response.currentPage * response.pageSize) < response.totalItems
+    };
+  })
+  .catch(error => {
+    // Don't log cancellation errors
+    if (!axios.isCancel(error)) {
+      console.error('Error fetching users:', error);
+      const errorMessage = error.response?.data?.message || 'Failed to fetch users. Please try again.';
+      
+      if (this._isMounted) {
+        this.setState({
+          isLoading: false,
+          error: errorMessage
+        });
+      }
+    }
+    
+    // Re-throw the error so it can be handled by the caller if needed
+    throw error;
+  });
 };
+
+  componentDidMount() {
+    this._isMounted = true;
+    this.fetchUsers(0, this.state.pageSize);
+  }
+
+  componentWillUnmount() {
+    // Cancel any pending requests when component unmounts
+    this._isMounted = false;
+    if (cancel) {
+      cancel('Operation canceled by the user.');
+    }
+  }
 
   handlePageChange = (page, pageSize) => {
     return this.fetchUsers(page, pageSize);
@@ -98,19 +134,6 @@ fetchUsers = (page, pageSize) => {
   handlePageSizeChange = (pageSize) => {
     // Reset to first page when changing page size
     return this.fetchUsers(0, pageSize);
-  };
-
-  componentDidMount() {
-    this.fetchUsers(0, this.state.pageSize);
-  }
-
-  handlePageChange = (page, pageSize) => {
-    this.fetchUsers(page, pageSize);
-  };
-
-  handlePageSizeChange = (pageSize) => {
-    this.fetchUsers(0, pageSize);
-
   };
 
   onView = (user) => {
@@ -225,6 +248,12 @@ fetchUsers = (page, pageSize) => {
                     title=""
                     columns={[
                       {
+                        title: 'NO',
+                        field: 'no',
+                        headerStyle: { minWidth: '100px' },
+                        cellStyle: { fontFamily: 'monospace', color: '#4b5563' }
+                      },
+                      {
                         title: 'EMP ID',
                         field: 'id',
                         headerStyle: { minWidth: '100px' },
@@ -317,11 +346,59 @@ fetchUsers = (page, pageSize) => {
                         )
                       }
                     ]}
-                    data={this.state.users}
+                    data={query => {
+                      // Cancel previous request if it exists
+                      if (cancel) {
+                        cancel('Operation canceled due to new request');
+                      }
+                      
+                      const page = query.page;
+                      const pageSize = query.pageSize;
+                      
+                      return this.fetchUsers(page, pageSize)
+                        .then(result => {
+                          // Only update state if component is still mounted
+                          if (this._isMounted) {
+                            this.setState({
+                              pageSize: pageSize,
+                              currentPage: page
+                            });
+                          }
+                          
+                          // Add row numbers that continue across pagination
+                          const dataWithRowNumbers = result.data.map((item, index) => ({
+                            ...item,
+                            no: (page * pageSize) + index + 1 // Calculate row number
+                          }));
+                          
+                          return {
+                            data: dataWithRowNumbers,
+                            page: page,
+                            totalCount: result.totalCount
+                          };
+                        })
+                        .catch(error => {
+                          if (axios.isCancel(error)) {
+                            // Request was cancelled, no need to show error
+                            return { data: [], page: 0, totalCount: 0 };
+                          }
+                          console.error('Error in data promise:', error);
+                          return { data: [], page: 0, totalCount: 0 };
+                        });
+                    }}
                     options={{
-                      pageSize: 10,
+                      pageSize: this.state.pageSize,
                       pageSizeOptions: [10, 20, 50],
+                      paginationType: 'stepped',
+                      paginationPosition: 'both',
+                      showFirstLastPageButtons: true,
+                      emptyRowsWhenPaging: true,
+                      sorting: false,
                       search: true,
+                      showNextPageButton: () => {
+                        const { currentPage, pageSize, totalCount } = this.state;
+                        return (currentPage + 1) * pageSize < totalCount;
+                      },
                       searchFieldVariant: 'outlined',
                       searchFieldStyle: {
                         padding: '1px 10px',
@@ -347,6 +424,17 @@ fetchUsers = (page, pageSize) => {
                           backgroundColor: '#f1f5f9',
                         },
                       }),
+                      loadingType: 'linear',
+                      showEmptyDataSourceMessage: !this.state.isLoading,
+                      toolbar: true,
+                      toolbarButtonAlignment: 'left',
+                      maxBodyHeight: 'calc(100vh - 300px)',
+                      minBodyHeight: '400px',
+                      draggable: false,
+                      filtering: false,
+                      actionsColumnIndex: -1,
+                      debounceInterval: 500,
+                      thirdSortClick: false,
                       components: {
                         Toolbar: props => (
                           <div className="px-6 py-4 border-b border-gray-200">
