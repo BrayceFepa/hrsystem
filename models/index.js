@@ -5,6 +5,13 @@ const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
   host: dbConfig.HOST,
   dialect: dbConfig.dialect,
   operatorsAliases: 0,
+  dialectOptions: dbConfig.dialectOptions || {},
+  define: {
+    timestamps: true,
+    underscored: true,
+    createdAt: "created_at",
+    updatedAt: "updated_at",
+  },
 
   pool: {
     max: dbConfig.pool.max,
