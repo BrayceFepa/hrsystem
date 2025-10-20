@@ -2,46 +2,6 @@
 
 This document provides comprehensive documentation for all API endpoints in the HR System.
 
-## General Features
-
-### Pagination
-
-Most list endpoints support pagination through query parameters:
-
-- `page` (number, optional) - Page number (default: 1)
-- `size` (number, optional) - Items per page (default: 10)
-
-**Pagination Response Format:**
-
-```json
-{
-  "totalItems": 100,
-  "items": [...],
-  "totalPages": 10,
-  "currentPage": 1
-}
-```
-
-**Endpoints with Pagination:**
-
-- GET /api/applications
-- GET /api/applications/user/:id
-- GET /api/applications/department/:id
-- GET /api/leave-balance
-- GET /api/users
-- GET /api/departments
-- GET /api/user-financial-info
-
-### Filtering
-
-Application (Leave Request) endpoints support filtering by:
-
-- `status` - Filter by status: "Pending" | "Approved" | "Rejected"
-- `type` - Filter by leave type (Sick Leave, Annual Leave, etc.)
-- `startDate` / `endDate` - Filter by date range
-
-**Example:** `GET /api/applications?status=Pending&type=Annual Leave&page=1&size=20`
-
 ---
 
 ## Table of Contents
@@ -54,7 +14,6 @@ Application (Leave Request) endpoints support filtering by:
 - [Departments](#departments)
 - [Jobs](#jobs)
 - [Applications (Leave Requests)](#applications-leave-requests)
-- [Leave Balance](#leave-balance)
 - [Payments](#payments)
 - [Expenses](#expenses)
 - [Department Announcements](#department-announcements)
@@ -968,7 +927,7 @@ Deletes all jobs for a specific user.
 
 ### Create Application
 
-Creates a new leave application with automatic balance deduction and validation.
+Creates a new leave application.
 
 **Endpoint:** `POST /api/applications`
 
@@ -978,143 +937,61 @@ Creates a new leave application with automatic balance deduction and validation.
 
 ```json
 {
-  "userId": number,                              // Required
-  "type": "string",                              // Required: See leave types below
-  "startDate": "date",                           // Required (YYYY-MM-DD)
-  "endDate": "date",                             // Required (YYYY-MM-DD)
-  "reason": "string",                            // Optional
-  "approvedBy": "string",                        // Optional - Name/ID of supervisor
-  "businessLeavePurpose": "string",              // Required if type is "Business Leave"
-  "businessLeaveDestination": "string"           // Required if type is "Business Leave"
+  "reason": "string",          // Optional
+  "startDate": "date",         // Required (YYYY-MM-DD)
+  "endDate": "date",           // Required (YYYY-MM-DD)
+  "type": "string",            // Required: "Normal" | "Student" | "Illness" | "Marriage"
+  "userId": number             // Required
 }
 ```
-
-**Leave Types:**
-
-- `Sick Leave with document` - Requires medical documentation
-- `Sick Leave without document` - Deducts from annual leave balance
-- `Remote Work` - Work from home/remote location
-- `Annual Leave` - Deducts from annual leave balance
-- `Bereavement Leave` - Funeral/family emergency
-- `Unexcused Absence` - Only selectable by HR/Supervisor
-- `Business Leave` - Field work, requires purpose and destination
 
 **Success Response (200):**
 
 ```json
 {
   "id": 1,
-  "name": "John Doe",
-  "positionTitle": "Software Engineer",
   "reason": "Family vacation",
   "startDate": "2024-03-15T00:00:00.000Z",
   "endDate": "2024-03-20T00:00:00.000Z",
-  "numberOfDays": 6,
   "status": "Pending",
-  "type": "Annual Leave",
-  "approvedBy": "Jane Manager",
-  "businessLeavePurpose": null,
-  "businessLeaveDestination": null,
-  "deductedFromBalance": true,
-  "userId": 1,
-  "createdAt": "2024-03-01T10:00:00.000Z",
-  "updatedAt": "2024-03-01T10:00:00.000Z"
+  "type": "Normal",
+  "userId": 1
 }
 ```
 
-**Business Logic:**
+**Notes:**
 
-1. **Auto-population**: Employee name and position are automatically fetched from User and Job tables
-2. **Auto-calculation**: `numberOfDays` is automatically calculated from start and end dates (inclusive)
-3. **Balance Deduction**:
-   - For "Sick Leave without document" or "Annual Leave": Automatically deducts from annual leave balance
-   - Checks if sufficient balance exists before allowing submission
-   - Sets `deductedFromBalance` flag to true
-4. **Business Leave Validation**: Requires both `businessLeavePurpose` and `businessLeaveDestination` fields
-5. **Status**: Automatically set to "Pending" on creation
-
-**Error Responses:**
-
-```json
-// Insufficient balance
-{
-  "message": "Insufficient annual leave balance. Available: 5 days, Requested: 10 days"
-}
-
-// Missing business leave fields
-{
-  "message": "Business Leave requires purpose and destination fields"
-}
-
-// Invalid date range
-{
-  "message": "End date must be after start date"
-}
-```
+- Status is automatically set to "Pending" on creation
 
 ---
 
 ### Get All Applications
 
-Retrieves all applications with user details, supports pagination and filtering.
+Retrieves all applications.
 
 **Endpoint:** `GET /api/applications`
 
 **Authentication:** Admin or Manager
 
-**Query Parameters:**
-
-- `page` (number, optional) - Page number (default: 1)
-- `size` (number, optional) - Items per page (default: 10)
-- `status` (string, optional) - Filter by status: "Pending" | "Approved" | "Rejected"
-- `type` (string, optional) - Filter by leave type (see leave types above)
-- `startDate` (date, optional) - Filter applications starting from this date (YYYY-MM-DD)
-- `endDate` (date, optional) - Filter applications up to this date (YYYY-MM-DD)
-
-**Example Requests:**
-
-```
-GET /api/applications?page=1&size=20
-GET /api/applications?status=Pending
-GET /api/applications?type=Annual Leave&status=Approved
-GET /api/applications?startDate=2024-03-01&endDate=2024-03-31
-GET /api/applications?status=Pending&type=Sick Leave without document&page=1&size=10
-```
-
 **Success Response (200):**
 
 ```json
-{
-  "totalItems": 45,
-  "items": [
-    {
+[
+  {
+    "id": 1,
+    "reason": "Family vacation",
+    "startDate": "2024-03-15T00:00:00.000Z",
+    "endDate": "2024-03-20T00:00:00.000Z",
+    "status": "Pending",
+    "type": "Normal",
+    "userId": 1,
+    "user": {
       "id": 1,
-      "name": "John Doe",
-      "positionTitle": "Software Engineer",
-      "reason": "Family vacation",
-      "startDate": "2024-03-15T00:00:00.000Z",
-      "endDate": "2024-03-20T00:00:00.000Z",
-      "numberOfDays": 6,
-      "status": "Pending",
-      "type": "Annual Leave",
-      "approvedBy": "Jane Manager",
-      "businessLeavePurpose": null,
-      "businessLeaveDestination": null,
-      "deductedFromBalance": true,
-      "userId": 1,
-      "user": {
-        "id": 1,
-        "username": "john_doe",
-        "fullName": "John Doe",
-        "departmentId": 1
-      },
-      "createdAt": "2024-03-01T10:00:00.000Z",
-      "updatedAt": "2024-03-01T10:00:00.000Z"
+      "username": "john_doe",
+      "fullName": "John Doe"
     }
-  ],
-  "totalPages": 5,
-  "currentPage": 1
-}
+  }
+]
 ```
 
 ---
@@ -1212,7 +1089,7 @@ Retrieves recent applications for a specific user.
 
 ### Get Applications by User
 
-Retrieves all applications for a specific user with pagination and filtering.
+Retrieves all applications for a specific user.
 
 **Endpoint:** `GET /api/applications/user/:id`
 
@@ -1222,56 +1099,28 @@ Retrieves all applications for a specific user with pagination and filtering.
 
 - `id` (number) - User ID
 
-**Query Parameters:**
-
-- `page` (number, optional) - Page number (default: 1)
-- `size` (number, optional) - Items per page (default: 10)
-- `status` (string, optional) - Filter by status: "Pending" | "Approved" | "Rejected"
-- `type` (string, optional) - Filter by leave type
-
-**Example Requests:**
-
-```
-GET /api/applications/user/5?page=1&size=10
-GET /api/applications/user/5?status=Pending
-GET /api/applications/user/5?type=Annual Leave&status=Approved
-```
-
 **Success Response (200):**
 
 ```json
-{
-  "totalItems": 12,
-  "items": [
-    {
-      "id": 1,
-      "name": "John Doe",
-      "positionTitle": "Software Engineer",
-      "reason": "Vacation",
-      "startDate": "2024-03-15T00:00:00.000Z",
-      "endDate": "2024-03-20T00:00:00.000Z",
-      "numberOfDays": 6,
-      "status": "Approved",
-      "type": "Annual Leave",
-      "userId": 1,
-      "user": {
-        "id": 1,
-        "username": "john_doe",
-        "fullName": "John Doe",
-        "departmentId": 1
-      }
-    }
-  ],
-  "totalPages": 2,
-  "currentPage": 1
-}
+[
+  {
+    "id": 1,
+    "reason": "Vacation",
+    "startDate": "2024-03-15T00:00:00.000Z",
+    "endDate": "2024-03-20T00:00:00.000Z",
+    "status": "Approved",
+    "type": "Normal",
+    "userId": 1,
+    "user": {...}
+  }
+]
 ```
 
 ---
 
 ### Get Applications by Department
 
-Retrieves all applications for a specific department with pagination and filtering.
+Retrieves all applications for a specific department.
 
 **Endpoint:** `GET /api/applications/department/:id`
 
@@ -1281,47 +1130,22 @@ Retrieves all applications for a specific department with pagination and filteri
 
 - `id` (number) - Department ID
 
-**Query Parameters:**
-
-- `page` (number, optional) - Page number (default: 1)
-- `size` (number, optional) - Items per page (default: 10)
-- `status` (string, optional) - Filter by status: "Pending" | "Approved" | "Rejected"
-- `type` (string, optional) - Filter by leave type
-
-**Example Requests:**
-
-```
-GET /api/applications/department/3?page=1&size=15
-GET /api/applications/department/3?status=Pending
-GET /api/applications/department/3?type=Remote Work&status=Approved
-```
-
 **Success Response (200):**
 
 ```json
-{
-  "totalItems": 28,
-  "items": [
-    {
-      "id": 1,
-      "name": "Jane Smith",
-      "positionTitle": "Marketing Manager",
-      "startDate": "2024-03-15T00:00:00.000Z",
-      "endDate": "2024-03-20T00:00:00.000Z",
-      "numberOfDays": 6,
-      "status": "Pending",
-      "type": "Annual Leave",
-      "user": {
-        "id": 5,
-        "username": "jane_smith",
-        "fullName": "Jane Smith",
-        "departmentId": 3
-      }
+[
+  {
+    "id": 1,
+    "startDate": "2024-03-15T00:00:00.000Z",
+    "endDate": "2024-03-20T00:00:00.000Z",
+    "status": "Pending",
+    "type": "Normal",
+    "user": {
+      "departmentId": 1,
+      ...
     }
-  ],
-  "totalPages": 3,
-  "currentPage": 1
-}
+  }
+]
 ```
 
 ---
@@ -1356,7 +1180,7 @@ Retrieves a single application.
 
 ### Update Application
 
-Updates an application (typically used for approval/rejection). Automatically restores leave balance if application is rejected.
+Updates an application (typically used for approval/rejection).
 
 **Endpoint:** `PUT /api/applications/:id`
 
@@ -1374,8 +1198,7 @@ Updates an application (typically used for approval/rejection). Automatically re
   "reason": "string", // Optional
   "startDate": "date", // Optional
   "endDate": "date", // Optional
-  "type": "string", // Optional
-  "approvedBy": "string" // Optional
+  "type": "string" // Optional
 }
 ```
 
@@ -1384,144 +1207,6 @@ Updates an application (typically used for approval/rejection). Automatically re
 ```json
 {
   "message": "Application was updated successfully."
-}
-```
-
-**Business Logic:**
-
-- When status changes from any status to "Rejected", and the application had `deductedFromBalance: true`, the system automatically restores the deducted days to the employee's annual leave balance
-
----
-
-### Get User Leave Balance
-
-Retrieves the leave balance for a specific user. Creates a default balance if one doesn't exist.
-
-**Endpoint:** `GET /api/applications/user/:id/balance`
-
-**Authentication:** Any authenticated user
-
-**URL Parameters:**
-
-- `id` (number) - User ID
-
-**Success Response (200):**
-
-```json
-{
-  "id": 1,
-  "userId": 5,
-  "annualLeaveTotal": 20,
-  "annualLeaveUsed": 5,
-  "annualLeaveRemaining": 15,
-  "sickLeaveDays": 10,
-  "year": 2024,
-  "createdAt": "2024-01-01T00:00:00.000Z",
-  "updatedAt": "2024-03-15T10:00:00.000Z"
-}
-```
-
----
-
-### Get User Leave History
-
-Retrieves complete leave history for a specific user, ordered by start date (most recent first).
-
-**Endpoint:** `GET /api/applications/history/:userId`
-
-**Authentication:** Any authenticated user
-
-**URL Parameters:**
-
-- `userId` (number) - User ID
-
-**Success Response (200):**
-
-```json
-[
-  {
-    "id": 3,
-    "name": "John Doe",
-    "positionTitle": "Software Engineer",
-    "reason": "Family vacation",
-    "startDate": "2024-03-15T00:00:00.000Z",
-    "endDate": "2024-03-20T00:00:00.000Z",
-    "numberOfDays": 6,
-    "status": "Approved",
-    "type": "Annual Leave",
-    "approvedBy": "Jane Manager",
-    "deductedFromBalance": true,
-    "userId": 5,
-    "user": {
-      "id": 5,
-      "username": "john_doe",
-      "fullName": "John Doe"
-    },
-    "createdAt": "2024-03-01T10:00:00.000Z",
-    "updatedAt": "2024-03-02T14:30:00.000Z"
-  }
-]
-```
-
----
-
-### Get Leave Reports
-
-Retrieves comprehensive leave usage reports with statistics. Available to Admin only.
-
-**Endpoint:** `GET /api/applications/reports`
-
-**Authentication:** Admin
-
-**Query Parameters:**
-
-- `startDate` (string, optional) - Filter by start date (YYYY-MM-DD)
-- `endDate` (string, optional) - Filter by end date (YYYY-MM-DD)
-- `departmentId` (number, optional) - Filter by department ID
-
-**Success Response (200):**
-
-```json
-{
-  "applications": [
-    {
-      "id": 1,
-      "name": "John Doe",
-      "positionTitle": "Software Engineer",
-      "startDate": "2024-03-15T00:00:00.000Z",
-      "endDate": "2024-03-20T00:00:00.000Z",
-      "numberOfDays": 6,
-      "status": "Approved",
-      "type": "Annual Leave",
-      "user": {
-        "id": 5,
-        "username": "john_doe",
-        "fullName": "John Doe",
-        "departmentId": 1
-      }
-    }
-  ],
-  "statistics": {
-    "totalApplications": 25,
-    "pending": 5,
-    "approved": 18,
-    "rejected": 2,
-    "totalDaysUsed": 120,
-    "byType": {
-      "Annual Leave": {
-        "count": 10,
-        "totalDays": 60
-      },
-      "Sick Leave with document": {
-        "count": 5,
-        "totalDays": 10
-      },
-      "Business Leave": {
-        "count": 3,
-        "totalDays": 15
-      }
-    }
-  }
 }
 ```
 
@@ -1586,201 +1271,6 @@ Deletes all applications for a specific user.
   "message": "5 Applications were deleted successfully!"
 }
 ```
-
----
-
-## Leave Balance
-
-### Create Leave Balance
-
-Initializes a leave balance for an employee. Default values: 20 annual leave days, 10 sick leave days.
-
-**Endpoint:** `POST /api/leave-balance`
-
-**Authentication:** Admin or Manager
-
-**Request Body:**
-
-```json
-{
-  "userId": number,                  // Required
-  "annualLeaveTotal": number,        // Optional, default: 20
-  "sickLeaveDays": number,           // Optional, default: 10
-  "year": number                     // Optional, default: current year
-}
-```
-
-**Success Response (200):**
-
-```json
-{
-  "id": 1,
-  "userId": 5,
-  "annualLeaveTotal": 20,
-  "annualLeaveUsed": 0,
-  "annualLeaveRemaining": 20,
-  "sickLeaveDays": 10,
-  "year": 2024,
-  "createdAt": "2024-01-01T00:00:00.000Z",
-  "updatedAt": "2024-01-01T00:00:00.000Z"
-}
-```
-
----
-
-### Get Leave Balance by User
-
-Retrieves the leave balance for a specific user.
-
-**Endpoint:** `GET /api/leave-balance/user/:userId`
-
-**Authentication:** Any authenticated user
-
-**URL Parameters:**
-
-- `userId` (number) - User ID
-
-**Success Response (200):**
-
-```json
-{
-  "id": 1,
-  "userId": 5,
-  "annualLeaveTotal": 20,
-  "annualLeaveUsed": 5,
-  "annualLeaveRemaining": 15,
-  "sickLeaveDays": 10,
-  "year": 2024,
-  "user": {
-    "id": 5,
-    "username": "john_doe",
-    "fullName": "John Doe",
-    "role": "ROLE_EMPLOYEE"
-  },
-  "createdAt": "2024-01-01T00:00:00.000Z",
-  "updatedAt": "2024-03-15T10:00:00.000Z"
-}
-```
-
----
-
-### Get All Leave Balances
-
-Retrieves all leave balances for all employees with pagination. Available to Admin/HR only.
-
-**Endpoint:** `GET /api/leave-balance`
-
-**Authentication:** Admin or Manager
-
-**Query Parameters:**
-
-- `page` (number, optional) - Page number (default: 1)
-- `size` (number, optional) - Items per page (default: 10)
-
-**Example Requests:**
-
-```
-GET /api/leave-balance?page=1&size=20
-GET /api/leave-balance?page=2&size=50
-```
-
-**Success Response (200):**
-
-```json
-{
-  "totalItems": 150,
-  "items": [
-    {
-      "id": 1,
-      "userId": 5,
-      "annualLeaveTotal": 20,
-      "annualLeaveUsed": 5,
-      "annualLeaveRemaining": 15,
-      "sickLeaveDays": 10,
-      "year": 2024,
-      "user": {
-        "id": 5,
-        "username": "john_doe",
-        "fullName": "John Doe",
-        "role": "ROLE_EMPLOYEE",
-        "departmentId": 1
-      },
-      "createdAt": "2024-01-01T00:00:00.000Z",
-      "updatedAt": "2024-03-15T10:00:00.000Z"
-    }
-  ],
-  "totalPages": 15,
-  "currentPage": 1
-}
-```
-
----
-
-### Update Leave Balance
-
-Manually updates a user's leave balance. Available to Admin only.
-
-**Endpoint:** `PUT /api/leave-balance/user/:userId`
-
-**Authentication:** Admin
-
-**URL Parameters:**
-
-- `userId` (number) - User ID
-
-**Request Body:**
-
-```json
-{
-  "annualLeaveTotal": number,        // Optional
-  "annualLeaveUsed": number,         // Optional
-  "annualLeaveRemaining": number,    // Optional
-  "sickLeaveDays": number,           // Optional
-  "year": number                     // Optional
-}
-```
-
-**Success Response (200):**
-
-```json
-{
-  "message": "Leave balance was updated successfully."
-}
-```
-
----
-
-### Reset All Leave Balances
-
-Resets all employee leave balances for a new year. Available to Admin only.
-
-**Endpoint:** `POST /api/leave-balance/reset`
-
-**Authentication:** Admin
-
-**Request Body:**
-
-```json
-{
-  "year": number,                    // Optional, default: current year
-  "annualLeaveTotal": number,        // Optional, default: 20
-  "sickLeaveDays": number            // Optional, default: 10
-}
-```
-
-**Success Response (200):**
-
-```json
-{
-  "message": "All leave balances have been reset successfully for year 2025"
-}
-```
-
-**Notes:**
-
-- This operation resets all employees' leave balances to the default values
-- Use this at the beginning of each year
-- All balances will be reset to the specified values regardless of current usage
 
 ---
 
@@ -2608,7 +2098,6 @@ phone: "string"                  // Optional
 emailAddress: "string"           // Optional
 emergencyContact: "string"       // Optional (emergency contact details)
 idCopy: File                     // Optional (PDF or Image, max 5MB)
-nationalIdNumber: "string"       // Optional (SSN/Tax ID/National ID) //nationalIdNumber added
 userId: number                   // Required
 ```
 
@@ -2630,7 +2119,6 @@ phone            | text  | +0987654321
 emailAddress     | text  | john@example.com
 emergencyContact | text  | Jane Doe - +1987654321
 idCopy           | file  | id_document.pdf
-nationalIdNumber | text  | 123-45-6789
 userId           | text  | 1
 ```
 
@@ -2652,7 +2140,6 @@ userId           | text  | 1
   "emailAddress": "john@example.com",
   "emergencyContact": "Jane Doe - +1987654321",
   "idCopy": "uploads/personal-info-files/idCopy-1234567890-123456789.pdf",
-  "nationalIdNumber": "123-45-6789",
   "userId": 1
 }
 ```
@@ -2871,6 +2358,7 @@ Creates new financial information for a user.
   "accountNumber": "string",           // Optional
   "iban": "string",                    // Optional
   "branch": "string",                  // Optional
+  "nationalIdNumber": "string",        // Optional
   "userId": number                     // Required
 }
 ```
@@ -2900,6 +2388,7 @@ Creates new financial information for a user.
   "accountNumber": "1234567890",
   "iban": "US64SVBKUS6S3300958879",
   "branch": "Downtown Branch",
+  "nationalIdNumber": "123-45-6789",
   "userId": 1
 }
 ```
@@ -2976,6 +2465,7 @@ Retrieves financial information for a specific user.
     "accountNumber": "1234567890",
     "iban": "US64SVBKUS6S3300958879",
     "branch": "Downtown Branch",
+    "nationalIdNumber": "123-45-6789",
     "userId": 1
   }
 ]
@@ -3009,6 +2499,7 @@ Retrieves a single financial information record by its ID.
   "accountNumber": "1234567890",
   "iban": "US64SVBKUS6S3300958879",
   "branch": "Downtown Branch",
+  "nationalIdNumber": "123-45-6789",
   "userId": 1,
   "user": {
     "id": 1,
@@ -3054,7 +2545,8 @@ Updates an existing financial information record.
   "accountName": "string",             // Optional
   "accountNumber": "string",           // Optional
   "iban": "string",                    // Optional
-  "branch": "string"                   // Optional
+  "branch": "string",                  // Optional
+  "nationalIdNumber": "string"         // Optional
 }
 ```
 
