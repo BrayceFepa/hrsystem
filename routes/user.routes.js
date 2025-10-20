@@ -6,8 +6,8 @@ const { cacheMiddleware } = require("../config/cache.config");
 
 const user = require("../controllers/user.controller.js");
 
-// Create a new user
-router.post("/", user.create);
+// Create a new user (Admin or HR)
+router.post("/", withAuth.verifyToken, withAuth.withRoleAdminOrHR, user.create);
 
 // Retrieve all Users (Admin, Manager, or HR)
 router.get(
