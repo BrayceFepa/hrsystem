@@ -249,3 +249,29 @@ exports.withRoleAdminOrManagerOrHR = (req, res, next) => {
     }
   });
 };
+
+exports.withRoleAdminOrManagerOrHROrFinance = (req, res, next) => {
+  var authData = req.authData;
+
+  User.findOne({
+    where: { id: authData.user.id },
+  }).then((user) => {
+    if (user) {
+      if (
+        user.role === "ROLE_ADMIN" ||
+        user.role === "ROLE_MANAGER" ||
+        user.role === "ROLE_HR" ||
+        user.role === "ROLE_FINANCE"
+      ) {
+        req.authData = authData;
+        next();
+      } else {
+        res
+          .status(401)
+          .send({ message: "Access denied: Role can't access this api" });
+      }
+    } else {
+      res.status(401).send({ message: "Forbidden" });
+    }
+  });
+};

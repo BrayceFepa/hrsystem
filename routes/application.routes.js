@@ -13,6 +13,14 @@ router.get(
   application.findAll
 );
 
+// Retrieve applications for current manager (their own + their department's employees)
+router.get(
+  "/manager/me",
+  withAuth.verifyToken,
+  withAuth.withRoleManager,
+  application.findAllForManager
+);
+
 // Create a new Application
 router.post("/", withAuth.verifyToken, application.create);
 

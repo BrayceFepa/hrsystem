@@ -14,11 +14,11 @@ router.post(
   department.create
 );
 
-//Retrieve all Departments (Admin, Manager, or HR)
+//Retrieve all Departments (Admin, Manager, HR, or Finance)
 router.get(
   "/",
   withAuth.verifyToken,
-  withAuth.withRoleAdminOrManagerOrHR,
+  withAuth.withRoleAdminOrManagerOrHROrFinance,
   cacheMiddleware(300),
   department.findAll
 );

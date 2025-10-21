@@ -64,10 +64,35 @@ exports.create = (req, res) => {
 
 // Retrieve all Users from the database with pagination
 exports.findAll = (req, res) => {
-  const { page, size } = req.query;
+  const { page, size, role, active, empStatus } = req.query;
   const { limit, offset } = getPagination(page, size);
 
+  // Build where clause for user filtering
+  let whereClause = {};
+
+  // Role filter (single or multiple comma-separated values)
+  if (role) {
+    const roles = role.split(",").map((r) => r.trim());
+    whereClause.role = roles.length === 1 ? roles[0] : { [Op.in]: roles };
+  }
+
+  // Active status filter
+  if (active !== undefined) {
+    whereClause.active = active === "true" || active === true;
+  }
+
+  // Build Job include with optional empStatus filter
+  const jobInclude = {
+    model: Job,
+  };
+
+  if (empStatus) {
+    jobInclude.where = { empStatus: empStatus };
+    jobInclude.required = true; // INNER JOIN to filter users by employment status
+  }
+
   User.findAndCountAll({
+    where: whereClause,
     limit,
     offset,
     include: [
@@ -80,9 +105,7 @@ exports.findAll = (req, res) => {
       {
         model: Department,
       },
-      {
-        model: Job,
-      },
+      jobInclude,
     ],
     distinct: true, // Important for accurate count with associations
   })
@@ -133,11 +156,35 @@ exports.findTotalByDept = (req, res) => {
 // Retrieve all Users by Department Id with pagination
 exports.findAllByDeptId = (req, res) => {
   const departmentId = req.params.id;
-  const { page, size } = req.query;
+  const { page, size, role, active, empStatus } = req.query;
   const { limit, offset } = getPagination(page, size);
 
+  // Build where clause for user filtering
+  let whereClause = { departmentId: departmentId };
+
+  // Role filter (single or multiple comma-separated values)
+  if (role) {
+    const roles = role.split(",").map((r) => r.trim());
+    whereClause.role = roles.length === 1 ? roles[0] : { [Op.in]: roles };
+  }
+
+  // Active status filter
+  if (active !== undefined) {
+    whereClause.active = active === "true" || active === true;
+  }
+
+  // Build Job include with optional empStatus filter
+  const jobInclude = {
+    model: Job,
+  };
+
+  if (empStatus) {
+    jobInclude.where = { empStatus: empStatus };
+    jobInclude.required = true; // INNER JOIN to filter users by employment status
+  }
+
   User.findAndCountAll({
-    where: { departmentId: departmentId },
+    where: whereClause,
     limit,
     offset,
     include: [
@@ -150,9 +197,7 @@ exports.findAllByDeptId = (req, res) => {
       {
         model: Department,
       },
-      {
-        model: Job,
-      },
+      jobInclude,
     ],
     distinct: true,
   })

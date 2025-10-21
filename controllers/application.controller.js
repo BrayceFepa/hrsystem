@@ -182,6 +182,80 @@ exports.findAll = (req, res) => {
     });
 };
 
+// Retrieve all Applications for a Manager (their own + their department's employees)
+exports.findAllForManager = async (req, res) => {
+  try {
+    const managerId = req.authData.user.id;
+    const { page, size, status, type, startDate, endDate } = req.query;
+    const { limit, offset } = getPagination(page, size);
+
+    // Fetch manager's information to get their department
+    const manager = await User.findByPk(managerId);
+
+    if (!manager) {
+      return res.status(404).send({
+        message: "Manager not found",
+      });
+    }
+
+    if (!manager.departmentId) {
+      return res.status(400).send({
+        message: "Manager is not assigned to any department",
+      });
+    }
+
+    // Build where clause for application filtering
+    let whereClause = {};
+
+    if (status) {
+      whereClause.status = status;
+    }
+
+    if (type) {
+      whereClause.type = type;
+    }
+
+    if (startDate && endDate) {
+      whereClause.startDate = {
+        [Op.between]: [new Date(startDate), new Date(endDate)],
+      };
+    } else if (startDate) {
+      whereClause.startDate = {
+        [Op.gte]: new Date(startDate),
+      };
+    } else if (endDate) {
+      whereClause.startDate = {
+        [Op.lte]: new Date(endDate),
+      };
+    }
+
+    // Query applications from manager's department
+    const data = await Application.findAndCountAll({
+      where: whereClause,
+      limit,
+      offset,
+      include: [
+        {
+          model: User,
+          where: { departmentId: manager.departmentId },
+          attributes: ["id", "username", "fullName", "departmentId"],
+        },
+      ],
+      order: [["startDate", "DESC"]],
+      distinct: true,
+    });
+
+    const response = getPagingData(data, page || 1, limit);
+    res.send(response);
+  } catch (err) {
+    console.error("Error retrieving applications for manager:", err);
+    res.status(500).send({
+      message:
+        err.message || "Some error occurred while retrieving Applications.",
+    });
+  }
+};
+
 // Retrieve all Applications from the database.
 exports.findAllRecent = (req, res) => {
   Application.findAll({

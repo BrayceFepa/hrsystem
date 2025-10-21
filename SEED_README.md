@@ -57,13 +57,34 @@ All users are created with the same password for easy testing:
 
 ## Sample Users
 
-After running the seed script, you'll see a list of sample usernames in the console output. Examples:
+After running the seed script, you'll see a list of sample usernames in the console output.
+
+### Admin Accounts:
 
 - `james_smith0` (ROLE_ADMIN)
 - `mary_johnson1` (ROLE_ADMIN)
-- `john_williams2` (ROLE_MANAGER)
-- `patricia_brown3` (ROLE_MANAGER)
-- ... and 26 more
+
+### Manager Accounts (10 available):
+
+- `joseph_anderson2` (ROLE_MANAGER)
+- `jennifer_clark3` (ROLE_MANAGER)
+- `matthew_ramirez4` (ROLE_MANAGER)
+- `donald_lee5` (ROLE_MANAGER)
+- `matthew_ramirez6` (ROLE_MANAGER)
+- `anthony_brown2` (ROLE_MANAGER)
+- `thomas_young3` (ROLE_MANAGER)
+- `sarah_miller4` (ROLE_MANAGER)
+- `karen_young5` (ROLE_MANAGER)
+- `patricia_clark6` (ROLE_MANAGER)
+
+### HR & Finance Accounts:
+
+- 2 HR accounts
+- 2 Finance accounts
+
+### Employee Accounts:
+
+- ... and additional employee accounts
 
 ## What the Script Does
 
@@ -172,6 +193,33 @@ If you encounter issues:
 2. Verify database connectivity
 3. Ensure all models are properly defined
 4. Check that all required fields are being populated
+
+---
+
+## Quick Login Reference
+
+### For Manager Testing:
+
+```
+Username: joseph_anderson2
+Password: password123
+```
+
+or
+
+```
+Username: jennifer_clark3
+Password: password123
+```
+
+### For Admin Testing:
+
+```
+Username: james_smith0
+Password: password123
+```
+
+**All accounts use the same password:** `password123`
 
 ---
 

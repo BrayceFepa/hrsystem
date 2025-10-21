@@ -217,44 +217,83 @@ Creates a new user (Admin function).
 
 ### Get All Users
 
-Retrieves all users with their related information.
+Retrieves all users with their related information. Supports filtering by role, active status, and employment status.
 
 **Endpoint:** `GET /api/users`
 
-**Authentication:** Admin or Manager
+**Authentication:** Admin, Manager, HR, or Finance
+
+**Query Parameters:**
+
+- `page` (number, optional) - Page number (default: 1)
+- `size` (number, optional) - Items per page (default: 10)
+- `role` (string, optional) - Filter by role (single or comma-separated): "ROLE_EMPLOYEE" | "ROLE_MANAGER" | "ROLE_ADMIN" | "ROLE_HR" | "ROLE_FINANCE"
+- `active` (boolean, optional) - Filter by account status: true | false
+- `empStatus` (string, optional) - Filter by employment status (from Job): "Active" | "On Leave" | "Terminated"
+
+**Example Requests:**
+
+```
+GET /api/users
+GET /api/users?page=1&size=20
+GET /api/users?role=ROLE_EMPLOYEE
+GET /api/users?role=ROLE_EMPLOYEE,ROLE_MANAGER
+GET /api/users?role=ROLE_EMPLOYEE&active=true
+GET /api/users?role=ROLE_EMPLOYEE&active=true&empStatus=Active
+GET /api/users?empStatus=On Leave
+```
 
 **Success Response (200):**
 
 ```json
-[
-  {
-    "id": 1,
-    "username": "john_doe",
-    "fullName": "John Doe",
-    "role": "ROLE_EMPLOYEE",
-    "active": true,
-    "departmentId": 1,
-    "user_personal_info": {
+{
+  "totalItems": 150,
+  "items": [
+    {
       "id": 1,
-      "dateOfBirth": "1990-01-15",
-      "gender": "Male",
-      "mobile": "+1234567890",
-      ...
-    },
-    "user_financial_info": {
-      "id": 1,
-      "salaryBasic": 50000,
-      "bankName": "Bank of America",
-      ...
-    },
-    "department": {
-      "id": 1,
-      "departmentName": "Engineering"
-    },
-    "jobs": [...]
-  }
-]
+      "username": "john_doe",
+      "fullName": "John Doe",
+      "role": "ROLE_EMPLOYEE",
+      "active": true,
+      "departmentId": 1,
+      "user_personal_info": {
+        "id": 1,
+        "dateOfBirth": "1990-01-15",
+        "gender": "Male",
+        "mobile": "+1234567890",
+        ...
+      },
+      "user_financial_info": {
+        "id": 1,
+        "salaryBasic": 50000,
+        "bankName": "Bank of America",
+        ...
+      },
+      "department": {
+        "id": 1,
+        "departmentName": "Engineering"
+      },
+      "jobs": [
+        {
+          "id": 1,
+          "jobTitle": "Software Engineer",
+          "empStatus": "Active",
+          ...
+        }
+      ]
+    }
+  ],
+  "totalPages": 8,
+  "currentPage": 1
+}
 ```
+
+**Notes:**
+
+- Multiple roles can be specified using comma-separated values
+- When filtering by `empStatus`, only users with at least one job matching that status are returned
+- All filters can be combined for more specific queries
+- Pagination works with all filters
 
 ---
 
@@ -264,7 +303,7 @@ Retrieves total number of users.
 
 **Endpoint:** `GET /api/users/total`
 
-**Authentication:** Admin or Manager
+**Authentication:** Admin, Manager, HR, or Finance
 
 **Success Response (200):**
 
@@ -296,7 +335,7 @@ Retrieves user count for a specific department.
 
 ### Get Users by Department
 
-Retrieves all users in a specific department.
+Retrieves all users in a specific department. Supports filtering by role, active status, and employment status.
 
 **Endpoint:** `GET /api/users/department/:id`
 
@@ -306,20 +345,65 @@ Retrieves all users in a specific department.
 
 - `id` (number) - Department ID
 
+**Query Parameters:**
+
+- `page` (number, optional) - Page number (default: 1)
+- `size` (number, optional) - Items per page (default: 10)
+- `role` (string, optional) - Filter by role (single or comma-separated): "ROLE_EMPLOYEE" | "ROLE_MANAGER" | "ROLE_ADMIN" | "ROLE_HR" | "ROLE_FINANCE"
+- `active` (boolean, optional) - Filter by account status: true | false
+- `empStatus` (string, optional) - Filter by employment status (from Job): "Active" | "On Leave" | "Terminated"
+
+**Example Requests:**
+
+```
+GET /api/users/department/1
+GET /api/users/department/1?page=1&size=20
+GET /api/users/department/1?role=ROLE_EMPLOYEE
+GET /api/users/department/1?role=ROLE_EMPLOYEE,ROLE_MANAGER
+GET /api/users/department/1?role=ROLE_EMPLOYEE&active=true
+GET /api/users/department/1?role=ROLE_EMPLOYEE&active=true&empStatus=Active
+```
+
 **Success Response (200):**
 
 ```json
-[
-  {
-    "id": 1,
-    "username": "john_doe",
-    "fullName": "John Doe",
-    "role": "ROLE_EMPLOYEE",
-    "departmentId": 1,
-    ...
-  }
-]
+{
+  "totalItems": 25,
+  "items": [
+    {
+      "id": 1,
+      "username": "john_doe",
+      "fullName": "John Doe",
+      "role": "ROLE_EMPLOYEE",
+      "active": true,
+      "departmentId": 1,
+      "user_personal_info": {...},
+      "user_financial_info": {...},
+      "department": {
+        "id": 1,
+        "departmentName": "Engineering"
+      },
+      "jobs": [
+        {
+          "id": 1,
+          "jobTitle": "Software Engineer",
+          "empStatus": "Active",
+          ...
+        }
+      ]
+    }
+  ],
+  "totalPages": 2,
+  "currentPage": 1
+}
 ```
+
+**Notes:**
+
+- Multiple roles can be specified using comma-separated values
+- When filtering by `empStatus`, only users with at least one job matching that status are returned
+- All filters can be combined for more specific queries
+- Pagination works with all filters
 
 ---
 
@@ -538,7 +622,7 @@ Retrieves all departments with their users.
 
 **Endpoint:** `GET /api/departments`
 
-**Authentication:** Admin or Manager
+**Authentication:** Admin, Manager, HR, or Finance
 
 **Success Response (200):**
 
@@ -1032,6 +1116,132 @@ GET /api/applications?startDate=2024-01-01&endDate=2024-12-31
 - This endpoint shows ALL applications from all users
 - Only accessible by Admin, Manager, or HR roles
 - For employees to see their own applications, use `GET /api/applications/user/:id`
+
+---
+
+### Get Applications for Manager (Own + Department)
+
+Retrieves applications for the current manager, including their own applications and all applications from employees in their department. This is the recommended endpoint for managers to view applications in their scope.
+
+**Endpoint:** `GET /api/applications/manager/me`
+
+**Authentication:** Manager only (ROLE_MANAGER)
+
+**Query Parameters:**
+
+- `page` (number, optional) - Page number (default: 1)
+- `size` (number, optional) - Items per page (default: 10)
+- `status` (string, optional) - Filter by status: "Approved" | "Rejected" | "Pending"
+- `type` (string, optional) - Filter by leave type
+- `startDate` (date, optional) - Filter by start date (YYYY-MM-DD)
+- `endDate` (date, optional) - Filter by end date (YYYY-MM-DD)
+
+**Example Requests:**
+
+```
+GET /api/applications/manager/me
+GET /api/applications/manager/me?page=1&size=20
+GET /api/applications/manager/me?status=Pending
+GET /api/applications/manager/me?type=Annual Leave&page=1&size=10
+GET /api/applications/manager/me?startDate=2024-01-01&endDate=2024-12-31
+```
+
+**Success Response (200):**
+
+```json
+{
+  "totalItems": 45,
+  "items": [
+    {
+      "id": 1,
+      "name": "John Doe",
+      "positionTitle": "Software Engineer",
+      "reason": "Family vacation",
+      "startDate": "2024-03-15T00:00:00.000Z",
+      "endDate": "2024-03-20T00:00:00.000Z",
+      "numberOfDays": 6,
+      "status": "Pending",
+      "type": "Annual Leave",
+      "approvedBy": null,
+      "businessLeavePurpose": null,
+      "businessLeaveDestination": null,
+      "deductedFromBalance": true,
+      "userId": 5,
+      "createdAt": "2024-03-01T10:00:00.000Z",
+      "updatedAt": "2024-03-01T10:00:00.000Z",
+      "user": {
+        "id": 5,
+        "username": "john_doe",
+        "fullName": "John Doe",
+        "departmentId": 1
+      }
+    },
+    {
+      "id": 2,
+      "name": "Jane Manager",
+      "positionTitle": "Engineering Manager",
+      "reason": "Conference",
+      "startDate": "2024-03-10T00:00:00.000Z",
+      "endDate": "2024-03-12T00:00:00.000Z",
+      "numberOfDays": 3,
+      "status": "Approved",
+      "type": "Business Leave",
+      "approvedBy": "HR Department",
+      "businessLeavePurpose": "Tech Conference",
+      "businessLeaveDestination": "San Francisco",
+      "deductedFromBalance": false,
+      "userId": 3,
+      "createdAt": "2024-02-25T10:00:00.000Z",
+      "updatedAt": "2024-02-26T14:00:00.000Z",
+      "user": {
+        "id": 3,
+        "username": "jane_manager",
+        "fullName": "Jane Manager",
+        "departmentId": 1
+      }
+    }
+  ],
+  "totalPages": 3,
+  "currentPage": 1
+}
+```
+
+**Error Responses:**
+
+```json
+// 404 - Manager not found
+{
+  "message": "Manager not found"
+}
+
+// 400 - Manager not assigned to department
+{
+  "message": "Manager is not assigned to any department"
+}
+
+// 401 - Not authorized (non-manager role)
+{
+  "message": "Access denied: Role can't access this api"
+}
+```
+
+**Notes:**
+
+- **Recommended endpoint for managers** to view leave applications within their scope
+- Automatically includes the manager's own applications (same department)
+- Automatically includes all applications from employees in the manager's department
+- Manager's department is determined from their user profile (`departmentId`)
+- Only accessible by users with `ROLE_MANAGER` role
+- Supports all the same filters and pagination as the general applications endpoint
+- More convenient than calling multiple endpoints (`/user/:id` + `/department/:id`)
+- Manager must be assigned to a department for this endpoint to work
+
+**Use Cases:**
+
+- Manager reviewing pending leave requests from their team
+- Manager checking their own leave history alongside team members
+- Manager generating department leave reports
+- Manager viewing all approved/rejected applications in their department
 
 ---
 

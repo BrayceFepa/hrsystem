@@ -9,20 +9,20 @@ const user = require("../controllers/user.controller.js");
 // Create a new user (Admin or HR)
 router.post("/", withAuth.verifyToken, withAuth.withRoleAdminOrHR, user.create);
 
-// Retrieve all Users (Admin, Manager, or HR)
+// Retrieve all Users (Admin, Manager, HR, or Finance)
 router.get(
   "/",
   withAuth.verifyToken,
-  withAuth.withRoleAdminOrManagerOrHR,
+  withAuth.withRoleAdminOrManagerOrHROrFinance,
   cacheMiddleware(300),
   user.findAll
 );
 
-//Retreive user count (Admin, Manager, or HR)
+//Retreive user count (Admin, Manager, HR, or Finance)
 router.get(
   "/total",
   withAuth.verifyToken,
-  withAuth.withRoleAdminOrManagerOrHR,
+  withAuth.withRoleAdminOrManagerOrHROrFinance,
   cacheMiddleware(300),
   user.findTotal
 );
