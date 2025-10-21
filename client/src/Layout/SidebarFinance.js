@@ -212,6 +212,7 @@ export default class SidebarFinance extends Component {
                                 <a href="#" className="d-block text-danger text-bold">
                                     {this.state.user.fullname || ''}
                                 </a>
+                                <small className="text-danger text-center">Finance</small>
                             </div>
                         )}
                     </div>

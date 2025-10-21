@@ -98,6 +98,12 @@ export default class SidebarHR extends Component {
         icon: 'briefcase', 
         to: '/job-list' 
       },
+      { 
+        id: 'terminated', 
+        title: 'Terminated Employees', 
+        icon: 'user-times', 
+        to: '/terminated-employees' 
+      },
       {
         id: 'applications',
         title: 'Applications',
@@ -207,14 +213,12 @@ export default class SidebarHR extends Component {
                 style={{ width: '2.1rem', height: '2.1rem' }}
               />
             </div>
-            <div className="info">
-              <a href="#" className="d-block" style={{ color: '#4b4b4b' }}>
-                {user.firstName} {user.lastName}
-              </a>
-              <a href="#" className="d-block" style={{ fontSize: '0.8rem', color: '#6c757d' }}>
-                HR Department
-              </a>
-            </div>
+                <div className="info d-flex flex-column">
+                  <a href="#" className="text-danger text-bold">
+                    {this.state.user.fullname || ''}
+                  </a>
+                  <small className="text-danger text-center">Human Resource</small>
+                </div>
           </div>
 
           <nav className="mt-2">

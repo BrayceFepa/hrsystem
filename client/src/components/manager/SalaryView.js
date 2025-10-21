@@ -90,7 +90,7 @@ export default class SalaryView extends Component {
                                                                     Basic Salary: 
                                                                 </Form.Label>
                                                                 <span>
-                                                                    $ {this.state.user.user_financial_info.salaryBasic}
+                                                                    $ {this.state.user.user_financial_info?.salaryBasic || 'N/A'}
                                                                 </span>
                                                             </Form.Group>
                                                         </Card.Text>
@@ -107,7 +107,7 @@ export default class SalaryView extends Component {
                                                                     House Rent Allowance: 
                                                                 </Form.Label>
                                                                 <span>
-                                                                    $ {this.state.user.user_financial_info.allowanceHouseRent}
+                                                                    $ {this.state.user.user_financial_info?.allowanceHouseRent || 'N/A'}
                                                                 </span>
                                                             </Form.Group>
                                                             <Form.Group as={Row}>
@@ -115,7 +115,7 @@ export default class SalaryView extends Component {
                                                                     Medical Allowance: 
                                                                 </Form.Label>
                                                                 <span>
-                                                                    $ {this.state.user.user_financial_info.allowanceMedical}
+                                                                    $ {this.state.user.user_financial_info?.allowanceMedical || 'N/A'}
                                                                 </span>
                                                             </Form.Group>
                                                             <Form.Group as={Row}>
@@ -123,7 +123,7 @@ export default class SalaryView extends Component {
                                                                     Special Allowance: 
                                                                 </Form.Label>
                                                                 <span>
-                                                                    $ {this.state.user.user_financial_info.allowanceSpecial}
+                                                                    $ {this.state.user.user_financial_info?.allowanceSpecial || 'N/A'}
                                                                 </span>
                                                             </Form.Group>
                                                             <Form.Group as={Row}>
@@ -131,7 +131,7 @@ export default class SalaryView extends Component {
                                                                     Fuel Allowance: 
                                                                 </Form.Label>
                                                                 <span>
-                                                                    $ {this.state.user.user_financial_info.allowanceFuel}
+                                                                    $ {this.state.user.user_financial_info?.allowanceTravel || 'N/A'}
                                                                 </span>
                                                             </Form.Group>
                                                             <Form.Group as={Row}>
@@ -139,7 +139,7 @@ export default class SalaryView extends Component {
                                                                     Phone Bill Allowance: 
                                                                 </Form.Label>
                                                                 <span>
-                                                                    $ {this.state.user.user_financial_info.allowancePhoneBill}
+                                                                    $ {this.state.user.user_financial_info?.allowancePhoneBill || 'N/A'}
                                                                 </span>
                                                             </Form.Group>
                                                             <Form.Group as={Row}>
@@ -147,7 +147,7 @@ export default class SalaryView extends Component {
                                                                     Other Allowance: 
                                                                 </Form.Label>
                                                                 <span>
-                                                                    $ {this.state.user.user_financial_info.allowanceOther}
+                                                                    $ {this.state.user.user_financial_info?.allowanceOther || 'N/A'}
                                                                 </span>
                                                             </Form.Group>
                                                             <Form.Group as={Row}>
@@ -155,7 +155,7 @@ export default class SalaryView extends Component {
                                                                     Total Allowance: 
                                                                 </Form.Label>
                                                                 <span>
-                                                                    $ {this.state.user.user_financial_info.allowanceTotal}
+                                                                    $ {this.state.user.user_financial_info?.allowanceTotal || 'N/A'}
                                                                 </span>
                                                             </Form.Group>
                                                         </Card.Text>
@@ -174,7 +174,7 @@ export default class SalaryView extends Component {
                                                                     Tax Deduction: 
                                                                 </Form.Label>
                                                                 <span>
-                                                                    $ {this.state.user.user_financial_info.deductionTax}
+                                                                    $ {this.state.user.user_financial_info?.deductionTax || 'N/A'}
                                                                 </span>
                                                             </Form.Group>
                                                             <Form.Group as={Row}>
@@ -182,7 +182,7 @@ export default class SalaryView extends Component {
                                                                     Other Deduction: 
                                                                 </Form.Label>
                                                                 <span>
-                                                                    $ {this.state.user.user_financial_info.deductionOther}
+                                                                    $ {this.state.user.user_financial_info?.deductionOther || 'N/A'}
                                                                 </span>
                                                             </Form.Group>
                                                             <Form.Group as={Row}>
@@ -190,7 +190,7 @@ export default class SalaryView extends Component {
                                                                     Total Deduction: 
                                                                 </Form.Label>
                                                                 <span>
-                                                                    $ {this.state.user.user_financial_info.deductionTotal}
+                                                                    $ {this.state.user.user_financial_info?.deductionTotal || 'N/A'}
                                                                 </span>
                                                             </Form.Group>
                                                         </Card.Text>
@@ -207,7 +207,7 @@ export default class SalaryView extends Component {
                                                                     Gross Salary: 
                                                                 </Form.Label>
                                                                 <span>
-                                                                    $ {this.state.user.user_financial_info.salaryGross}
+                                                                    $ {this.state.user.user_financial_info?.salaryGross || 'N/A'}
                                                                 </span>
                                                             </Form.Group>
                                                             <Form.Group as={Row}>
@@ -215,7 +215,7 @@ export default class SalaryView extends Component {
                                                                     Total Deduction: 
                                                                 </Form.Label>
                                                                 <span>
-                                                                    $ {this.state.user.user_financial_info.deductionTotal}
+                                                                    $ {this.state.user.user_financial_info?.deductionTotal || 'N/A'}
                                                                 </span>
                                                             </Form.Group>
                                                             <Form.Group as={Row}>
@@ -223,7 +223,7 @@ export default class SalaryView extends Component {
                                                                     Net Salary: 
                                                                 </Form.Label>
                                                                 <span>
-                                                                    $ {this.state.user.user_financial_info.salaryNet}
+                                                                    $ {this.state.user.user_financial_info?.salaryNet || 'N/A'}
                                                                 </span>
                                                             </Form.Group>
                                                         </Card.Text>

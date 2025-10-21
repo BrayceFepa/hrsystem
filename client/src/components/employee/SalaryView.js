@@ -82,7 +82,7 @@ export default class SalaryViewEmployee extends Component {
                                             <ul>
                                                 <li><span>Employee ID: </span> {this.state.user.id}</li>
                                                 <li><span>Department: </span> {this.state.user.department ? this.state.user.department.departmentName : 'N/A'}</li>
-                                                <li><span>Job Title: </span> {this.state.currentJobTitle || 'N/A'}</li>
+                                                <li><span>Job Title: </span> {this.state.user.jobs?.[0]?.jobTitle || 'N/A'}</li>
                                                 <li>
                                                     <span>Role: </span>
                                                     {this.state.user.role === 'ROLE_ADMIN' 
@@ -107,7 +107,7 @@ export default class SalaryViewEmployee extends Component {
                                                             Employment Type: 
                                                         </Form.Label>
                                                         <Col sm={6}>
-                                                            <span>{this.state.user.user_financial_info?.employmentType || 'N/A'}</span>
+                                                            <span>{this.state.user.jobs?.[0]?.empType || 'N/A'}</span>
                                                         </Col>
                                                     </Form.Group>
                                                     <Form.Group as={Row} className="mb-3">

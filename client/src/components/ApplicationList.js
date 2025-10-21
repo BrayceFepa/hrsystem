@@ -12,32 +12,67 @@ import { createMuiTheme } from '@material-ui/core/styles'
 export default class ApplicationList extends Component {
   constructor(props) {
     super(props);
-
-    this.state = {
-      applications: [],
-      selectedApplications: null,
-      done: false,
-      hasError: false,
-      errorMsg: "",
-      completed: false,
-      showModel: false,
-    };
+    this.state = this.getInitialState();
   }
 
+  getInitialState = () => ({
+    applications: [],
+    selectedApplications: null,
+    done: false,
+    hasError: false,
+    errorMsg: "",
+    completed: false,
+    showModel: false,
+    pagination: {
+      currentPage: 1,
+      totalPages: 1,
+      totalItems: 0,
+      pageSize: 10,
+      hasNextPage: false,
+      hasPrevPage: false
+    }
+  });
+
   componentDidMount() {
+    this.fetchApplications(1);
+  }
+
+  fetchApplications = (page) => {
     axios({
       method: "get",
-      url: "/api/applications",
+      url: `/api/applications?page=${page}`,
       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
     }).then((res) => {
-        res.data.map(app => {
-            app.startDate=moment(app.startDate).format('YYYY-MM-DD')
-            app.endDate=moment(app.endDate).format('YYYY-MM-DD')
-        })
-      this.setState({ applications: res.data }, () => {
-          console.log('applications', this.state.aplications)
+      const { items, ...pagination } = res.data;
+      const formattedData = items.map(app => ({
+        ...app,
+        user: app.user || { id: null, fullName: 'Unknown User' },
+        startDate: app.startDate ? moment(app.startDate).format('YYYY-MM-DD') : '',
+        endDate: app.endDate ? moment(app.endDate).format('YYYY-MM-DD') : ''
+      }));
+      
+      this.setState({ 
+        applications: formattedData,
+        pagination: {
+          currentPage: pagination.currentPage,
+          totalPages: pagination.totalPages,
+          totalItems: pagination.totalItems,
+          pageSize: pagination.pageSize,
+          hasNextPage: pagination.hasNextPage,
+          hasPrevPage: pagination.hasPrevPage
+        }
+      });
+    }).catch(error => {
+      console.error('Error fetching applications:', error);
+      this.setState({ 
+        hasError: true, 
+        errorMsg: 'Failed to load applications. Please try again later.' 
       });
     });
+  }
+
+  handlePageChange = (newPage) => {
+    this.fetchApplications(newPage);
   }
 
   handleChange = (event) => {
@@ -135,45 +170,79 @@ export default class ApplicationList extends Component {
                         },
                         {
                             title: 'Action',
-                            render: rowData => (
-                              rowData.user.id != JSON.parse(localStorage.getItem('user')).id ? (
-                                rowData.status === "Pending" ? (
-                                  <>
-                                    <Button onClick={this.onApprove(rowData)} variant="success" size="sm" className="mr-2" title="Approve"><i className="fas fa-check"></i></Button>
-                                    <Button onClick={this.onReject(rowData)} variant="danger" size="sm" className="ml-2" title="Reject"><i className="fas fa-times"></i></Button>
-                                  </>
-                                ) : null
-                              ) : null
-                            )
+                            render: rowData => {
+                                try {
+                                    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+                                    const isNotCurrentUser = rowData.user && rowData.user.id && currentUser.id && 
+                                                          String(rowData.user.id) !== String(currentUser.id);
+                                    const isPending = rowData.status === "Pending";
+                                    
+                                    if (isNotCurrentUser && isPending) {
+                                        return (
+                                            <>
+                                                <Button 
+                                                    onClick={(e) => this.onApprove(rowData)(e)} 
+                                                    variant="success" 
+                                                    size="sm" 
+                                                    className="mr-2" 
+                                                    title="Approve"
+                                                >
+                                                    <i className="fas fa-check"></i>
+                                                </Button>
+                                                <Button 
+                                                    onClick={(e) => this.onReject(rowData)(e)} 
+                                                    variant="danger" 
+                                                    size="sm" 
+                                                    className="ml-2" 
+                                                    title="Reject"
+                                                >
+                                                    <i className="fas fa-times"></i>
+                                                </Button>
+                                            </>
+                                        );
+                                    }
+                                    return null;
+                                } catch (error) {
+                                    console.error('Error rendering action buttons:', error);
+                                    return null;
+                                }
+                            }
                         }
                     ]}
                     data={this.state.applications}
                     
                     options={{
-                    rowStyle: (rowData, index) => {
-                      if(index%2) {
-                        return {backgroundColor: '#f2f2f2'}
-                      }
-                    },
-                    pageSize: 10,
-                    pageSizeOptions: [10, 20, 30, 50, 75, 100]
-                  }}
+                      rowStyle: (rowData, index) => ({
+                        backgroundColor: index % 2 ? '#f2f2f2' : 'white'
+                      }),
+                      ...(this.state.pagination && {
+                        pageSize: this.state.pagination.pageSize || 10,
+                        page: (this.state.pagination.currentPage || 1) - 1,
+                        totalCount: this.state.pagination.totalItems || 0,
+                        pageSizeOptions: [5, 10, 20, 50],
+                        paginationType: 'stepped',
+                        onChangePage: (event, newPage) => {
+                          this.handlePageChange(newPage + 1);
+                        },
+                        onChangeRowsPerPage: (pageSize) => {
+                          this.fetchApplications(1);
+                        },
+                        paginationPosition: 'both'
+                      })
+                    }}
                     title=""
-                />
-              </ThemeProvider>
-            </Card.Body>
-          </Card>
+                  />
+                </ThemeProvider>
+              </Card.Body>
+            </Card>
+          </div>
+          {this.state.hasError && (
+            <Alert variant="danger" className="m-3">
+              {this.state.errorMsg}
+            </Alert>
+          )}
+          {this.state.completed && <Redirect to="/application-list" />}
         </div>
-        {this.state.hasError ? (
-          <Alert variant="danger" className="m-3" block>
-            {this.state.errMsg}
-          </Alert>
-        ) : this.state.completed ? (
-          <Redirect to="/application-list" />
-        ) : (
-          <></>
-        )}
-      </div>
     );
   }
 }

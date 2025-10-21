@@ -156,6 +156,19 @@ export default class EmployeeList extends Component {
               <ThemeProvider theme={theme}>
                 <MaterialTable 
                   columns={[
+                    {
+                      title: 'NO',
+                      field: 'tableData.id',
+                      width: 50,
+                      render: (rowData) => rowData.tableData.id + 1,
+                      cellStyle: {
+                        textAlign: 'center',
+                        verticalAlign: 'top'
+                      },
+                      headerStyle: {
+                        textAlign: 'center'
+                      }
+                    },
                     { 
                       title: 'EMP ID', 
                       field: 'id',
