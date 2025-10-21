@@ -36,45 +36,45 @@ export default class SidebarAdmin extends Component {
   updateActiveMenu() {
     const { pathname } = window.location;
     const menuItems = this.getMenuItems();
-    
+
     // Find the active menu by checking all items and their children
     for (const item of menuItems) {
       if (item.children) {
         // Check if any child matches the current path
-        const activeChild = item.children.find(child => 
-          pathname === child.to || 
+        const activeChild = item.children.find(child =>
+          pathname === child.to ||
           (child.to !== '/' && pathname.startsWith(child.to))
         );
-        
+
         if (activeChild) {
           this.setState({ activeMenu: item.id });
           return;
         }
-      } else if (item.to && (pathname === item.to || 
-                 (item.to !== '/' && pathname.startsWith(item.to)))) {
+      } else if (item.to && (pathname === item.to ||
+        (item.to !== '/' && pathname.startsWith(item.to)))) {
         this.setState({ activeMenu: item.id });
         return;
       }
     }
-    
+
     // If no match found, clear active menu
     this.setState({ activeMenu: '' });
   }
-  
+
   getMenuItems() {
     return [
-      { 
-        id: 'dashboard', 
-        title: 'Dashboard', 
-        icon: 'tachometer-alt', 
-        to: '/', 
-        exact: true 
+      {
+        id: 'dashboard',
+        title: 'Dashboard',
+        icon: 'tachometer-alt',
+        to: '/',
+        exact: true
       },
-      { 
-        id: 'departments', 
-        title: 'Departments', 
-        icon: 'building', 
-        to: '/departments' 
+      {
+        id: 'departments',
+        title: 'Departments',
+        icon: 'building',
+        to: '/departments'
       },
       {
         id: 'employee',
@@ -85,21 +85,13 @@ export default class SidebarAdmin extends Component {
           { title: 'Employee List', to: '/employee-list', icon: 'users' }
         ]
       },
-      { 
-        id: 'jobs', 
-        title: 'Job List', 
-        icon: 'briefcase', 
-        to: '/job-list' 
-      },
       {
-        id: 'applications',
-        title: 'Applications',
-        icon: 'rocket',
-        children: [
-          { title: 'Add Application', to: '/application', icon: 'plus' },
-          { title: 'Application List', to: '/application-list', icon: 'list-ul' }
-        ]
+        id: 'jobs',
+        title: 'Job List',
+        icon: 'briefcase',
+        to: '/job-list'
       },
+
       {
         id: 'payroll',
         title: 'Payroll Management',
@@ -119,10 +111,10 @@ export default class SidebarAdmin extends Component {
           { title: 'Expense Report', to: '/expense-report', icon: 'file-invoice' }
         ]
       },
-      { 
-        id: 'announcements', 
-        title: 'Announcements', 
-        icon: 'bell', 
+      {
+        id: 'announcements',
+        title: 'Announcements',
+        icon: 'bell',
         to: '/announcement',
         exact: true
       }
@@ -144,15 +136,15 @@ export default class SidebarAdmin extends Component {
   renderMenuItems() {
     const { collapsed, activeMenu } = this.state;
     const menuItems = this.getMenuItems();
-    
+
     return menuItems.map(item => {
       if (item.children) {
         const isActive = activeMenu === item.id;
         return (
           <li key={item.id} className={`nav-item has-treeview ${isActive ? 'menu-open' : ''}`}>
-            <a 
-              href="#" 
-              className="nav-link" 
+            <a
+              href="#"
+              className="nav-link"
               onClick={(e) => {
                 e.preventDefault();
                 this.toggleMenu(item.id);
@@ -169,9 +161,9 @@ export default class SidebarAdmin extends Component {
             <ul className="nav nav-treeview">
               {item.children.map(child => (
                 <li key={child.to} className="nav-item">
-                    <NavLink 
-                    to={child.to} 
-                    className="nav-link" 
+                  <NavLink
+                    to={child.to}
+                    className="nav-link"
                     isActive={(match, location) => {
                       if (match) return true;
                       // Handle nested routes
@@ -192,10 +184,10 @@ export default class SidebarAdmin extends Component {
 
       return (
         <li key={item.id} className="nav-item">
-          <NavLink 
-            exact={item.exact} 
-            to={item.to} 
-            className="nav-link" 
+          <NavLink
+            exact={item.exact}
+            to={item.to}
+            className="nav-link"
             activeClassName="active"
             onClick={() => collapsed && this.toggleSidebar()}
           >
@@ -219,21 +211,21 @@ export default class SidebarAdmin extends Component {
           {/* Brand Logo */}
           <div className="brand-link d-flex justify-content-between align-items-center">
             <div className="d-flex align-items-center">
-              <img 
-                src={process.env.PUBLIC_URL + '/Logo.png'} 
-                alt="CHIP CHIP HRMS Logo" 
+              <img
+                src={process.env.PUBLIC_URL + '/Logo.png'}
+                alt="CHIP CHIP HRMS Logo"
                 className="brand-image"
               />
             </div>
-            <button 
-              className="btn btn-link text-white" 
+            <button
+              className="btn btn-link text-white"
               onClick={this.toggleSidebar}
-              style={{padding: '0.5rem'}}
+              style={{ padding: '0.5rem' }}
             >
               {/* <i className={`fa fa-${collapsed ? 'bars' : 'times'}`} /> */}
             </button>
           </div>
-          
+
           {/* Sidebar */}
           <div className="sidebar">
             <div className="user-panel mt-3 pb-3 mb-3 d-flex">
@@ -245,14 +237,15 @@ export default class SidebarAdmin extends Component {
                 />
               </div>
               {!collapsed && (
-                <div className="info">
-                  <a href="#" className="d-block text-danger text-bold">
+                <div className="info d-flex flex-column">
+                  <a href="#" className="text-danger text-bold">
                     {this.state.user.fullname || ''}
                   </a>
+                  <small className="text-danger text-center">Admin</small>
                 </div>
               )}
             </div>
-            
+
             {/* Sidebar Menu */}
             <nav className="mt-2">
               <ul className="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">

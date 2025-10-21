@@ -56,6 +56,7 @@ export default class SidebarEmployee extends Component {
               <a href="#" className="d-block text-danger text-bold">
                 {this.state.user.fullname}
               </a>
+              <small className="text-danger text-center">Employee</small>
             </div>
           </div>
           {/* Sidebar Menu */}

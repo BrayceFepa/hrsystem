@@ -25,23 +25,57 @@ export default class ApplicationList extends Component {
   }
 
   componentDidMount() {
-      let deptId = JSON.parse(localStorage.getItem('user')).departmentId
-    axios({
-      method: "get",
-      url: "/api/applications/department/" + deptId,
-      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-    }).then((res) => {
-        res.data.map(app => {
-            app.startDate=moment(app.startDate).format('YYYY-MM-DD')
-            app.endDate=moment(app.endDate).format('YYYY-MM-DD')
-        })
-        this.setState({ applications: res.data }, () => {
-            console.log('applications', this.state.aplications)
+    try {
+      const user = JSON.parse(localStorage.getItem('user'));
+      if (!user || !user.departmentId) {
+        throw new Error('User department information not found');
+      }
+      
+      const deptId = user.departmentId;
+      axios({
+        method: "get",
+        url: "/api/applications/department/" + deptId,
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      })
+      .then((res) => {
+        if (!res.data || !res.data.items) {
+          throw new Error('No applications data received from server');
+        }
+        
+        // Format dates for each application
+        const formattedApplications = res.data.items.map(app => ({
+          ...app,
+          startDate: app.startDate ? moment(app.startDate).format('YYYY-MM-DD') : '',
+          endDate: app.endDate ? moment(app.endDate).format('YYYY-MM-DD') : ''
+        }));
+        
+        this.setState({ 
+          applications: formattedApplications,
+          pagination: {
+            totalItems: res.data.totalItems,
+            currentPage: res.data.currentPage,
+            pageSize: res.data.pageSize,
+            totalPages: res.data.totalPages,
+            hasNextPage: res.data.hasNextPage,
+            hasPrevPage: res.data.hasPrevPage
+          },
+          hasError: false 
         });
-    })
-    .catch(err => {
-        console.log(err)
-    })
+      })
+      .catch(err => {
+        console.error('Error fetching applications:', err);
+        this.setState({ 
+          hasError: true,
+          errorMsg: err.response?.data?.message || 'Failed to load applications'
+        });
+      });
+    } catch (error) {
+      console.error('Error in componentDidMount:', error);
+      this.setState({ 
+        hasError: true,
+        errorMsg: error.message
+      });
+    }
   }
 
   handleChange = (event) => {
@@ -125,6 +159,17 @@ export default class ApplicationList extends Component {
               <ThemeProvider theme={theme}>
                 <MaterialTable
                     columns={[
+                        {
+                            title: 'NO',
+                            width: 80,
+                            render: (rowData) => {
+                                const { pagination } = this.state;
+                                const currentPage = pagination?.currentPage || 1;
+                                const pageSize = pagination?.pageSize || 10;
+                                const rowIndex = this.state.applications.indexOf(rowData);
+                                return (currentPage - 1) * pageSize + rowIndex + 1;
+                            }
+                        },
                         {title: 'APP ID', field: 'id'},
                         {title: 'Full Name', field: 'user.fullName'},
                         {title: 'Start Date', field: 'startDate'},

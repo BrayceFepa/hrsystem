@@ -9,6 +9,24 @@ import MaterialTable from 'material-table';
 import { ThemeProvider } from '@material-ui/core';
 import { createMuiTheme } from '@material-ui/core/styles';
 
+// Function to decode JWT token
+const decodeToken = (token) => {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    console.error('Error decoding token:', e);
+    return null;
+  }
+};
+
 export default class ApplicationList extends Component {
   constructor(props) {
     super(props);
@@ -29,37 +47,66 @@ export default class ApplicationList extends Component {
     this.fetchApplications();
   }
 
-  fetchApplications = (page = 0, pageSize = 10) => {
-    axios({
-      method: "get",
-      url: "/api/applications",
-      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      params: {
-        page: page + 1, // API uses 1-based paging
-        size: pageSize
-      }
-    }).then((res) => {
-      const formattedApplications = res.data.items.map(app => ({
-        ...app,
-        startDate: moment(app.startDate).format('YYYY-MM-DD'),
-        endDate: moment(app.endDate).format('YYYY-MM-DD'),
-        fullName: app.user?.fullName || app.name,
-        status: app.status || 'Pending'
-      }));
+fetchApplications = (page, pageSize = 10) => {
+  // Get the token from localStorage
+  const token = localStorage.getItem("token");
+  if (!token) {
+    console.error('No token found');
+    return Promise.reject('No authentication token found');
+  }
+  
+  // Decode the token to get user info
+  const decoded = decodeToken(token);
+  if (!decoded || !decoded.user || !decoded.user.id) {
+    console.error('Invalid token format');
+    return Promise.reject('Invalid authentication token');
+  }
+  
+  const userId = decoded.user.id; // Get user ID from the token
 
+  return axios({
+    method: "get",
+    url: `/api/applications/user/${userId}?page=${page + 1}&size=${pageSize}`,
+    headers: { Authorization: `Bearer ${token}` },
+  }).then((res) => {
+      const { items, ...pagination } = res.data;
+      const formattedData = items.map(app => ({
+        ...app,
+        user: app.user || { id: null, fullName: 'Unknown User' },
+        startDate: app.startDate ? moment(app.startDate).format('YYYY-MM-DD') : '',
+        endDate: app.endDate ? moment(app.endDate).format('YYYY-MM-DD') : ''
+      }));
+      
       this.setState({ 
-        applications: formattedApplications,
-        totalItems: res.data.totalItems,
-        totalPages: res.data.totalPages,
-        currentPage: res.data.currentPage - 1,
-        pageSize: pageSize
+        applications: formattedData,
+        currentPage: pagination.currentPage - 1, // Convert to 0-based
+        totalItems: pagination.totalItems,
+        totalPages: pagination.totalPages,
+        pageSize: pagination.pageSize,
+        hasError: false, // Reset error state on success
+        errorMsg: ''
       });
-    }).catch((err) => {
-      console.error('Error fetching applications:', err);
+      
+      return {
+        data: formattedData,
+        page: pagination.currentPage - 1,
+        totalCount: pagination.totalItems
+      };
+    }).catch(error => {
+      console.error('Error fetching applications:', error);
+      const errorMessage = error.response?.data?.message || 'Failed to load applications. Please try again later.';
       this.setState({ 
         hasError: true, 
-        errorMsg: err.response?.data?.message || 'Failed to load applications. Please try again later.'
+        errorMsg: errorMessage,
+        applications: [] // Clear applications on error
       });
+      
+      // Return empty data to prevent Material-Table from showing loading state
+      return {
+        data: [],
+        page: 0,
+        totalCount: 0
+      };
     });
   }
 
@@ -97,16 +144,97 @@ export default class ApplicationList extends Component {
       overrides: {
         MuiTableCell: {
           root: {
-            padding: '6px 6px 6px 6px'
+            padding: '12px 8px',
+            '&:last-child': {
+              paddingRight: '8px'
+            }
+          },
+          head: {
+            fontWeight: 'bold',
+            backgroundColor: '#f5f5f5'
           }
         }
       }
     });
 
-    const { applications, pageSize } = this.state;
+    const columns = [
+      { 
+        title: 'Type', 
+        field: 'type',
+        render: rowData => rowData.type || 'N/A',
+        width: 200
+      },
+      {
+        title: 'Start Date',
+        field: 'startDate',
+        render: rowData => moment(rowData.startDate).format('MMM D, YYYY'),
+        width: 150
+      },
+      {
+        title: 'End Date',
+        field: 'endDate',
+        render: rowData => moment(rowData.endDate).format('MMM D, YYYY'),
+        width: 150
+      },
+      {
+        title: 'Days',
+        field: 'numberOfDays',
+        type: 'numeric',
+        align: 'center',
+        width: 100
+      },
+      {
+        title: 'Status',
+        field: 'status',
+        render: rowData => (
+          <span 
+            style={{
+              color: rowData.status === 'Approved' ? 'green' : 
+                     rowData.status === 'Rejected' ? 'red' : 'orange',
+              fontWeight: 'bold',
+              padding: '4px 8px',
+              borderRadius: '12px',
+              backgroundColor: rowData.status === 'Pending' ? '#fff3e0' : 'transparent'
+            }}
+          >
+            {rowData.status}
+          </span>
+        ),
+        width: 150
+      },
+      {
+        title: 'Reason',
+        field: 'reason',
+        render: rowData => rowData.reason || 'N/A',
+        width: 250
+      }
+    ];
 
     return (
       <div className="container-fluid pt-5">
+        {this.state.hasError && (
+          <div className="row justify-content-center mt-3">
+            <div className="col-12">
+              <Alert 
+                variant="danger" 
+                className="p-3"
+                style={{
+                  boxShadow: '0 0 10px rgba(0,0,0,0.1)',
+                  borderLeft: '4px solid #dc3545',
+                  margin: '0 0.5rem 0 0'
+                }}
+              >
+                <div className="d-flex">
+                  <i className="fas fa-exclamation-triangle mt-3 me-3" style={{minWidth: '20px'}}></i>
+                  <div>
+                    <h5 className="alert-heading mb-1">Error</h5>
+                    <p className="mb-0">{this.state.errorMsg}</p>
+                  </div>
+                </div>
+              </Alert>
+            </div>
+          </div>
+        )}
         <div className="col-sm-12">
           <Card>
             <Card.Header className="bg-danger text-white">
@@ -116,16 +244,34 @@ export default class ApplicationList extends Component {
               <ThemeProvider theme={theme}>
                 <MaterialTable
                   columns={[
+                    { 
+                      title: 'NO',
+                      field: 'tableData.id',
+                      width: 70,
+                      render: (rowData) => {
+                        const index = rowData.tableData.id + 1;
+                        return index + (this.state.currentPage * this.state.pageSize);
+                      },
+                      customSort: (a, b) => {
+                        const aIndex = a.tableData.id + (this.state.currentPage * this.state.pageSize);
+                        const bIndex = b.tableData.id + (this.state.currentPage * this.state.pageSize);
+                        return aIndex - bIndex;
+                      }
+                    },
                     { title: 'APP ID', field: 'id' },
                     { 
                       title: 'Full Name', 
                       field: 'fullName',
                       render: rowData => rowData.user?.fullName || rowData.name || 'N/A'
                     },
-                    { title: 'Start Date', field: 'startDate' },
+                    { 
+                      title: 'Start Date', 
+                      field: 'startDate',
+                      render: rowData => moment(rowData.startDate).format('MMM D, YYYY')
+                    },
                     { title: 'End Date', field: 'endDate' },
                     { title: 'Leave Type', field: 'type' },
-                    { title: 'Comments', field: 'reason' },
+                    { title: 'Reason', field: 'reason' },
                     {
                       title: 'Status',
                       field: 'status',
@@ -144,64 +290,76 @@ export default class ApplicationList extends Component {
                           {rowData.status}
                         </Button>
                       )
-                    },
-                    {
-                      title: 'Action',
-                      field: 'actions',
-                      sorting: false,
-                      render: rowData => {
-                        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-                        const isCurrentUser = rowData.user?.id === currentUser.id;
-                        
-                        if (isCurrentUser || rowData.status !== 'Pending') {
-                          return null;
-                        }
-                        
-                        return (
-                          <div>
-                            <Button 
-                              onClick={this.onApprove(rowData)} 
-                              variant="success" 
-                              size="sm" 
-                              className="mr-2" 
-                              title="Approve"
-                            >
-                              <i className="fas fa-check"></i>
-                            </Button>
-                            <Button 
-                              onClick={this.onReject(rowData)} 
-                              variant="danger" 
-                              size="sm" 
-                              className="ml-2" 
-                              title="Reject"
-                            >
-                              <i className="fas fa-times"></i>
-                            </Button>
-                          </div>
-                        );
-                      }
                     }
+                    // {
+                    //   title: 'Action',
+                    //   field: 'actions',
+                    //   sorting: false,
+                    //   render: rowData => {
+                    //     const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+                    //     const isCurrentUser = rowData.user?.id === currentUser.id;
+                        
+                    //     if (isCurrentUser || rowData.status !== 'Pending') {
+                    //       return null;
+                    //     }
+                        
+                    //     return (
+                    //       <div>
+                    //         <Button 
+                    //           onClick={this.onApprove(rowData)} 
+                    //           variant="success" 
+                    //           size="sm" 
+                    //           className="mr-2" 
+                    //           title="Approve"
+                    //         >
+                    //           <i className="fas fa-check"></i>
+                    //         </Button>
+                    //         <Button 
+                    //           onClick={this.onReject(rowData)} 
+                    //           variant="danger" 
+                    //           size="sm" 
+                    //           className="ml-2" 
+                    //           title="Reject"
+                    //         >
+                    //           <i className="fas fa-times"></i>
+                    //         </Button>
+                    //       </div>
+                    //     );
+                    //   }
+                    // }
                   ]}
                   data={query =>
-                    new Promise((resolve) => {
+                    new Promise((resolve, reject) => {
                       this.fetchApplications(query.page, query.pageSize)
-                        .then(() => {
+                        .then((result) => {
                           resolve({
-                            data: applications,
-                            page: this.state.currentPage,
-                            totalCount: this.state.totalItems,
+                            data: result.data,
+                            page: result.page,
+                            totalCount: result.totalCount
                           });
+                        })
+                        .catch(error => {
+                          console.error('Error:', error);
+                          reject(error);
                         });
                     })
                   }
                   options={{
-                    search: true,
+                    search: false,
                     sorting: true,
-                    pageSize: pageSize,
-                    pageSizeOptions: [10, 20, 30, 50, 75, 100],
-                    rowStyle: (rowData, index) => ({
-                      backgroundColor: index % 2 ? '#f2f2f2' : 'white'
-                    })
+                    pageSize: 10,
+                    pageSizeOptions: [5, 10, 20, 50],
+                    headerStyle: {
+                      backgroundColor: '#f8f9fa',
+                      position: 'sticky',
+                      top: 0,
+                      zIndex: 1
+                    },
+                    maxBodyHeight: 'calc(100vh - 200px)',
+                    padding: 'dense',
+                    rowStyle: {
+                      fontSize: '0.875rem'
+                    }
                   }}
                   title=""
                 />
@@ -209,11 +367,6 @@ export default class ApplicationList extends Component {
             </Card.Body>
           </Card>
         </div>
-        {this.state.hasError && (
-          <Alert variant="danger" className="m-3">
-            {this.state.errorMsg}
-          </Alert>
-        )}
         {this.state.completed && <Redirect to="/application-list" />}
       </div>
     );

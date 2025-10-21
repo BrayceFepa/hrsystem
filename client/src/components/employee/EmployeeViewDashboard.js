@@ -65,6 +65,10 @@ export default class EmployeeViewEmployee extends Component {
         return 'Manager';
       case 'ROLE_EMPLOYEE':
         return 'Employee';
+      case 'ROLE_FINANCE':
+        return 'Finance';
+      case 'ROLE_HR':
+        return 'HR';
       default:
         return role;
     }

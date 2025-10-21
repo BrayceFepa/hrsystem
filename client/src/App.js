@@ -8,8 +8,9 @@ import SidebarHR from "./Layout/SidebarHR";
 import SidebarManager from "./Layout/SidebarManager";
 import SidebarEmployee from './Layout/SidebarEmployee'
 import Dashboard from "./components/Dashboard";
-import DashboardManager from './components/manager/Dashboard'
-import DashboardEmployee from './components/employee/Dashboard'
+import DashboardManager from './components/manager/Dashboard';
+import DashboardEmployee from './components/employee/Dashboard';
+import DashboardFinance from './components/finance/Dashboard';
 import Layout from "./Layout/Layout";
 import EmployeeList from "./components/EmployeeList";
 import EmployeeListManager from "./components/manager/EmployeeList";
@@ -115,7 +116,7 @@ const FinanceContainer = () => (
     <SidebarFinance />
     <Layout>
       <Switch>
-        <Route exact path="/" component={withAuth(Dashboard)} />
+        <Route exact path="/" component={withAuth(DashboardFinance)} />
         <Route exact path="/employee-list" component={withAuth(EmployeeList)} />
         <Route exact path="/salary-details" component={withAuth(SalaryDetails)} />
         <Route exact path="/salary-list" component={withAuth(SalaryList)} />

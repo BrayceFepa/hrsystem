@@ -81,6 +81,7 @@ export default class SidebarManager extends Component {
                   <a href="#" className="d-block text-danger text-bold">
                     {this.state.user.fullname || 'User'}
                   </a>
+                  <small className="text-danger text-center">Manager</small>
                 </div>
               )}
             </div>
@@ -99,12 +100,41 @@ export default class SidebarManager extends Component {
                     <p>My Employees</p>
                   </NavLink>
                 </li>
+                <li className="nav-item has-treeview">
+                  <a href="#" className="nav-link">
+                    <i className="nav-icon fas fa-file-alt" />
+                    <p>
+                      Applications
+                      <i className="right fas fa-angle-left" />
+                    </p>
+                  </a>
+                  <ul className="nav nav-treeview">
+                    <li className="nav-item">
+                      <NavLink to="/application" className="nav-link">
+                        <i className="fas fa-plus nav-icon" />
+                        <p>Add Application</p>
+                      </NavLink>
+                    </li>
+                    <li className="nav-item">
+                      <NavLink to="/application-list" className="nav-link">
+                        <i className="fas fa-list nav-icon" />
+                        <p>Application List</p>
+                      </NavLink>
+                    </li>
+                  </ul>
+                </li>
                 <li className="nav-item">
                   <NavLink to="/job-list" className="nav-link">
                     <i className="nav-icon fas fa-briefcase" />
                     <p>Job List</p>
                   </NavLink>
                 </li>
+                {/* <li className="nav-item">
+                  <NavLink exact to="/salary-details" className="nav-link">
+                    <i className="nav-icon fas fa-euro-sign" />
+                    <p>Salary Details</p>
+                  </NavLink>
+                </li> */}
                 <li className="nav-item">
                   <NavLink exact to="/announcement" className="nav-link">
                     <i className="nav-icon fa fa-bell" />
