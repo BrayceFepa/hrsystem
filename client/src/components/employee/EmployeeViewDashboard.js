@@ -90,24 +90,45 @@ export default class EmployeeViewEmployee extends Component {
       <Card>
         <Card.Header className="bg-danger">My Profile</Card.Header>
         <Card.Body>
-          <Card.Title><strong>{user.fullName}</strong></Card.Title>
+          {/* <Card.Title><strong>{user.fullName}</strong></Card.Title> */}
           <Card.Text>
             <Col lg={12}>
-              <Row className="pt-4">
-                <Col lg={3}>
-                  <img 
-                    className="img-circle elevation-1 bp-2" 
+              <Row className="align-items-center py-4 px-3 bg-white shadow-sm rounded-3">
+                <Col lg={3} className="text-center">
+                  <img
                     src={`${process.env.PUBLIC_URL}/user-128.png`}
-                    alt="User profile"
+                    alt={`${user.fullName || 'User'} profile`}
+                    className="img-fluid rounded-circle border border-2 border-light shadow-sm"
+                    style={{ width: "120px", height: "120px", objectFit: "cover" }}
                   />
+                  {/* <h6 className="mt-3 mb-0 fw-semibold">{user.fullName || "Employee Name"}</h6> */}
+                  <small className="text-muted">{this.renderRole(user.role)}</small>
                 </Col>
-                <Col className="pt-4" lg={9}>
-                  <div className="emp-view-list">
-                    <ul>
-                      <li><span>Employee ID: </span> {user.id}</li>
-                      <li><span>Department: </span> {department?.departmentName || 'N/A'}</li>
-                      <li><span>Role: </span> {this.renderRole(user.role)}</li>
-                      <li><span>Status: </span> {user.active ? 'Active' : 'Inactive'}</li>
+
+                <Col lg={9}>
+                  <div className="border-start ps-4 mt-3 mt-lg-0">
+                    <h5 className="fw-semibold mb-3 text-danger">{user.fullName}</h5>
+                    <ul className="list-unstyled mb-0">
+                      <li className="mb-2">
+                        <strong className="text-muted">Employee ID:</strong> {user.id}
+                      </li>
+                      <li className="mb-2">
+                        <strong className="text-muted">Department:</strong>{" "}
+                        {department?.departmentName || "N/A"}
+                      </li>
+                      <li className="mb-2">
+                        <strong className="text-muted">Role:</strong> {this.renderRole(user.role)}
+                      </li>
+                      <li className="mb-2">
+                        <strong className="text-muted">Status:</strong>{" "}
+                        <span
+                          className={`badge ${
+                            user.active ? "bg-green-200 text-green-600" : "bg-secondary"
+                          } rounded-pill px-2 py-2`}
+                        >
+                          {user.active ? "Active" : "Inactive"}
+                        </span>
+                      </li>
                     </ul>
                   </div>
                 </Col>
@@ -184,7 +205,7 @@ export default class EmployeeViewEmployee extends Component {
                   </Card>
                 </Col>
               </Row>
-              <Row className="mt-4">
+              {/* <Row className="mt-4">
                 <Col sm={12}>
                   <Card className="secondary-card">
                     <Card.Header className="bg-danger">Bank & Financial Information</Card.Header>
@@ -197,16 +218,8 @@ export default class EmployeeViewEmployee extends Component {
                             <span>{user_financial_info?.bankName || 'N/A'}</span>
                           </Form.Group>
                           <Form.Group as={Row}>
-                            <Form.Label className="label">Account Name:</Form.Label>
-                            <span>{user_financial_info?.accountName || 'N/A'}</span>
-                          </Form.Group>
-                          <Form.Group as={Row}>
                             <Form.Label className="label">Account Number:</Form.Label>
                             <span>{user_financial_info?.accountNumber || 'N/A'}</span>
-                          </Form.Group>
-                          <Form.Group as={Row}>
-                            <Form.Label className="label">IBAN:</Form.Label>
-                            <span>{user_financial_info?.iban || 'N/A'}</span>
                           </Form.Group>
                           <Form.Group as={Row}>
                             <Form.Label className="label">Branch:</Form.Label>
@@ -241,7 +254,7 @@ export default class EmployeeViewEmployee extends Component {
                     </Card.Body>
                   </Card>
                 </Col>
-              </Row>    
+              </Row>     */}
             </Col>
           </Card.Text>
         </Card.Body>

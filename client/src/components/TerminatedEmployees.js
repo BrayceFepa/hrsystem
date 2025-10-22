@@ -14,8 +14,10 @@ let cancel;
 export default class TerminatedEmployees extends Component {
   constructor(props) {
     super(props);
-    this.defaultPageSize = 10;
+    this.defaultPageSize = 15;
     this.maxPageSize = 100;
+    this.pageSizeOptions = [10, 15, 25, 50, 100];
+    this.searchTimeout = null;
 
     this.state = {
       users: [],
@@ -27,13 +29,27 @@ export default class TerminatedEmployees extends Component {
       editRedirect: false,
       deleteModal: false,
       isLoading: false,
-      error: null
+      error: null,
+      searchTerm: ''
     };
   }
 
-  fetchTerminatedUsers = (page, pageSize) => {
+  handleSearch = (e) => {
+    const searchTerm = e.target.value;
+    this.setState({ searchTerm }, () => {
+      if (this.searchTimeout) {
+        clearTimeout(this.searchTimeout);
+      }
+      
+      this.searchTimeout = setTimeout(() => {
+        this.fetchTerminatedUsers(0, this.state.pageSize, searchTerm);
+      }, 500);
+    });
+  };
+
+  fetchTerminatedUsers = async (page, pageSize, searchTerm) => {
     if (cancel) {
-      cancel('Operation canceled due to new request');
+      cancel('Operation canceled by new request');
     }
 
     const validPageSize = Math.min(Math.max(1, pageSize), this.maxPageSize);
@@ -45,64 +61,94 @@ export default class TerminatedEmployees extends Component {
         isLoading: true,
         error: null,
         pageSize: validPageSize,
-        currentPage: validPage
+        currentPage: validPage,
+        searchTerm: searchTerm !== undefined ? searchTerm : this.state.searchTerm
       });
     }
 
-    return axios({
-      method: 'get',
-      url: `/api/users?page=${apiPage}&size=${validPageSize}&empstatus=Terminated`,
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-      timeout: 10000,
-      cancelToken: new CancelToken(function executor(c) {
-        cancel = c;
-      })
-    })
-    .then(res => {
-      if (!res.data) {
+    try {
+      const response = await axios({
+        method: 'get',
+        url: '/api/users',
+        params: {
+          active: true,
+          empStatus: 'Terminated',
+          page: apiPage,
+          size: validPageSize,
+          search: searchTerm || this.state.searchTerm || undefined
+        },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}` 
+        },
+        timeout: 10000,
+        cancelToken: new CancelToken(c => { cancel = c; })
+      });
+
+      if (!this._isMounted) return;
+
+      if (!response.data || !response.data.items) {
         throw new Error('No data received from server');
       }
 
-      const response = {
-        items: res.data.items || [],
-        totalItems: res.data.totalItems || 0,
-        currentPage: res.data.currentPage || 1,
-        totalPages: res.data.totalPages || 0,
-        pageSize: res.data.pageSize || validPageSize
-      };
+      const { items, totalItems, currentPage: currentPageFromApi, totalPages, hasNextPage, hasPrevPage } = response.data;
+
+      // Format data for the table
+      const formattedData = items.map(user => {
+        const job = user.jobs?.[0] || {};
+        return {
+          id: user.id,
+          username: user.username,
+          fullName: user.fullName || 'N/A',
+          department: user.department?.departmentName || 'N/A',
+          jobTitle: job.jobTitle || 'N/A',
+          empType: job.empType || 'N/A',
+          contract: job.contract || 'N/A',
+          startDate: job.startDate ? new Date(job.startDate).toLocaleDateString() : 'N/A',
+          endDate: job.endDate ? new Date(job.endDate).toLocaleDateString() : 'N/A',
+          directSupervisor: job.directSupervisor || 'N/A',
+          certificate: job.certificate || 'N/A',
+          status: job.empStatus || 'N/A',
+          role: user.role ? user.role.replace('ROLE_', '') : 'N/A'
+        };
+      });
 
       if (this._isMounted) {
         this.setState({
-          users: response.items,
-          totalCount: response.totalItems,
-          currentPage: response.currentPage - 1,
-          pageSize: response.pageSize,
+          users: formattedData,
+          totalCount: parseInt(totalItems) || 0,
+          currentPage: parseInt(currentPageFromApi) - 1, // Convert to 0-based index
+          pageSize: parseInt(validPageSize),
+          totalPages: parseInt(totalPages) || 1,
           isLoading: false
         });
       }
 
       return {
-        data: response.items,
-        page: response.currentPage - 1,
-        totalCount: response.totalItems,
-        hasNextPage: (response.currentPage * response.pageSize) < response.totalItems
+        data: formattedData,
+        page: parseInt(currentPageFromApi) - 1, // Convert to 0-based index
+        totalCount: parseInt(totalItems) || 0,
+        totalPages: parseInt(totalPages) || 1,
+        hasNextPage: hasNextPage === true,
+        hasPrevPage: hasPrevPage === true
       };
-    })
-    .catch(error => {
-      if (!axios.isCancel(error)) {
+    } catch (error) {
+      if (!axios.isCancel(error) && this._isMounted) {
         console.error('Error fetching terminated employees:', error);
         const errorMessage = error.response?.data?.message || 'Failed to fetch terminated employees. Please try again.';
         
-        if (this._isMounted) {
-          this.setState({
-            isLoading: false,
-            error: errorMessage
-          });
-        }
+        this.setState({
+          isLoading: false,
+          error: errorMessage
+        });
       }
       throw error;
-    });
+    } finally {
+      cancel = null; // Reset cancel token
+    }
   };
+
+  _isMounted = false;
 
   componentDidMount() {
     this._isMounted = true;
@@ -112,7 +158,8 @@ export default class TerminatedEmployees extends Component {
   componentWillUnmount() {
     this._isMounted = false;
     if (cancel) {
-      cancel('Operation canceled by the user.');
+      cancel('Operation canceled by component unmount');
+      cancel = null;
     }
   }
 
@@ -132,161 +179,195 @@ export default class TerminatedEmployees extends Component {
   };
 
   render() {
-    const { users, totalCount, isLoading, error, viewRedirect, selectedUser } = this.state;
+    const { users, totalCount, isLoading, error, viewRedirect, selectedUser, pageSize, currentPage } = this.state;
 
     if (viewRedirect && selectedUser) {
       return <Redirect to={`/employee-view/${selectedUser.id}`} />;
     }
 
+    const columns = [
+      {
+        title: 'NO',
+        field: 'id',
+        cellStyle: { width: '5%' },
+        render: (rowData) => rowData.tableData.id + 1,
+        customSort: () => 0,
+        sorting: false
+      },
+      {
+        title: 'EMP ID',
+        field: 'id',
+        headerStyle: { minWidth: '100px' },
+        cellStyle: { fontFamily: 'monospace', color: '#4b5563' }
+      },
+      {
+        title: 'FULL NAME',
+        field: 'fullName',
+        headerStyle: { minWidth: '180px' },
+        cellStyle: { fontWeight: 500, color: '#1e293b' },
+        render: rowData => rowData.fullName || 'N/A'
+      },
+      {
+        title: 'DEPARTMENT',
+        field: 'department',
+        headerStyle: { minWidth: '150px' },
+        cellStyle: { color: '#4b5563' },
+        render: rowData => rowData.department || 'N/A'
+      },
+      {
+        title: 'JOB TITLE',
+        field: 'jobTitle',
+        headerStyle: { minWidth: '200px' },
+        cellStyle: { color: '#4b5563' },
+        render: rowData => rowData.jobTitle || 'N/A'
+      },
+      {
+        title: 'START DATE',
+        field: 'startDate',
+        headerStyle: { minWidth: '120px' },
+        cellStyle: { color: '#4b5563' },
+        render: rowData => rowData.startDate || 'N/A'
+      },
+      {
+        title: 'TERMINATION DATE',
+        field: 'endDate',
+        headerStyle: { minWidth: '150px' },
+        cellStyle: { color: '#4b5563' },
+        render: rowData => rowData.endDate || 'Present'
+      },
+      {
+        title: 'STATUS',
+        field: 'status',
+        headerStyle: { minWidth: '120px' },
+        render: rowData => (
+          <Badge variant="danger" className="px-2 py-1 text-xs">Terminated</Badge>
+        )
+      },
+      // {
+      //   title: 'ACTIONS',
+      //   field: 'actions',
+      //   headerStyle: { minWidth: '150px', textAlign: 'center' },
+      //   cellStyle: { textAlign: 'center' },
+      //   render: rowData => (
+      //     <div className="flex justify-center space-x-2">
+      //       <Button
+      //         size="sm"
+      //         variant="outline-primary"
+      //         className="px-2 py-1 text-xs"
+      //         onClick={this.onView(rowData)}
+      //       >
+      //         <FiEye className="mr-1" /> View
+      //       </Button>
+      //     </div>
+      //   )
+      // }
+    ];
+
     const theme = createMuiTheme({
       overrides: {
-        MuiTable: {
+        MuiTableCell: {
           root: {
-            minWidth: '100%',
-          },
+            padding: '6px 6px 6px 6px'
+          }
         },
-        MuiTableHead: {
+        MuiToolbar: {
           root: {
-            backgroundColor: '#f8fafc',
-          },
-        },
-        MuiTableRow: {
-          head: {
-            '& th': {
-              fontWeight: '600',
-              color: '#334155',
-              fontSize: '0.875rem',
-              padding: '12px 16px',
-              backgroundColor: '#f8fafc',
-              borderBottom: '1px solid #e2e8f0',
-            },
-          },
-          root: {
-            '&:nth-of-type(odd)': {
-              backgroundColor: '#f8fafc',
-            },
-            '&:hover': {
-              backgroundColor: '#f1f5f9',
+            padding: '0 8px',
+            minHeight: '64px',
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            '@media (min-width: 600px)': {
+              padding: '0 16px',
             },
           },
         },
       },
     });
 
-    const columns = [
-      { 
-        title: 'Employee ID', 
-        field: 'employeeId',
-        render: (rowData) => rowData.employeeId || 'N/A'
-      },
-      { 
-        title: 'Name', 
-        field: 'fullName',
-        render: (rowData) => `${rowData.firstName || ''} ${rowData.lastName || ''}`.trim() || 'N/A'
-      },
-      { 
-        title: 'Email', 
-        field: 'email',
-        render: (rowData) => rowData.email || 'N/A'
-      },
-      { 
-        title: 'Department', 
-        field: 'department',
-        render: (rowData) => rowData.department?.name || 'N/A'
-      },
-      { 
-        title: 'Job Title', 
-        field: 'jobTitle',
-        render: (rowData) => rowData.jobTitle || 'N/A'
-      },
-      {
-        title: 'Actions',
-        field: 'actions',
-        sorting: false,
-        render: (rowData) => (
-          <div className="d-flex">
-            <Button 
-              variant="link" 
-              size="sm" 
-              className="p-0 mr-2"
-              onClick={this.onView(rowData)}
-              title="View"
-            >
-              <FiEye className="text-primary" />
-            </Button>
-          </div>
-        ),
-      },
-    ];
-
     return (
-      <div className="container-fluid p-0">
-        <div className="d-flex justify-content-between align-items-center mb-4">
-          <h1 className="h3 mb-0 text-gray-800">Terminated Employees</h1>
-        </div>
-
-        {error && (
-          <div className="alert alert-danger" role="alert">
-            {error}
+      <div className="container-fluid pt-2">
+        <div className="row">
+          <div className="col-sm-12">
+            <Card className="main-card">
+              <Card.Header className="bg-danger d-flex justify-content-between align-items-center">
+                <div className="panel-title">
+                  <strong className="text-white">Terminated Employees</strong>
+                </div>
+                {/* <div className="search-container" style={{ width: '300px' }}>
+                  <Form.Control
+                    type="text"
+                    placeholder="Search employees..."
+                    value={this.state.searchTerm}
+                    onChange={this.handleSearch}
+                    className="form-control-sm"
+                  />
+                </div> */}
+              </Card.Header>
+              <Card.Body>
+                <ThemeProvider theme={theme}>
+                  <MaterialTable
+                    title=""
+                    components={{
+                      Container: props => <div {...props} style={{ width: '100%', margin: 0, padding: 0 }} />,
+                      Toolbar: props => (
+                        <div style={{ display: 'none' }}>
+                          {props.children}
+                        </div>
+                      ),
+                    }}
+                    columns={columns}
+                    data={query =>
+                      new Promise((resolve, reject) => {
+                        this.fetchTerminatedUsers(
+                          query.page,
+                          query.pageSize,
+                          this.state.searchTerm
+                        )
+                          .then(result => {
+                            resolve({
+                              data: result.data,
+                              page: result.page,
+                              totalCount: result.totalCount,
+                            });
+                          })
+                          .catch(error => {
+                            console.error('Error in data fetch:', error);
+                            reject(error);
+                          });
+                      })
+                    }
+                    options={{
+                      pageSize: this.state.pageSize,
+                      pageSizeOptions: this.pageSizeOptions,
+                      padding: 'dense',
+                      tableLayout: 'auto',
+                      maxBodyHeight: 'calc(100vh - 300px)',
+                      headerStyle: {
+                        position: 'sticky',
+                        top: 0,
+                        backgroundColor: '#fff',
+                        zIndex: 1,
+                        borderBottom: '1px solid #e2e8f0',
+                      },
+                      rowStyle: (rowData, index) => ({
+                        backgroundColor: index % 2 ? '#f8fafc' : '#ffffff',
+                        '&:hover': {
+                          backgroundColor: '#f1f5f9'
+                        }
+                      }),
+                      search: false, // Disable the default search
+                      showTitle: false,
+                      toolbar: true,
+                    }}
+                  />
+                </ThemeProvider>
+              </Card.Body>
+            </Card>
           </div>
-        )}
-
-        <Card className="shadow-sm">
-          <Card.Body className="p-0">
-            <ThemeProvider theme={theme}>
-              <MaterialTable
-                columns={columns}
-                data={query =>
-                  new Promise((resolve, reject) => {
-                    this.fetchTerminatedUsers(
-                      query.page,
-                      query.pageSize
-                    )
-                    .then(result => {
-                      resolve({
-                        data: result.data,
-                        page: result.page,
-                        totalCount: result.totalCount,
-                      });
-                    })
-                    .catch(error => {
-                      reject(error);
-                    });
-                  })
-                }
-                options={{
-                  search: true,
-                  searchFieldAlignment: 'left',
-                  pageSize: this.state.pageSize,
-                  pageSizeOptions: [10, 20, 50, 100],
-                  paginationType: 'stepped',
-                  showFirstLastPageButtons: true,
-                  toolbar: true,
-                  headerStyle: {
-                    backgroundColor: '#f8f9fa',
-                    padding: '1rem',
-                    borderBottom: '1px solid #e3e6f0',
-                    color: '#4e73df',
-                    fontWeight: '600',
-                    textTransform: 'uppercase',
-                    fontSize: '0.7rem',
-                    letterSpacing: '0.05rem',
-                  },
-                  rowStyle: {
-                    backgroundColor: '#fff',
-                    '&:nth-of-type(odd)': {
-                      backgroundColor: '#f8f9fa',
-                    },
-                    '&:hover': {
-                      backgroundColor: '#f1f3f9',
-                    },
-                  },
-                }}
-                isLoading={isLoading}
-              />
-            </ThemeProvider>
-          </Card.Body>
-        </Card>
+        </div>
       </div>
     );
   }

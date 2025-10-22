@@ -18,14 +18,15 @@ export default class Expense extends Component {
         super(props)
 
         this.state = {
-            departments: [],
-            selectedDepartment: null,
+            departments: null,
+            selectedDepartment: "",
             itemName: "",
             purchasedFrom: "",
             purchaseDate: "",
             amountSpent: 0,
             hasError: false,
             errMsg: "",
+            isLoading: true
         }
     }
 
@@ -36,19 +37,39 @@ export default class Expense extends Component {
             headers: {Authorization: `Bearer ${localStorage.getItem('token')}`}
         })
         .then(res => {
-            this.setState({departments: res.data})
+            if (res.data && res.data.items && Array.isArray(res.data.items)) {
+                this.setState({ 
+                    departments: res.data.items,
+                    isLoading: false 
+                });
+            } else {
+                throw new Error('Invalid response format');
+            }
         })
         .catch(err => {
-            console.log(err)
-        })
+            console.error('Error fetching departments:', err);
+            this.setState({ 
+                hasError: true, 
+                errMsg: 'Failed to load departments. Please try again later.',
+                isLoading: false
+            });
+        });
     }
 
     pushDepartments = () => {
-        let items= []
-        this.state.departments.map((dept, index) => {
-            items.push(<option key={index} value={dept.id}>{dept.departmentName}</option>)
-        })
-        return items
+        if (!this.state.departments) {
+            return <option value="">Loading departments...</option>;
+        }
+        
+        if (this.state.departments.length === 0) {
+            return <option value="">No departments available</option>;
+        }
+        
+        return this.state.departments.map((dept) => (
+            <option key={dept.id} value={dept.id}>
+                {dept.departmentName}
+            </option>
+        ));
     }
 
     handleChange = (event) => {
