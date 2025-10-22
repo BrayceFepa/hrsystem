@@ -71,14 +71,34 @@ export default class SalaryDetails extends Component {
             headers: {Authorization: `Bearer ${localStorage.getItem('token')}`}
         })
         .then(res => {
-            this.setState(prevState => ({
-                ...prevState,
-                financialId: res.data[0].id,
-                ...res.data[0]
-            }))
+            if (res.data && res.data.length > 0) {
+                this.setState(prevState => ({
+                    ...prevState,
+                    financialId: res.data[0].id,
+                    ...res.data[0]
+                }));
+            } else {
+                // Initialize with default values if no financial data exists
+                this.setState({
+                    financialId: null,
+                    salaryBasic: 0,
+                    allowanceHouseRent: 0,
+                    allowanceMedical: 0,
+                    allowanceSpecial: 0,
+                    allowanceFuel: 0,
+                    allowancePhoneBill: 0,
+                    allowanceOther: 0,
+                    deductionTax: 0,
+                    deductionOther: 0
+                });
+            }
         })
         .catch(err => {
-            console.log(err)
+            console.error('Error fetching financial information:', err);
+            this.setState({
+                hasError: true,
+                errMsg: 'Failed to load financial information. Please try again.'
+            });
         })
     }
 
@@ -160,27 +180,43 @@ export default class SalaryDetails extends Component {
     }
 
     handleUserChange = (event) => {
-        this.state.users.map(user => {
-            if(user.id == event.target.value) {
-                this.setState({selectedUser: event.target.value}, () => {
-                    axios({
-                        method: 'get',
-                        url: 'api/financialInformations/user/' + this.state.selectedUser,
-                        headers: {Authorization: `Bearer ${localStorage.getItem('token')}`}
-                    })
-                    .then(res => {
-                        this.setState(prevState => ({
-                            ...prevState,
-                            financialId: res.data[0].id,
-                            ...res.data[0]
-                        }))
-                    })
-                    .catch(err => {
-                        console.log(err)
-                    })
-                })
-            }
-        })
+        const selectedUserId = event.target.value;
+        this.setState({selectedUser: selectedUserId}, () => {
+            axios({
+                method: 'get',
+                url: 'api/financialInformations/user/' + selectedUserId,
+                headers: {Authorization: `Bearer ${localStorage.getItem('token')}`}
+            })
+            .then(res => {
+                if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+                    this.setState({
+                        financialId: res.data[0].id,
+                        ...res.data[0]
+                    });
+                } else {
+                    // Initialize with default values if no financial data exists
+                    this.setState({
+                        financialId: null,
+                        salaryBasic: 0,
+                        allowanceHouseRent: 0,
+                        allowanceMedical: 0,
+                        allowanceSpecial: 0,
+                        allowanceFuel: 0,
+                        allowancePhoneBill: 0,
+                        allowanceOther: 0,
+                        deductionTax: 0,
+                        deductionOther: 0
+                    });
+                }
+            })
+            .catch(err => {
+                console.error('Error fetching financial information:', err);
+                this.setState({
+                    hasError: true,
+                    errMsg: 'Failed to load financial information. Please try again.'
+                });
+            });
+        });
     }
 
     handleChangeEmploymentType = (event) => {

@@ -35,7 +35,7 @@ export default class Dashboard extends Component {
     //Fetch Expenses Total
     axios({
       method: "get",
-      url: "/api/expenses/year/2021",
+      url: "/api/expenses/year/2025",
       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
     }).then((res) => {
       let array = res.data;
@@ -51,7 +51,7 @@ export default class Dashboard extends Component {
     //Fetch Payments Total
     axios({
       method: "get",
-      url: "api/payments/year/2021",
+      url: "api/payments/year/2025",
       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
     }).then((res) => {
       let array = res.data;
@@ -81,7 +81,7 @@ export default class Dashboard extends Component {
           {/* Second info-box */}
           <div className="col-md-4 col-sm-6 col-xs-12">
             <Infobox
-              title="Total Expenses"
+              title="Total Expenses 2025"
               description={this.state.totalExpenses + " Birr"}
               color="bg-warning"
               icon="fa fa-shopping-cart"
@@ -90,7 +90,7 @@ export default class Dashboard extends Component {
           {/* Third info-box */}
           <div className="col-md-4 col-sm-6 col-xs-12">
             <Infobox
-              title="Total Payments"
+              title="Total Payments 2025"
               description={this.state.totalPayments + " Birr"}
               color="bg-danger"
               icon="fa fa-money-check"

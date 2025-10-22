@@ -35,6 +35,7 @@ export default class ApplicationList extends Component {
       axios({
         method: "get",
         url: "/api/applications/department/" + deptId,
+        // url: "/api/applications/manager/me",
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       })
       .then((res) => {

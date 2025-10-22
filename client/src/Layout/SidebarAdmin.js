@@ -82,7 +82,8 @@ export default class SidebarAdmin extends Component {
         icon: 'user',
         children: [
           { title: 'Add Employee', to: '/employee-add', icon: 'user-plus' },
-          { title: 'Employee List', to: '/employee-list', icon: 'users' }
+          { title: 'Employee List', to: '/employee-list', icon: 'users' },
+          { title: 'Terminated Employees', to: '/terminated-employees', icon: 'user-times' }
         ]
       },
       {

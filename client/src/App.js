@@ -43,6 +43,7 @@ import Login from "./components/Login";
 import JobList from "./components/JobList";
 import JobListManager from './components/manager/JobList'
 import SidebarFinance from './Layout/SidebarFinance';
+import TerminatedEmployees from './components/TerminatedEmployees';
 
 export default class App extends Component {
   render() {
@@ -102,6 +103,7 @@ const HRContainer = () => (
         <Route exact path="/employee-view" component={withAuth(EmployeeView)} />
         <Route exact path="/employee-edit" component={withAuth(EmployeeEdit)} />
         <Route exact path="/departments" component={withAuth(DepartmentList)} />
+        <Route exact path="/terminated-employees" component={withAuth(TerminatedEmployees)} />
         <Route exact path="/job-list" component={withAuth(JobList)} />
         <Route exact path="/application-list" component={withAuth(ApplicationList)} />
         <Route exact path="/application" component={withAuth(Application)} />

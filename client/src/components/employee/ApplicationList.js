@@ -30,6 +30,8 @@ const decodeToken = (token) => {
 export default class ApplicationList extends Component {
   constructor(props) {
     super(props);
+    this.defaultPageSize = 10;
+    this.maxPageSize = 100; // Match backend's max page size
 
     this.state = {
       applications: [],
@@ -39,36 +41,61 @@ export default class ApplicationList extends Component {
       totalItems: 0,
       totalPages: 0,
       currentPage: 0,
-      pageSize: 10
+      pageSize: this.defaultPageSize,
+      isLoading: false,
+      error: null
     };
   }
 
   componentDidMount() {
-    this.fetchApplications();
+    this._isMounted = true;
+    this.fetchApplications(0, this.state.pageSize);
   }
 
-fetchApplications = (page, pageSize = 10) => {
-  // Get the token from localStorage
-  const token = localStorage.getItem("token");
-  if (!token) {
-    console.error('No token found');
-    return Promise.reject('No authentication token found');
+  componentWillUnmount() {
+    this._isMounted = false;
   }
-  
-  // Decode the token to get user info
-  const decoded = decodeToken(token);
-  if (!decoded || !decoded.user || !decoded.user.id) {
-    console.error('Invalid token format');
-    return Promise.reject('Invalid authentication token');
-  }
-  
-  const userId = decoded.user.id; // Get user ID from the token
 
-  return axios({
-    method: "get",
-    url: `/api/applications/user/${userId}?page=${page + 1}&size=${pageSize}`,
-    headers: { Authorization: `Bearer ${token}` },
-  }).then((res) => {
+  fetchApplications = (page, pageSize = this.defaultPageSize) => {
+    // Get the token from localStorage
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.error('No token found');
+      return Promise.reject('No authentication token found');
+    }
+    
+    // Decode the token to get user info
+    const decoded = decodeToken(token);
+    if (!decoded || !decoded.user || !decoded.user.id) {
+      console.error('Invalid token format');
+      return Promise.reject('Invalid authentication token');
+    }
+    
+    const userId = decoded.user.id;
+    const validPageSize = Math.min(Math.max(1, pageSize), this.maxPageSize);
+    const validPage = Math.max(0, page);
+    const apiPage = validPage + 1; // Convert to 1-based for backend
+
+    if (this._isMounted) {
+      this.setState({
+        isLoading: true,
+        error: null,
+        pageSize: validPageSize,
+        currentPage: validPage
+      });
+    }
+
+    return axios({
+      method: "get",
+      url: `/api/applications/user/${userId}?page=${apiPage}&size=${validPageSize}`,
+      headers: { Authorization: `Bearer ${token}` },
+      timeout: 10000
+    })
+    .then((res) => {
+      if (!res.data) {
+        throw new Error('No data received from server');
+      }
+
       const { items, ...pagination } = res.data;
       const formattedData = items.map(app => ({
         ...app,
@@ -77,38 +104,53 @@ fetchApplications = (page, pageSize = 10) => {
         endDate: app.endDate ? moment(app.endDate).format('YYYY-MM-DD') : ''
       }));
       
-      this.setState({ 
-        applications: formattedData,
-        currentPage: pagination.currentPage - 1, // Convert to 0-based
-        totalItems: pagination.totalItems,
-        totalPages: pagination.totalPages,
-        pageSize: pagination.pageSize,
-        hasError: false, // Reset error state on success
-        errorMsg: ''
-      });
+      if (this._isMounted) {
+        this.setState({ 
+          applications: formattedData,
+          totalItems: pagination.totalItems,
+          totalPages: pagination.totalPages,
+          currentPage: pagination.currentPage - 1, // Convert to 0-based
+          pageSize: pagination.pageSize,
+          hasError: false,
+          errorMsg: '',
+          isLoading: false
+        });
+      }
       
       return {
         data: formattedData,
         page: pagination.currentPage - 1,
         totalCount: pagination.totalItems
       };
-    }).catch(error => {
+    })
+    .catch(error => {
       console.error('Error fetching applications:', error);
       const errorMessage = error.response?.data?.message || 'Failed to load applications. Please try again later.';
-      this.setState({ 
-        hasError: true, 
-        errorMsg: errorMessage,
-        applications: [] // Clear applications on error
-      });
       
-      // Return empty data to prevent Material-Table from showing loading state
+      if (this._isMounted) {
+        this.setState({ 
+          hasError: true, 
+          errorMsg: errorMessage,
+          applications: [],
+          isLoading: false
+        });
+      }
+      
       return {
         data: [],
         page: 0,
         totalCount: 0
       };
     });
-  }
+  };
+
+  handlePageChange = (page, pageSize) => {
+    return this.fetchApplications(page, pageSize);
+  };
+
+  handlePageSizeChange = (pageSize) => {
+    return this.fetchApplications(0, pageSize);
+  };
 
   onApprove = (app) => (event) => {
     event.preventDefault();
@@ -328,8 +370,8 @@ fetchApplications = (page, pageSize = 10) => {
                     //   }
                     // }
                   ]}
-                  data={query =>
-                    new Promise((resolve, reject) => {
+                  data={query => {
+                    return new Promise((resolve, reject) => {
                       this.fetchApplications(query.page, query.pageSize)
                         .then((result) => {
                           resolve({
@@ -342,23 +384,156 @@ fetchApplications = (page, pageSize = 10) => {
                           console.error('Error:', error);
                           reject(error);
                         });
-                    })
-                  }
+                    });
+                  }}
                   options={{
                     search: false,
                     sorting: true,
-                    pageSize: 10,
+                    pageSize: this.state.pageSize,
                     pageSizeOptions: [5, 10, 20, 50],
+                    paginationType: 'stepped',
+                    paginationPosition: 'both',
+                    showFirstLastPageButtons: true,
                     headerStyle: {
                       backgroundColor: '#f8f9fa',
                       position: 'sticky',
                       top: 0,
-                      zIndex: 1
+                      zIndex: 1,
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
                     },
-                    maxBodyHeight: 'calc(100vh - 200px)',
-                    padding: 'dense',
                     rowStyle: {
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    },
+                    maxBodyHeight: 'calc(100vh - 250px)',
+                    emptyRowsWhenPaging: false,
+                    loadingType: 'overlay',
+                    toolbar: false,
+                    debounceInterval: 500,
+                    minBodyHeight: '200px',
+                    padding: 'dense',
+                    showTitle: false,
+                    toolbarButtonAlignment: 'left',
+                    filtering: false,
+                    draggable: false,
+                    columnsButton: false,
+                    actionsColumnIndex: -1,
+                    addRowPosition: 'first',
+                    showEmptyDataSourceMessage: !this.state.isLoading,
+                    showTextRowsSelected: false,
+                    showSelectAllCheckbox: false,
+                    selection: false,
+                    showSelectCheckbox: false,
+                    searchFieldAlignment: 'left',
+                    searchFieldStyle: {
+                      marginRight: '1rem'
+                    },
+                    headerSelectionProps: {
+                      color: 'primary'
+                    },
+                    rowStyle: rowData => ({
+                      backgroundColor: rowData.tableData.checked ? 'rgba(0, 0, 0, 0.04)' : 'inherit',
+                      transition: 'background-color 0.3s ease',
+                      cursor: 'pointer',
+                      '&:hover': {
+                        backgroundColor: 'rgba(0, 0, 0, 0.04)'
+                      }
+                    }),
+                    paginationType: 'stepped',
+                    showFirstLastPageButtons: true,
+                    showTextRowsSelected: false,
+                    showSelectAllCheckbox: false,
+                    selection: false,
+                    showSelectCheckbox: false
+                  }}
+                  isLoading={this.state.isLoading}
+                  localization={{
+                    pagination: {
+                      labelRowsSelect: 'rows',
+                      labelRowsPerPage: 'Rows per page:',
+                      firstAriaLabel: 'First page',
+                      firstTooltip: 'First page',
+                      previousAriaLabel: 'Previous page',
+                      previousTooltip: 'Previous page',
+                      nextAriaLabel: 'Next page',
+                      nextTooltip: 'Next page',
+                      lastAriaLabel: 'Last page',
+                      lastTooltip: 'Last page',
+                      labelDisplayedRows: '{from}-{to} of {count}'
+                    },
+                    toolbar: {
+                      searchTooltip: 'Search',
+                      searchPlaceholder: 'Search...'
+                    },
+                    header: {
+                      actions: 'Actions'
+                    },
+                    body: {
+                      emptyDataSourceMessage: this.state.isLoading ? 'Loading...' : 'No records to display',
+                      filterRow: {
+                        filterTooltip: 'Filter'
+                      },
+                      addTooltip: 'Add',
+                      deleteTooltip: 'Delete',
+                      editTooltip: 'Edit',
+                      editRow: {
+                        deleteText: 'Are you sure you want to delete this row?',
+                        cancelTooltip: 'Cancel',
+                        saveTooltip: 'Save'
+                      }
+                    }
+                  }}
+                  options={{
+                    search: false,
+                    sorting: true,
+                    pageSize: this.state.pageSize,
+                    pageSizeOptions: [5, 10, 20, 50],
+                    paginationType: 'stepped',
+                    paginationPosition: 'both',
+                    showFirstLastPageButtons: true,
+                    headerStyle: {
+                      backgroundColor: '#f8f9fa',
+                      position: 'sticky',
+                      top: 0,
+                      zIndex: 1,
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    },
+                    rowStyle: {
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
                       fontSize: '0.875rem'
+                    },
+                    maxBodyHeight: 'calc(100vh - 250px)',
+                    emptyRowsWhenPaging: false,
+                    loadingType: 'overlay',
+                    toolbar: false,
+                    debounceInterval: 500,
+                    minBodyHeight: '200px',
+                    padding: 'dense',
+                    showTitle: false,
+                    toolbarButtonAlignment: 'left',
+                    filtering: false,
+                    draggable: false,
+                    columnsButton: false,
+                    actionsColumnIndex: -1,
+                    addRowPosition: 'first',
+                    showEmptyDataSourceMessage: !this.state.isLoading,
+                    showTextRowsSelected: false,
+                    showSelectAllCheckbox: false,
+                    selection: false,
+                    showSelectCheckbox: false,
+                    searchFieldAlignment: 'left',
+                    searchFieldStyle: {
+                      marginRight: '1rem'
+                    },
+                    headerSelectionProps: {
+                      color: 'primary'
                     }
                   }}
                   title=""

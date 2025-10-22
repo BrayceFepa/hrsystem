@@ -1,8 +1,9 @@
 import React, { Component } from "react";
 import { Card, Form, Button, Alert } from "react-bootstrap";
-import { Redirect } from 'react-router-dom'
-import DatePicker from 'react-datepicker'
+import { Redirect } from 'react-router-dom';
+import DatePicker from 'react-datepicker';
 import axios from "axios";
+import { LEAVE_TYPES, LEAVE_TYPE_OPTIONS, mapLegacyType } from '../constants/leaveTypes';
 
 export default class Application extends Component {
 
@@ -38,16 +39,7 @@ export default class Application extends Component {
     return true;
   };
   mapLeaveTypeToApi = (type) => {
-    const typeMap = {
-      'sick_with_document': 'Sick Leave with document',
-      'sick_home': 'Sick Leave without document',
-      'remote_work': 'Remote Work',
-      'annual_leave': 'Annual Leave',
-      'bereavement': 'Bereavement Leave',
-      'unexcused_absence': 'Unexcused Absence',
-      'business_leave': 'Business Leave'
-    };
-    return typeMap[type] || type;
+    return mapLegacyType(type);
   };
   handleChange = (event) => {
     const { value, name } = event.target;
