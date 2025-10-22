@@ -38,19 +38,21 @@ export default class Payment extends Component {
         }
     }
 
-    componentDidMount() {
-        axios({
-            method: 'get',
-            url: '/api/departments',
-            headers: {Authorization: `Bearer ${localStorage.getItem('token')}`}
-        })
-        .then(res => {
-            this.setState({departments: res.data})
-        })
-        .catch(err => {
-            console.log(err)
-        })
-    }
+componentDidMount() {
+    axios({
+        method: 'get',
+        url: '/api/departments?page=1&limit=100',
+        headers: {Authorization: `Bearer ${localStorage.getItem('token')}`}
+    })
+    .then(res => {
+        const departments = Array.isArray(res.data?.items) ? res.data.items : [];
+        this.setState({ departments });
+    })
+    .catch(err => {
+        console.error('Error fetching departments:', err);
+        this.setState({ departments: [] });
+    });
+}
 
     fetchData = () => {
         axios({
@@ -73,41 +75,47 @@ export default class Payment extends Component {
         })
     }
 
-    fetchDataAll = () => {
-        axios({
-            method: 'get',
-            url: 'api/departments/',
-            headers: {Authorization: `Bearer ${localStorage.getItem('token')}`}
-        })
-        .then(res => {
-            let departments = res.data
-            let users = [];
-
-            departments.map(dept => {
-                dept.users.map(user => {
-                    users.push(user)
-                })
-            })
-            
-            this.setState({users: users})
-        })
-        .catch(err => {
-            console.log(err)
-        })
-    }
-
-    pushDepartments = () => {
-        let items= []
-        items.push(<option key={584390} value="all">All departments</option>)
-        this.state.departments.map((dept, index) => {
-            if(this.state.selectedDepartment == dept.id) {
-                items.push(<option key={index} value={dept.id} defaultValue>{dept.departmentName}</option>)
-            } else {
-                items.push(<option key={index} value={dept.id}>{dept.departmentName}</option>)
+fetchDataAll = () => {
+    axios({
+        method: 'get',
+        url: 'api/departments?page=1&limit=100',
+        headers: {Authorization: `Bearer ${localStorage.getItem('token')}`}
+    })
+    .then(res => {
+        const departments = Array.isArray(res.data?.items) ? res.data.items : [];
+        const users = departments.flatMap(dept => Array.isArray(dept.users) ? dept.users : []);
+        this.setState({ users });
+    })
+    .catch(err => {
+        console.error('Error fetching all departments:', err);
+        this.setState({ users: [] });
+    });
+}
+pushDepartments = () => {
+    const { departments = [] } = this.state;
+    const items = [];
+    
+    items.push(<option key="all" value="all">All departments</option>);
+    
+    if (Array.isArray(departments)) {
+        departments.forEach((dept, index) => {
+            if (dept?.id && dept?.departmentName) {
+                const isSelected = this.state.selectedDepartment == dept.id;
+                items.push(
+                    <option 
+                        key={dept.id || index} 
+                        value={dept.id}
+                        {...(isSelected ? { defaultValue: true } : {})}
+                    >
+                        {dept.departmentName}
+                    </option>
+                );
             }
-        })
-        return items
+        });
     }
+    
+    return items;
+}
 
     pushUsers = () => {
         let items = []
