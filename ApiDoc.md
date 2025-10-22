@@ -2204,7 +2204,7 @@ Retrieves the 2 most recent announcements (Admin view).
 
 **Endpoint:** `GET /api/departmentAnnouncements/recent`
 
-**Authentication:** Admin
+**Authentication:** Admin, Finance
 
 **Success Response (200):**
 
