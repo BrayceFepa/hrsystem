@@ -27,6 +27,15 @@ router.get(
   user.findTotal
 );
 
+// Get available filter options (Admin, Manager, HR, or Finance)
+router.get(
+  "/filter-options",
+  withAuth.verifyToken,
+  withAuth.withRoleAdminOrManagerOrHROrFinance,
+  cacheMiddleware(600),
+  user.getFilterOptions
+);
+
 router.get(
   "/total/department/:id",
   withAuth.verifyToken,

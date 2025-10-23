@@ -6,24 +6,24 @@ This document provides comprehensive documentation for all API endpoints in the 
 
 ## Table of Contents
 
-- [Authentication](#authentication)
+- [Authentication & User Management](#authentication--user-management)
   - [Login](#login)
   - [Register](#register)
   - [Check Token](#check-token)
-- [Users](#users)
-- [Departments](#departments)
-- [Jobs](#jobs)
-- [Applications (Leave Requests)](#applications-leave-requests)
-- [Payments](#payments)
-- [Expenses](#expenses)
-- [Department Announcements](#department-announcements)
-- [Personal Information](#personal-information)
-- [Financial Information](#financial-information)
-- [Personal Events](#personal-events)
+- [Users & Employees Management](#users--employees-management)
+- [Departments & Organizations](#departments--organizations)
+- [Jobs & Employment](#jobs--employment)
+- [Leave Applications & Requests](#leave-applications--requests)
+- [Payments & Financial Records](#payments--financial-records)
+- [Expenses & Budget Management](#expenses--budget-management)
+- [Announcements & Communications](#announcements--communications)
+- [Personal Information & Profiles](#personal-information--profiles)
+- [Financial Information & Banking](#financial-information--banking)
+- [Personal Events & Calendar](#personal-events--calendar)
 
 ---
 
-## Authentication
+## Authentication & User Management
 
 ### Login
 
@@ -169,7 +169,7 @@ Authorization: Bearer <your_jwt_token>
 
 ---
 
-## Users
+## Users & Employees Management
 
 ### Create User
 
@@ -225,13 +225,59 @@ Retrieves all users with their related information. Supports filtering by role, 
 
 **Query Parameters:**
 
+**Basic Parameters:**
+
 - `page` (number, optional) - Page number (default: 1)
 - `size` (number, optional) - Items per page (default: 10)
+
+**Simple Query Filters:**
+
 - `role` (string, optional) - Filter by role (single or comma-separated): "ROLE_EMPLOYEE" | "ROLE_MANAGER" | "ROLE_ADMIN" | "ROLE_HR" | "ROLE_FINANCE"
 - `active` (boolean, optional) - Filter by account status: true | false
 - `empStatus` (string, optional) - Filter by employment status (from Job): "Active" | "On Leave" | "Terminated"
+- `fullName` (string, optional) - Filter by full name (contains)
+- `email` (string, optional) - Filter by email address (contains)
+- `departmentId` (number, optional) - Filter by department ID
+- `jobTitle` (string, optional) - Filter by job title (contains)
+- `salaryMin` (number, optional) - Filter by minimum salary
+- `salaryMax` (number, optional) - Filter by maximum salary
+
+**Advanced Structured Filters:**
+
+- `filter` (JSON array, optional) - Advanced filtering with field, operator, and value
+
+**Filter Structure:**
+
+```json
+[
+  {
+    "field": "fullName",
+    "operator": "contains",
+    "value": "John"
+  },
+  {
+    "field": "salaryBasic",
+    "operator": "between",
+    "value": [50000, 100000]
+  }
+]
+```
+
+**Available Fields:**
+
+- `fullName`, `username`, `email`, `phone`, `mobile`
+- `departmentId`, `departmentName`, `jobTitle`, `empStatus`, `empType`
+- `salaryBasic`, `salaryGross`, `role`, `active`
+
+**Available Operators:**
+
+- `equal`, `not_equal`, `contains`, `starts_with`, `ends_with`
+- `greater_than`, `greater_equal`, `less_than`, `less_equal`
+- `in`, `not_in`, `between`, `is_null`, `is_not_null`
 
 **Example Requests:**
+
+**Simple Filters:**
 
 ```
 GET /api/users
@@ -239,8 +285,18 @@ GET /api/users?page=1&size=20
 GET /api/users?role=ROLE_EMPLOYEE
 GET /api/users?role=ROLE_EMPLOYEE,ROLE_MANAGER
 GET /api/users?role=ROLE_EMPLOYEE&active=true
-GET /api/users?role=ROLE_EMPLOYEE&active=true&empStatus=Active
-GET /api/users?empStatus=On Leave
+GET /api/users?fullName=John
+GET /api/users?email=@company.com
+GET /api/users?salaryMin=50000&salaryMax=100000
+```
+
+**Advanced Structured Filters:**
+
+```
+GET /api/users?filter=[{"field":"fullName","operator":"contains","value":"John"}]
+GET /api/users?filter=[{"field":"email","operator":"ends_with","value":"@company.com"}]
+GET /api/users?filter=[{"field":"salaryBasic","operator":"between","value":[50000,100000]}]
+GET /api/users?filter=[{"field":"role","operator":"in","value":["ROLE_EMPLOYEE","ROLE_MANAGER"]},{"field":"active","operator":"equal","value":true}]
 ```
 
 **Success Response (200):**
@@ -294,6 +350,73 @@ GET /api/users?empStatus=On Leave
 - When filtering by `empStatus`, only users with at least one job matching that status are returned
 - All filters can be combined for more specific queries
 - Pagination works with all filters
+
+---
+
+### Get Filter Options
+
+Retrieves available filter fields and operators for the user list.
+
+**Endpoint:** `GET /api/users/filter-options`
+
+**Authentication:** Admin, Manager, HR, or Finance
+
+**Success Response (200):**
+
+```json
+{
+  "fields": [
+    "fullName",
+    "username",
+    "email",
+    "phone",
+    "mobile",
+    "departmentId",
+    "departmentName",
+    "jobTitle",
+    "empStatus",
+    "empType",
+    "salaryBasic",
+    "salaryGross",
+    "role",
+    "active"
+  ],
+  "operators": [
+    "equal",
+    "not_equal",
+    "contains",
+    "starts_with",
+    "ends_with",
+    "greater_than",
+    "greater_equal",
+    "less_than",
+    "less_equal",
+    "in",
+    "not_in",
+    "between",
+    "is_null",
+    "is_not_null"
+  ],
+  "examples": [
+    {
+      "description": "Find users with full name containing 'John'",
+      "filter": "[{\"field\":\"fullName\",\"operator\":\"contains\",\"value\":\"John\"}]"
+    },
+    {
+      "description": "Find users with email ending with '@company.com'",
+      "filter": "[{\"field\":\"email\",\"operator\":\"ends_with\",\"value\":\"@company.com\"}]"
+    },
+    {
+      "description": "Find users with salary between 50000 and 100000",
+      "filter": "[{\"field\":\"salaryBasic\",\"operator\":\"between\",\"value\":[50000,100000]}]"
+    },
+    {
+      "description": "Find active employees in specific roles",
+      "filter": "[{\"field\":\"role\",\"operator\":\"in\",\"value\":[\"ROLE_EMPLOYEE\",\"ROLE_MANAGER\"]},{\"field\":\"active\",\"operator\":\"equal\",\"value\":true}]"
+    }
+  ]
+}
+```
 
 ---
 
@@ -587,7 +710,7 @@ Deletes all users in a specific department.
 
 ---
 
-## Departments
+## Departments & Organizations
 
 ### Create Department
 
@@ -739,7 +862,7 @@ Deletes all departments.
 
 ---
 
-## Jobs
+## Jobs & Employment
 
 ### Create Job
 
@@ -1007,7 +1130,7 @@ Deletes all jobs for a specific user.
 
 ---
 
-## Applications (Leave Requests)
+## Leave Applications & Requests
 
 ### Create Application
 
@@ -1567,7 +1690,7 @@ Deletes all applications for a specific user.
 
 ---
 
-## Payments
+## Payments & Financial Records
 
 ### Create Payment
 
@@ -1852,7 +1975,7 @@ Deletes all payments for a specific job.
 
 ---
 
-## Expenses
+## Expenses & Budget Management
 
 ### Create Expense
 
@@ -2129,7 +2252,7 @@ Deletes all expenses for a specific department.
 
 ---
 
-## Department Announcements
+## Announcements & Communications
 
 ### Create Announcement
 
@@ -2363,7 +2486,7 @@ Deletes all announcements for a specific department.
 
 ---
 
-## Personal Information
+## Personal Information & Profiles
 
 ### Create Personal Information
 
@@ -2617,7 +2740,7 @@ Deletes all personal information records.
 
 ---
 
-## Financial Information
+## Financial Information & Banking
 
 ### Create Financial Information
 
@@ -2861,7 +2984,7 @@ Updates an existing financial information record.
 
 ---
 
-## Personal Events
+## Personal Events & Calendar
 
 ### Create Personal Event
 

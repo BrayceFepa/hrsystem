@@ -10,6 +10,7 @@ const Op = db.Sequelize.Op;
 const bcrypt = require("bcrypt");
 const { getPagination, getPagingData } = require("../utils/pagination");
 const { clearCache } = require("../config/cache.config");
+const { parseFilters, getFilterInfo } = require("../utils/filterParser");
 
 // Create and Save a new User
 exports.create = (req, res) => {
@@ -64,49 +65,60 @@ exports.create = (req, res) => {
 
 // Retrieve all Users from the database with pagination
 exports.findAll = (req, res) => {
-  const { page, size, role, active, empStatus } = req.query;
+  const { page, size } = req.query;
   const { limit, offset } = getPagination(page, size);
 
-  // Build where clause for user filtering
-  let whereClause = {};
+  // Parse flexible filters
+  const { whereClause, includeClause } = parseFilters(req);
 
-  // Role filter (single or multiple comma-separated values)
-  if (role) {
-    const roles = role.split(",").map((r) => r.trim());
-    whereClause.role = roles.length === 1 ? roles[0] : { [Op.in]: roles };
-  }
+  // Build base includes
+  const baseIncludes = [
+    {
+      model: UserPersonalInfo,
+    },
+    {
+      model: UserFinancialInfo,
+    },
+    {
+      model: Department,
+    },
+    {
+      model: Job,
+    },
+  ];
 
-  // Active status filter
-  if (active !== undefined) {
-    whereClause.active = active === "true" || active === true;
-  }
+  // Merge base includes with filter includes
+  const finalIncludes = [...baseIncludes];
 
-  // Build Job include with optional empStatus filter
-  const jobInclude = {
-    model: Job,
-  };
-
-  if (empStatus) {
-    jobInclude.where = { empStatus: empStatus };
-    jobInclude.required = true; // INNER JOIN to filter users by employment status
-  }
+  // Add filter-specific includes
+  includeClause.forEach((filterInclude) => {
+    // Check if we already have this model in includes
+    const existingIndex = finalIncludes.findIndex(
+      (inc) => inc.model === filterInclude.model
+    );
+    if (existingIndex >= 0) {
+      // Merge conditions
+      if (finalIncludes[existingIndex].where && filterInclude.where) {
+        finalIncludes[existingIndex].where = {
+          ...finalIncludes[existingIndex].where,
+          ...filterInclude.where,
+        };
+      } else if (filterInclude.where) {
+        finalIncludes[existingIndex].where = filterInclude.where;
+      }
+      if (filterInclude.required) {
+        finalIncludes[existingIndex].required = true;
+      }
+    } else {
+      finalIncludes.push(filterInclude);
+    }
+  });
 
   User.findAndCountAll({
     where: whereClause,
     limit,
     offset,
-    include: [
-      {
-        model: UserPersonalInfo,
-      },
-      {
-        model: UserFinancialInfo,
-      },
-      {
-        model: Department,
-      },
-      jobInclude,
-    ],
+    include: finalIncludes,
     distinct: true, // Important for accurate count with associations
   })
     .then((data) => {
@@ -135,6 +147,19 @@ exports.findTotal = (req, res) => {
     });
 };
 
+// Get available filter options
+exports.getFilterOptions = (req, res) => {
+  try {
+    const filterInfo = getFilterInfo();
+    res.send(filterInfo);
+  } catch (err) {
+    res.status(500).send({
+      message:
+        err.message || "Some error occurred while retrieving filter options.",
+    });
+  }
+};
+
 // Retrieve all Users from the database.
 exports.findTotalByDept = (req, res) => {
   const id = req.params.id;
@@ -156,49 +181,63 @@ exports.findTotalByDept = (req, res) => {
 // Retrieve all Users by Department Id with pagination
 exports.findAllByDeptId = (req, res) => {
   const departmentId = req.params.id;
-  const { page, size, role, active, empStatus } = req.query;
+  const { page, size } = req.query;
   const { limit, offset } = getPagination(page, size);
 
-  // Build where clause for user filtering
-  let whereClause = { departmentId: departmentId };
+  // Parse flexible filters
+  const { whereClause, includeClause } = parseFilters(req);
 
-  // Role filter (single or multiple comma-separated values)
-  if (role) {
-    const roles = role.split(",").map((r) => r.trim());
-    whereClause.role = roles.length === 1 ? roles[0] : { [Op.in]: roles };
-  }
+  // Add department constraint
+  whereClause.departmentId = departmentId;
 
-  // Active status filter
-  if (active !== undefined) {
-    whereClause.active = active === "true" || active === true;
-  }
+  // Build base includes
+  const baseIncludes = [
+    {
+      model: UserPersonalInfo,
+    },
+    {
+      model: UserFinancialInfo,
+    },
+    {
+      model: Department,
+    },
+    {
+      model: Job,
+    },
+  ];
 
-  // Build Job include with optional empStatus filter
-  const jobInclude = {
-    model: Job,
-  };
+  // Merge base includes with filter includes
+  const finalIncludes = [...baseIncludes];
 
-  if (empStatus) {
-    jobInclude.where = { empStatus: empStatus };
-    jobInclude.required = true; // INNER JOIN to filter users by employment status
-  }
+  // Add filter-specific includes
+  includeClause.forEach((filterInclude) => {
+    // Check if we already have this model in includes
+    const existingIndex = finalIncludes.findIndex(
+      (inc) => inc.model === filterInclude.model
+    );
+    if (existingIndex >= 0) {
+      // Merge conditions
+      if (finalIncludes[existingIndex].where && filterInclude.where) {
+        finalIncludes[existingIndex].where = {
+          ...finalIncludes[existingIndex].where,
+          ...filterInclude.where,
+        };
+      } else if (filterInclude.where) {
+        finalIncludes[existingIndex].where = filterInclude.where;
+      }
+      if (filterInclude.required) {
+        finalIncludes[existingIndex].required = true;
+      }
+    } else {
+      finalIncludes.push(filterInclude);
+    }
+  });
 
   User.findAndCountAll({
     where: whereClause,
     limit,
     offset,
-    include: [
-      {
-        model: UserPersonalInfo,
-      },
-      {
-        model: UserFinancialInfo,
-      },
-      {
-        model: Department,
-      },
-      jobInclude,
-    ],
+    include: finalIncludes,
     distinct: true,
   })
     .then((data) => {
