@@ -20,6 +20,8 @@ This document provides comprehensive documentation for all API endpoints in the 
 - [Personal Information & Profiles](#personal-information--profiles)
 - [Financial Information & Banking](#financial-information--banking)
 - [Personal Events & Calendar](#personal-events--calendar)
+- [User Certificates & Documents](#user-certificates--documents)
+- [Salary History & Management](#salary-history--management)
 
 ---
 
@@ -213,6 +215,170 @@ Creates a new user (Admin function).
 }
 ```
 
+**Notes:**
+
+- User is created with `active: true` by default
+- After creating a user, you need to create associated records:
+  - Personal Information (Personal & Contact details)
+  - Financial Information (Salary & Banking details)
+  - Job (Employment details)
+- Use the following endpoints to complete employee setup:
+  1. `POST /api/personalInformations` - Add personal information
+  2. `POST /api/financialInformations` - Add financial information
+  3. `POST /api/jobs` - Add employment/job information
+
+---
+
+### Create Complete Employee
+
+Creates a complete employee with all associated information. This is typically done in a single workflow with multiple API calls.
+
+**Workflow:**
+
+1. **Create User Account** (`POST /api/users`)
+2. **Add Personal Information** (`POST /api/personalInformations`)
+3. **Add Financial Information** (`POST /api/financialInformations`)
+4. **Add Employment/Job** (`POST /api/jobs`)
+5. **(Optional)** Add Certificates (`POST /api/userCertificates`)
+6. **(Optional)** Set up Employee Allowances (`POST /api/employeeAllowances`)
+
+**Complete Employee Data Structure:**
+
+```json
+{
+  "user": {
+    "username": "john_doe", // Required
+    "password": "secure_password", // Required
+    "fullname": "John Doe", // Required
+    "role": "ROLE_EMPLOYEE", // Required
+    "departmentId": 1 // Required (department assignment)
+  },
+
+  "personalInfo": {
+    "dateOfBirth": "1990-01-15", // Required: Date of Birth
+    "gender": "Male", // Required: "Male" | "Female"
+    "maritalStatus": "Married", // Required: "Married" | "Single" | "Widowed"
+    "nationalIdNumber": "1234567890", // Required: National ID/Passport
+    "phone": "+251911234567", // Required: Phone number
+    "emailAddress": "john@company.com", // Required: Email address
+    "address": "123 Main Street", // Required: Address
+    "city": "Addis Ababa", // Required: City
+    "country": "Ethiopia", // Required: Country
+    "emergencyContact": "Jane Doe - +251922345678", // Required: Emergency contact
+    "emergencyContactId": "ECO123", // Optional: Emergency contact ID
+    "guarantorId": "GUAR123", // Optional: Guarantor ID
+    "guarantorSignature": "File", // Optional: Signature document
+    "remark": "No special notes" // Optional: Additional notes
+  },
+
+  "financialInfo": {
+    "salaryBasic": 10000, // Required: Basic salary
+    "salaryGross": 12000, // Calculated: Gross salary
+    "salaryNet": 9000, // Calculated: Net salary
+    "bankName": "Commercial Bank of Ethiopia", // Required: Bank name
+    "accountNumber": "1234567890", // Required: Account number
+    "branch": "Bole Branch" // Required: Branch name
+  },
+
+  "job": {
+    "jobTitle": "Software Engineer", // Required: Job title
+    "startDate": "2024-01-01", // Required: Employment start date
+    "endDate": "2025-12-31", // Optional: Employment end date
+    "empType": "Full-Time", // Required: "Full-Time" | "Part-Time" | "Contract"
+    "empStatus": "Active", // Required: "Active" | "On Leave" | "Terminated" | "Resigned"
+    "directSupervisor": "Jane Manager", // Required: Supervisor name
+    "agreementType": "Permanent", // Optional: "Permanent" | "Contract" | "Probation" | "Intern"
+    "contract": "File", // Optional: Employment contract
+    "certificate": "File", // Optional: Professional certificate
+    "laptopAgreement": "File", // Optional: Laptop agreement
+    "guaranteeForm": "File", // Optional: Guarantee form
+    "companyGuaranteeSupportLetter": "File" // Optional: Support letter
+  },
+
+  "allowances": [
+    // Optional: Employee allowances
+    {
+      "allowanceTypeId": 1, // Transport Allowance
+      "amount": 800,
+      "effectiveDate": "2024-01-01"
+    },
+    {
+      "allowanceTypeId": 2, // Shift Allowance
+      "amount": 500,
+      "effectiveDate": "2024-01-01"
+    }
+  ],
+
+  "certificates": [
+    // Optional: Employee certificates
+    {
+      "certificateType": "Degree",
+      "certificateName": "Bachelor of Computer Science",
+      "issuingAuthority": "Addis Ababa University",
+      "issueDate": "2020-07-15",
+      "certificateNumber": "BSC2020001",
+      "filePath": "File"
+    }
+  ]
+}
+```
+
+**Field Reference - Personal Information:**
+
+| Field                | Type   | Required | Description                         |
+| -------------------- | ------ | -------- | ----------------------------------- |
+| `dateOfBirth`        | date   | ✅       | Employee date of birth (YYYY-MM-DD) |
+| `gender`             | string | ✅       | "Male" or "Female"                  |
+| `maritalStatus`      | string | ✅       | "Married", "Single", or "Widowed"   |
+| `nationalIdNumber`   | string | ✅       | National ID or Passport number      |
+| `phone`              | string | ✅       | Primary phone number                |
+| `emailAddress`       | string | ✅       | Email address                       |
+| `address`            | string | ✅       | Street address                      |
+| `city`               | string | ✅       | City name                           |
+| `country`            | string | ✅       | Country name                        |
+| `emergencyContact`   | string | ✅       | Emergency contact details           |
+| `emergencyContactId` | string | ❌       | Emergency contact ID                |
+| `guarantorId`        | string | ❌       | Guarantor ID                        |
+| `guarantorSignature` | file   | ❌       | Guarantor signature document        |
+| `remark`             | string | ❌       | Additional notes                    |
+
+**Field Reference - Financial Information:**
+
+| Field           | Type   | Required | Description                             |
+| --------------- | ------ | -------- | --------------------------------------- |
+| `salaryBasic`   | number | ✅       | Basic salary amount                     |
+| `salaryGross`   | number | ❌       | Gross salary (calculated automatically) |
+| `salaryNet`     | number | ❌       | Net salary (calculated automatically)   |
+| `bankName`      | string | ✅       | Bank name                               |
+| `accountNumber` | string | ✅       | Bank account number                     |
+| `branch`        | string | ✅       | Bank branch name                        |
+| `iban`          | string | ❌       | IBAN number                             |
+
+**Field Reference - Job/Employment:**
+
+| Field                           | Type   | Required | Description                                          |
+| ------------------------------- | ------ | -------- | ---------------------------------------------------- |
+| `jobTitle`                      | string | ✅       | Job title/position                                   |
+| `startDate`                     | date   | ✅       | Employment start date                                |
+| `endDate`                       | date   | ❌       | Employment end date (for fixed-term)                 |
+| `empType`                       | string | ✅       | "Full-Time", "Part-Time", "Contract", or "Probation" |
+| `empStatus`                     | string | ✅       | "Active", "On Leave", "Terminated", or "Resigned"    |
+| `directSupervisor`              | string | ✅       | Supervisor name or ID                                |
+| `agreementType`                 | string | ❌       | "Permanent", "Contract", "Probation", or "Intern"    |
+| `contract`                      | file   | ❌       | Employment contract document                         |
+| `certificate`                   | file   | ❌       | Professional certificate                             |
+| `laptopAgreement`               | file   | ❌       | Laptop agreement document                            |
+| `guaranteeForm`                 | file   | ❌       | Guarantee form document                              |
+| `companyGuaranteeSupportLetter` | file   | ❌       | Company support letter                               |
+
+**Notes:**
+
+- All required fields must be provided for a complete employee record
+- Employee creation is a multi-step process (User → Personal Info → Financial Info → Job)
+- Financial information can include allowances which affect tax and pension calculations
+- Job documents (contracts, certificates) are uploaded as files
+- Allowances are managed separately and can be added/updated independently
+
 ---
 
 ### Get All Users
@@ -234,7 +400,7 @@ Retrieves all users with their related information. Supports filtering by role, 
 
 - `role` (string, optional) - Filter by role (single or comma-separated): "ROLE_EMPLOYEE" | "ROLE_MANAGER" | "ROLE_ADMIN" | "ROLE_HR" | "ROLE_FINANCE"
 - `active` (boolean, optional) - Filter by account status: true | false
-- `empStatus` (string, optional) - Filter by employment status (from Job): "Active" | "On Leave" | "Terminated"
+- `empStatus` (string, optional) - Filter by employment status (from Job): "Active" | "On Leave" | "Terminated" | "Resigned"
 - `fullName` (string, optional) - Filter by full name (contains)
 - `email` (string, optional) - Filter by email address (contains)
 - `departmentId` (number, optional) - Filter by department ID
@@ -474,7 +640,7 @@ Retrieves all users in a specific department. Supports filtering by role, active
 - `size` (number, optional) - Items per page (default: 10)
 - `role` (string, optional) - Filter by role (single or comma-separated): "ROLE_EMPLOYEE" | "ROLE_MANAGER" | "ROLE_ADMIN" | "ROLE_HR" | "ROLE_FINANCE"
 - `active` (boolean, optional) - Filter by account status: true | false
-- `empStatus` (string, optional) - Filter by employment status (from Job): "Active" | "On Leave" | "Terminated"
+- `empStatus` (string, optional) - Filter by employment status (from Job): "Active" | "On Leave" | "Terminated" | "Resigned"
 
 **Example Requests:**
 
@@ -877,31 +1043,39 @@ Creates a new job position for a user with optional file uploads.
 **Request Body (Form Data):**
 
 ```
-jobTitle: "string"              // Required
-startDate: "date"               // Required (YYYY-MM-DD)
-endDate: "date"                 // Optional (YYYY-MM-DD)
-empType: "string"               // Optional (e.g., "Full-Time", "Part-Time", "Contract")
-empStatus: "string"             // Optional (e.g., "Active", "On Leave", "Terminated")
-directSupervisor: "string"      // Optional (Supervisor name or ID)
-contract: File                  // Optional (PDF or Image, max 5MB)
-certificate: File               // Optional (PDF or Image, max 5MB)
-userId: number                  // Required
+jobTitle: "string"                      // Required
+startDate: "date"                       // Required (YYYY-MM-DD)
+endDate: "date"                         // Optional (YYYY-MM-DD)
+empType: "string"                       // Optional (e.g., "Full-Time", "Part-Time", "Contract")
+empStatus: "string"                     // Optional: "Active" | "On Leave" | "Terminated" | "Resigned"
+directSupervisor: "string"              // Optional (Supervisor name or ID)
+contract: File                          // Optional (PDF or Image, max 5MB)
+certificate: File                       // Optional (PDF or Image, max 5MB)
+laptopAgreement: File                   // Optional (PDF or Image, max 5MB) ✨ NEW
+guaranteeForm: File                     // Optional (PDF or Image, max 5MB) ✨ NEW
+companyGuaranteeSupportLetter: File    // Optional (PDF or Image, max 5MB) ✨ NEW
+agreementType: "string"                // Optional: "Permanent" | "Contract" | "Probation" | "Intern" ✨ NEW
+userId: number                          // Required
 ```
 
 **Example using Postman/Form Data:**
 
 ```
-Key              | Type  | Value
------------------|-------|---------------------------
-jobTitle         | text  | Software Engineer
-startDate        | text  | 2024-01-01
-endDate          | text  | 2024-12-31
-empType          | text  | Full-Time
-empStatus        | text  | Active
-directSupervisor | text  | John Smith
-contract         | file  | employment_contract.pdf
-certificate      | file  | certificate.pdf
-userId           | text  | 1
+Key                             | Type  | Value
+--------------------------------|-------|---------------------------
+jobTitle                        | text  | Software Engineer
+startDate                       | text  | 2024-01-01
+endDate                         | text  | 2024-12-31
+empType                         | text  | Full-Time
+empStatus                       | text  | Active
+directSupervisor                | text  | John Smith
+contract                        | file  | employment_contract.pdf
+certificate                     | file  | certificate.pdf
+laptopAgreement                 | file  | laptop_agreement.pdf ✨ NEW
+guaranteeForm                   | file  | guarantee_form.pdf ✨ NEW
+companyGuaranteeSupportLetter   | file  | support_letter.pdf ✨ NEW
+agreementType                   | text  | Permanent ✨ NEW
+userId                          | text  | 1
 ```
 
 **Success Response (200):**
@@ -917,6 +1091,10 @@ userId           | text  | 1
   "directSupervisor": "John Smith",
   "contract": "uploads/job-files/contract-1234567890-123456789.pdf",
   "certificate": "uploads/job-files/certificate-1234567890-987654321.pdf",
+  "laptopAgreement": "uploads/job-files/laptopAgreement-1234567890-111111111.pdf",
+  "guaranteeForm": "uploads/job-files/guaranteeForm-1234567890-222222222.pdf",
+  "companyGuaranteeSupportLetter": "uploads/job-files/companyGuaranteeSupportLetter-1234567890-333333333.pdf",
+  "agreementType": "Permanent",
   "userId": 1
 }
 ```
@@ -953,8 +1131,11 @@ userId           | text  | 1
 - If user has an active job, its end date will be adjusted to one day before the new job's start date
 - Files are stored locally in `uploads/job-files/` directory
 - File paths are stored in the database as strings
-- All new fields (empType, empStatus, directSupervisor, contract, certificate) are optional
-- The `endDate` field is now optional (can be null for ongoing positions)
+- All document fields (contract, certificate, laptopAgreement, guaranteeForm, companyGuaranteeSupportLetter) are optional
+- All employment fields (empType, empStatus, directSupervisor, agreementType) are optional
+- The `endDate` field is optional (can be null for ongoing positions)
+- `empStatus` accepts: "Active", "On Leave", "Terminated", or "Resigned"
+- `agreementType` accepts: "Permanent", "Contract", "Probation", or "Intern"
 
 ---
 
@@ -2501,20 +2682,25 @@ Creates personal information for a user with optional ID copy upload.
 **Request Body (Form Data):**
 
 ```
-dateOfBirth: "date"              // Optional (YYYY-MM-DD)
-gender: "string"                 // Optional: "Male" | "Female"
-maritalStatus: "string"          // Optional: "Married" | "Single" | "Widowed"
-fatherName: "string"             // Optional
-idNumber: "string"               // Optional
-address: "string"                // Optional
-city: "string"                   // Optional
-country: "string"                // Optional
-mobile: "string"                 // Optional
-phone: "string"                  // Optional
-emailAddress: "string"           // Optional
-emergencyContact: "string"       // Optional (emergency contact details)
-idCopy: File                     // Optional (PDF or Image, max 5MB)
-userId: number                   // Required
+dateOfBirth: "date"                   // Optional (YYYY-MM-DD)
+gender: "string"                      // Optional: "Male" | "Female"
+maritalStatus: "string"               // Optional: "Married" | "Single" | "Widowed"
+fatherName: "string"                  // Optional
+idNumber: "string"                    // Optional
+address: "string"                     // Optional
+city: "string"                        // Optional
+country: "string"                     // Optional
+mobile: "string"                      // Optional
+phone: "string"                       // Optional
+emailAddress: "string"               // Optional
+emergencyContact: "string"            // Optional (emergency contact details)
+nationalIdNumber: "string"            // Optional (National ID/Passport number) ✨ ENHANCED
+emergencyContactId: "string"          // Optional (Emergency contact ID) ✨ NEW
+guarantorId: "string"                 // Optional (Guarantor ID) ✨ NEW
+guarantorSignature: File             // Optional (Guarantor signature document, max 5MB) ✨ NEW
+remark: "string"                      // Optional (Additional notes) ✨ NEW
+idCopy: File                          // Optional (PDF or Image, max 5MB)
+userId: number                        // Required
 ```
 
 **Example using Postman/Form Data:**
@@ -3172,6 +3358,555 @@ Deletes all personal events.
 
 ---
 
+## User Certificates & Documents
+
+### Create User Certificate
+
+Creates a new certificate/document for a user. Employees can have multiple certificates (diplomas, degrees, ID cards, etc.).
+
+**Endpoint:** `POST /api/userCertificates`
+
+**Authentication:** Admin
+
+**Content-Type:** `multipart/form-data` (for file upload)
+
+**Request Body (Form Data):**
+
+```
+userId: number                    // Required
+certificateType: "string"         // Required: "Diploma" | "Degree" | "Certificate" | "ID Card" | "Passport" | "Other"
+certificateName: "string"         // Required (e.g., "Bachelor of Computer Science")
+issuingAuthority: "string"        // Optional (Organization that issued it)
+issueDate: "date"                 // Optional (YYYY-MM-DD)
+expiryDate: "date"                // Optional (YYYY-MM-DD)
+certificateNumber: "string"      // Optional (Certificate reference number)
+filePath: File                    // Optional (Scanned document, max 5MB)
+isActive: boolean                 // Optional (default: true)
+remarks: "string"                 // Optional
+```
+
+**Example using Postman/Form Data:**
+
+```
+Key                  | Type  | Value
+---------------------|-------|---------------------------
+userId              | text  | 1
+certificateType     | text  | Degree
+certificateName     | text  | Bachelor of Computer Science
+issuingAuthority    | text  | University of Technology
+issueDate           | text  | 2020-05-15
+expiryDate          | text  |
+certificateNumber   | text  | BSC2020001
+filePath            | file  | degree_certificate.pdf
+isActive            | text  | true
+remarks             | text  | Original degree document
+```
+
+**Success Response (200):**
+
+```json
+{
+  "id": 1,
+  "userId": 1,
+  "certificateType": "Degree",
+  "certificateName": "Bachelor of Computer Science",
+  "issuingAuthority": "University of Technology",
+  "issueDate": "2020-05-15T00:00:00.000Z",
+  "expiryDate": null,
+  "certificateNumber": "BSC2020001",
+  "filePath": "uploads/certificates/certificate-1234567890.pdf",
+  "isActive": true,
+  "remarks": "Original degree document",
+  "createdAt": "2024-03-15T10:00:00.000Z",
+  "updatedAt": "2024-03-15T10:00:00.000Z"
+}
+```
+
+**Notes:**
+
+- Users can have multiple certificates of different types
+- Certificate types include: Diploma, Degree, Certificate, ID Card, Passport, Other
+- All fields except `userId`, `certificateType`, and `certificateName` are optional
+- Files are stored in `uploads/certificates/` directory
+
+---
+
+### Get All User Certificates
+
+Retrieves all certificates from all users.
+
+**Endpoint:** `GET /api/userCertificates`
+
+**Authentication:** Admin or Manager
+
+**Success Response (200):**
+
+```json
+[
+  {
+    "id": 1,
+    "userId": 1,
+    "certificateType": "Degree",
+    "certificateName": "Bachelor of Computer Science",
+    "issuingAuthority": "University of Technology",
+    "filePath": "uploads/certificates/certificate-1234567890.pdf",
+    "isActive": true
+  }
+]
+```
+
+---
+
+### Get Certificates by User
+
+Retrieves all certificates for a specific user.
+
+**Endpoint:** `GET /api/userCertificates/user/:id`
+
+**Authentication:** Any authenticated user
+
+**URL Parameters:**
+
+- `id` (number) - User ID
+
+**Success Response (200):**
+
+```json
+[
+  {
+    "id": 1,
+    "userId": 1,
+    "certificateType": "Degree",
+    "certificateName": "Bachelor of Computer Science",
+    "certificateName": "Bachelor of Computer Science",
+    "isActive": true
+  },
+  {
+    "id": 2,
+    "userId": 1,
+    "certificateType": "ID Card",
+    "certificateName": "National ID Card",
+    "isActive": true
+  }
+]
+```
+
+**Notes:**
+
+- Returns all certificates for the specified user
+- Useful for viewing employee's complete education/document portfolio
+
+---
+
+### Get Single User Certificate
+
+Retrieves a single certificate by its ID.
+
+**Endpoint:** `GET /api/userCertificates/:id`
+
+**Authentication:** Any authenticated user
+
+**URL Parameters:**
+
+- `id` (number) - Certificate ID
+
+**Success Response (200):**
+
+```json
+{
+  "id": 1,
+  "userId": 1,
+  "certificateType": "Degree",
+  "certificateName": "Bachelor of Computer Science",
+  "issuingAuthority": "University of Technology",
+  "issueDate": "2020-05-15T00:00:00.000Z",
+  "certificateNumber": "BSC2020001",
+  "filePath": "uploads/certificates/certificate-1234567890.pdf",
+  "isActive": true
+}
+```
+
+---
+
+### Update User Certificate
+
+Updates certificate information.
+
+**Endpoint:** `PUT /api/userCertificates/:id`
+
+**Authentication:** Admin
+
+**URL Parameters:**
+
+- `id` (number) - Certificate ID
+
+**Request Body:**
+
+```json
+{
+  "certificateType": "string",       // Optional
+  "certificateName": "string",        // Optional
+  "issuingAuthority": "string",      // Optional
+  "issueDate": "date",               // Optional
+  "expiryDate": "date",              // Optional
+  "certificateNumber": "string",     // Optional
+  "isActive": boolean,               // Optional
+  "remarks": "string"                // Optional
+}
+```
+
+**Success Response (200):**
+
+```json
+{
+  "message": "User Certificate was updated successfully."
+}
+```
+
+---
+
+### Delete User Certificate
+
+Deletes a certificate.
+
+**Endpoint:** `DELETE /api/userCertificates/:id`
+
+**Authentication:** Admin
+
+**URL Parameters:**
+
+- `id` (number) - Certificate ID
+
+**Success Response (200):**
+
+```json
+{
+  "message": "User Certificate was deleted successfully!"
+}
+```
+
+---
+
+### Delete All Certificates by User
+
+Deletes all certificates for a specific user.
+
+**Endpoint:** `DELETE /api/userCertificates/user/:id`
+
+**Authentication:** Admin
+
+**URL Parameters:**
+
+- `id` (number) - User ID
+
+**Success Response (200):**
+
+```json
+{
+  "message": "5 User Certificates were deleted successfully!"
+}
+```
+
+---
+
+## Salary History & Management
+
+### Create Salary History
+
+Creates a new salary history record. Tracks salary changes over time (e.g., salary in 2022 vs 2024).
+
+**Endpoint:** `POST /api/salaryHistory`
+
+**Authentication:** Admin
+
+**Request Body:**
+
+```json
+{
+  "userId": number,                      // Required
+  "effectiveDate": "date",               // Required (YYYY-MM-DD)
+  "endDate": "date",                     // Optional (YYYY-MM-DD, null for current salary)
+  "salaryBasic": number,                 // Optional
+  "salaryGross": number,                 // Optional
+  "salaryNet": number,                   // Optional
+  "allowanceHouseRent": number,          // Optional (default: 0)
+  "allowanceMedical": number,            // Optional (default: 0)
+  "allowanceSpecial": number,            // Optional (default: 0)
+  "allowanceFuel": number,               // Optional (default: 0)
+  "allowancePhoneBill": number,          // Optional (default: 0)
+  "allowanceOther": number,              // Optional (default: 0)
+  "allowanceTotal": number,              // Optional (default: 0)
+  "deductionProvidentFund": number,      // Optional (default: 0)
+  "deductionTax": number,                // Optional (default: 0)
+  "deductionOther": number,              // Optional (default: 0)
+  "deductionTotal": number,              // Optional (default: 0)
+  "reason": "string",                    // Optional (e.g., "Promotion", "Annual Increase")
+  "approvedBy": "string",                // Optional (Approver name)
+  "remarks": "string"                    // Optional
+}
+```
+
+**Success Response (200):**
+
+```json
+{
+  "id": 1,
+  "userId": 1,
+  "effectiveDate": "2024-01-01T00:00:00.000Z",
+  "endDate": null,
+  "salaryBasic": 50000,
+  "salaryGross": 60000,
+  "salaryNet": 45000,
+  "allowanceHouseRent": 5000,
+  "allowanceMedical": 2000,
+  "allowanceTotal": 7000,
+  "deductionTax": 8000,
+  "reason": "Promotion to Senior Engineer",
+  "approvedBy": "HR Manager",
+  "createdAt": "2024-03-15T10:00:00.000Z"
+}
+```
+
+**Notes:**
+
+- Allows tracking complete salary history for an employee
+- `endDate` is null for current/active salary
+- When creating a new salary, set `endDate` on the previous salary record
+- All financial amounts are stored as integers (no decimals)
+
+---
+
+### Get All Salary History
+
+Retrieves all salary history records.
+
+**Endpoint:** `GET /api/salaryHistory`
+
+**Authentication:** Admin or Manager
+
+**Success Response (200):**
+
+```json
+[
+  {
+    "id": 1,
+    "userId": 1,
+    "effectiveDate": "2024-01-01T00:00:00.000Z",
+    "endDate": null,
+    "salaryBasic": 50000,
+    "salaryGross": 60000,
+    "salaryNet": 45000
+  }
+]
+```
+
+---
+
+### Get Salary History by User
+
+Retrieves complete salary history for a specific user (ordered by date, most recent first).
+
+**Endpoint:** `GET /api/salaryHistory/user/:id`
+
+**Authentication:** Any authenticated user
+
+**URL Parameters:**
+
+- `id` (number) - User ID
+
+**Success Response (200):**
+
+```json
+[
+  {
+    "id": 3,
+    "userId": 1,
+    "effectiveDate": "2024-01-01T00:00:00.000Z",
+    "endDate": null,
+    "salaryBasic": 50000,
+    "salaryGross": 60000,
+    "salaryNet": 45000,
+    "reason": "Promotion to Senior Engineer",
+    "approvedBy": "HR Manager"
+  },
+  {
+    "id": 2,
+    "userId": 1,
+    "effectiveDate": "2023-01-01T00:00:00.000Z",
+    "endDate": "2023-12-31T00:00:00.000Z",
+    "salaryBasic": 40000,
+    "salaryGross": 48000,
+    "salaryNet": 36000,
+    "reason": "Annual salary increase",
+    "approvedBy": "HR Manager"
+  },
+  {
+    "id": 1,
+    "userId": 1,
+    "effectiveDate": "2022-01-01T00:00:00.000Z",
+    "endDate": "2022-12-31T00:00:00.000Z",
+    "salaryBasic": 35000,
+    "salaryGross": 42000,
+    "salaryNet": 31500
+  }
+]
+```
+
+**Notes:**
+
+- Returns salary history ordered by `effectiveDate` (descending - most recent first)
+- Useful for viewing employee's salary progression over time
+- Null `endDate` indicates current/active salary
+
+---
+
+### Get Current Salary
+
+Retrieves the current (active) salary for a user.
+
+**Endpoint:** `GET /api/salaryHistory/user/:id/current`
+
+**Authentication:** Any authenticated user
+
+**URL Parameters:**
+
+- `id` (number) - User ID
+
+**Success Response (200):**
+
+```json
+{
+  "id": 3,
+  "userId": 1,
+  "effectiveDate": "2024-01-01T00:00:00.000Z",
+  "endDate": null,
+  "salaryBasic": 50000,
+  "salaryGross": 60000,
+  "salaryNet": 45000,
+  "allowanceHouseRent": 5000,
+  "allowanceMedical": 2000,
+  "reason": "Promotion to Senior Engineer",
+  "approvedBy": "HR Manager"
+}
+```
+
+**Notes:**
+
+- Returns the current salary (where `endDate` is null)
+- If no active salary found, returns null or empty response
+
+---
+
+### Get Single Salary History
+
+Retrieves a single salary history record by its ID.
+
+**Endpoint:** `GET /api/salaryHistory/:id`
+
+**Authentication:** Any authenticated user
+
+**URL Parameters:**
+
+- `id` (number) - Salary History ID
+
+**Success Response (200):**
+
+```json
+{
+  "id": 1,
+  "userId": 1,
+  "effectiveDate": "2024-01-01T00:00:00.000Z",
+  "endDate": null,
+  "salaryBasic": 50000,
+  "salaryGross": 60000,
+  "salaryNet": 45000,
+  "reason": "Promotion to Senior Engineer"
+}
+```
+
+---
+
+### Update Salary History
+
+Updates salary history information.
+
+**Endpoint:** `PUT /api/salaryHistory/:id`
+
+**Authentication:** Admin
+
+**URL Parameters:**
+
+- `id` (number) - Salary History ID
+
+**Request Body:**
+
+```json
+{
+  "effectiveDate": "date",               // Optional
+  "endDate": "date",                     // Optional
+  "salaryBasic": number,                 // Optional
+  "salaryGross": number,                 // Optional
+  "salaryNet": number,                   // Optional
+  "reason": "string",                    // Optional
+  "approvedBy": "string",                // Optional
+  "remarks": "string"                    // Optional
+}
+```
+
+**Success Response (200):**
+
+```json
+{
+  "message": "Salary History was updated successfully."
+}
+```
+
+---
+
+### Delete Salary History
+
+Deletes a salary history record.
+
+**Endpoint:** `DELETE /api/salaryHistory/:id`
+
+**Authentication:** Admin
+
+**URL Parameters:**
+
+- `id` (number) - Salary History ID
+
+**Success Response (200):**
+
+```json
+{
+  "message": "Salary History was deleted successfully!"
+}
+```
+
+---
+
+### Delete All Salary History by User
+
+Deletes all salary history records for a specific user.
+
+**Endpoint:** `DELETE /api/salaryHistory/user/:id`
+
+**Authentication:** Admin
+
+**URL Parameters:**
+
+- `id` (number) - User ID
+
+**Success Response (200):**
+
+```json
+{
+  "message": "5 Salary History records were deleted successfully!"
+}
+```
+
+---
+
 ## General Notes
 
 ### Authentication
@@ -3341,6 +4076,13 @@ Common error responses across all endpoints:
 
 - `Full Time`
 - `Part Time`
+
+**Employment Status:**
+
+- `Active`
+- `On Leave`
+- `Terminated`
+- `Resigned`
 
 **Payment Types:**
 

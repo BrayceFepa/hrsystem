@@ -66,6 +66,23 @@ module.exports = (sequelize, Sequelize) => {
         type: Sequelize.STRING,
         allowNull: true,
       },
+      emergencyContactId: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+      guarantorId: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
+      guarantorSignature: {
+        type: Sequelize.STRING,
+        allowNull: true,
+        comment: "File path to guarantor signature document",
+      },
+      remark: {
+        type: Sequelize.TEXT,
+        allowNull: true,
+      },
     },
     {
       timestamps: false,

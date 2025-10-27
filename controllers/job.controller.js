@@ -14,6 +14,29 @@ exports.create = (req, res) => {
     return;
   }
 
+  // Validate empStatus if provided
+  const validStatuses = ["Active", "On Leave", "Terminated", "Resigned"];
+  if (req.body.empStatus && !validStatuses.includes(req.body.empStatus)) {
+    res.status(400).send({
+      message: `Invalid empStatus. Must be one of: ${validStatuses.join(", ")}`,
+    });
+    return;
+  }
+
+  // Validate agreementType if provided
+  const validAgreementTypes = ["Permanent", "Contract", "Probation", "Intern"];
+  if (
+    req.body.agreementType &&
+    !validAgreementTypes.includes(req.body.agreementType)
+  ) {
+    res.status(400).send({
+      message: `Invalid agreementType. Must be one of: ${validAgreementTypes.join(
+        ", "
+      )}`,
+    });
+    return;
+  }
+
   // Create a Job
   const newJob = {
     jobTitle: req.body.jobTitle,
@@ -28,6 +51,19 @@ exports.create = (req, res) => {
       req.files && req.files.contract ? req.files.contract[0].path : null,
     certificate:
       req.files && req.files.certificate ? req.files.certificate[0].path : null,
+    laptopAgreement:
+      req.files && req.files.laptopAgreement
+        ? req.files.laptopAgreement[0].path
+        : null,
+    guaranteeForm:
+      req.files && req.files.guaranteeForm
+        ? req.files.guaranteeForm[0].path
+        : null,
+    companyGuaranteeSupportLetter:
+      req.files && req.files.companyGuaranteeSupportLetter
+        ? req.files.companyGuaranteeSupportLetter[0].path
+        : null,
+    agreementType: req.body.agreementType || null,
     userId: req.body.userId,
   };
 
@@ -120,6 +156,29 @@ exports.findOne = (req, res) => {
 // Update an Job by the id in the request
 exports.update = (req, res) => {
   const id = req.params.id;
+
+  // Validate empStatus if provided
+  const validStatuses = ["Active", "On Leave", "Terminated", "Resigned"];
+  if (req.body.empStatus && !validStatuses.includes(req.body.empStatus)) {
+    res.status(400).send({
+      message: `Invalid empStatus. Must be one of: ${validStatuses.join(", ")}`,
+    });
+    return;
+  }
+
+  // Validate agreementType if provided
+  const validAgreementTypes = ["Permanent", "Contract", "Probation", "Intern"];
+  if (
+    req.body.agreementType &&
+    !validAgreementTypes.includes(req.body.agreementType)
+  ) {
+    res.status(400).send({
+      message: `Invalid agreementType. Must be one of: ${validAgreementTypes.join(
+        ", "
+      )}`,
+    });
+    return;
+  }
 
   Job.update(req.body, {
     where: { id: id },

@@ -116,7 +116,7 @@ const leaveTypes = [
 const leaveStatuses = ["Pending", "Approved", "Rejected"];
 
 const employmentTypes = ["Full-time", "Part-time", "Contract", "Intern"];
-const employmentStatuses = ["Active", "On Leave", "Terminated"];
+const employmentStatuses = ["Active", "On Leave", "Terminated", "Resigned"];
 const contractTypes = ["Permanent", "Temporary", "Contractual"];
 
 const departments = [

@@ -44,6 +44,13 @@ db.application = require("./application.model")(sequelize, Sequelize);
 db.leaveBalance = require("./leaveBalance.model")(sequelize, Sequelize);
 db.payment = require("./payment.model")(sequelize, Sequelize);
 db.expense = require("./expense.model")(sequelize, Sequelize);
+db.userCertificate = require("./userCertificate.model")(sequelize, Sequelize);
+db.salaryHistory = require("./salaryHistory.model")(sequelize, Sequelize);
+db.allowanceType = require("./allowanceType.model")(sequelize, Sequelize);
+db.employeeAllowance = require("./employeeAllowance.model")(
+  sequelize,
+  Sequelize
+);
 
 // User Associations
 db.user.hasOne(db.userPersonalInfo, { foreignKey: { allowNull: false } });
@@ -69,6 +76,21 @@ db.user.hasMany(db.deptAnnouncement, {
   hooks: true,
 });
 db.user.hasMany(db.job, {
+  foreignKey: { allowNull: false },
+  onDelete: "CASCADE",
+  hooks: true,
+});
+db.user.hasMany(db.userCertificate, {
+  foreignKey: { allowNull: false },
+  onDelete: "CASCADE",
+  hooks: true,
+});
+db.user.hasMany(db.salaryHistory, {
+  foreignKey: { allowNull: false },
+  onDelete: "CASCADE",
+  hooks: true,
+});
+db.user.hasMany(db.employeeAllowance, {
   foreignKey: { allowNull: false },
   onDelete: "CASCADE",
   hooks: true,
@@ -113,6 +135,25 @@ db.deptAnnouncement.belongsTo(db.department, {
 });
 db.deptAnnouncement.belongsTo(db.user, {
   foreignKey: { name: "createdByUserId", allowNull: false },
+});
+
+// User Certificate Associations
+db.userCertificate.belongsTo(db.user, { foreignKey: { allowNull: false } });
+
+// Salary History Associations
+db.salaryHistory.belongsTo(db.user, { foreignKey: { allowNull: false } });
+
+// Allowance Type Associations
+db.allowanceType.hasMany(db.employeeAllowance, {
+  foreignKey: { allowNull: false },
+  onDelete: "CASCADE",
+  hooks: true,
+});
+
+// Employee Allowance Associations
+db.employeeAllowance.belongsTo(db.user, { foreignKey: { allowNull: false } });
+db.employeeAllowance.belongsTo(db.allowanceType, {
+  foreignKey: { name: "allowanceTypeId", allowNull: false },
 });
 
 module.exports = db;

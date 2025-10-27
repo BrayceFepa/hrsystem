@@ -25,7 +25,8 @@ module.exports = (sequelize, Sequelize) => {
         allowNull: true,
       },
       empStatus: {
-        type: Sequelize.STRING,
+        type: Sequelize.ENUM,
+        values: ["Active", "On Leave", "Terminated", "Resigned"],
         allowNull: true,
       },
       contract: {
@@ -38,6 +39,26 @@ module.exports = (sequelize, Sequelize) => {
       },
       directSupervisor: {
         type: Sequelize.STRING,
+        allowNull: true,
+      },
+      laptopAgreement: {
+        type: Sequelize.STRING,
+        allowNull: true,
+        comment: "File path to laptop agreement document",
+      },
+      guaranteeForm: {
+        type: Sequelize.STRING,
+        allowNull: true,
+        comment: "File path to guarantee form document",
+      },
+      companyGuaranteeSupportLetter: {
+        type: Sequelize.STRING,
+        allowNull: true,
+        comment: "File path to company guarantee support letter",
+      },
+      agreementType: {
+        type: Sequelize.ENUM,
+        values: ["Permanent", "Contract", "Probation", "Intern"],
         allowNull: true,
       },
     },
