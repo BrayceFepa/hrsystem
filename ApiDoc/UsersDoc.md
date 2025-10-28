@@ -119,7 +119,8 @@ Creates a complete employee with all associated information. This is typically d
     "agreementType": "Permanent", // Optional: "Permanent" | "Contract" | "Probation" | "Intern"
     "contract": "File", // Optional: Employment contract
     "certificate": "File", // Optional: Professional certificate
-    "laptopAgreement": "File", // Optional: Laptop agreement
+    "takenAssets": "Laptop (Dell XPS 15), Phone (iPhone 13)", // Optional: Assets assigned to employee (text)
+    "documentScanned": true, // Optional: Whether documents are scanned (true/false)
     "guaranteeForm": "File", // Optional: Guarantee form
     "companyGuaranteeSupportLetter": "File" // Optional: Support letter
   },
@@ -185,20 +186,21 @@ Creates a complete employee with all associated information. This is typically d
 
 **Field Reference - Job/Employment:**
 
-| Field                           | Type   | Required | Description                                          |
-| ------------------------------- | ------ | -------- | ---------------------------------------------------- |
-| `jobTitle`                      | string | ✅       | Job title/position                                   |
-| `startDate`                     | date   | ✅       | Employment start date                                |
-| `endDate`                       | date   | ❌       | Employment end date (for fixed-term)                 |
-| `empType`                       | string | ✅       | "Full-Time", "Part-Time", "Contract", or "Probation" |
-| `empStatus`                     | string | ✅       | "Active", "On Leave", "Terminated", or "Resigned"    |
-| `directSupervisor`              | string | ✅       | Supervisor name or ID                                |
-| `agreementType`                 | string | ❌       | "Permanent", "Contract", "Probation", or "Intern"    |
-| `contract`                      | file   | ❌       | Employment contract document                         |
-| `certificate`                   | file   | ❌       | Professional certificate                             |
-| `laptopAgreement`               | file   | ❌       | Laptop agreement document                            |
-| `guaranteeForm`                 | file   | ❌       | Guarantee form document                              |
-| `companyGuaranteeSupportLetter` | file   | ❌       | Company support letter                               |
+| Field                           | Type    | Required | Description                                               |
+| ------------------------------- | ------- | -------- | --------------------------------------------------------- |
+| `jobTitle`                      | string  | ✅       | Job title/position                                        |
+| `startDate`                     | date    | ✅       | Employment start date                                     |
+| `endDate`                       | date    | ❌       | Employment end date (for fixed-term)                      |
+| `empType`                       | string  | ✅       | "Full-Time", "Part-Time", "Contract", or "Probation"      |
+| `empStatus`                     | string  | ✅       | "Active", "On Leave", "Terminated", or "Resigned"         |
+| `directSupervisor`              | string  | ✅       | Supervisor name or ID                                     |
+| `agreementType`                 | string  | ❌       | "Permanent", "Contract", "Probation", or "Intern"         |
+| `contract`                      | file    | ❌       | Employment contract document                              |
+| `certificate`                   | file    | ❌       | Professional certificate                                  |
+| `takenAssets`                   | string  | ❌       | Assets assigned to employee (text field)                  |
+| `documentScanned`               | boolean | ❌       | Whether employee documents have been scanned (true/false) |
+| `guaranteeForm`                 | file    | ❌       | Guarantee form document                                   |
+| `companyGuaranteeSupportLetter` | file    | ❌       | Company support letter                                    |
 
 **Notes:**
 
@@ -206,6 +208,8 @@ Creates a complete employee with all associated information. This is typically d
 - Employee creation is a multi-step process (User → Personal Info → Financial Info → Job)
 - Financial information can include allowances which affect tax and pension calculations
 - Job documents (contracts, certificates) are uploaded as files
+- `takenAssets` is a text field (not a file) - describes assets assigned to employee
+- `documentScanned` is a boolean field (true/false) indicating if documents are scanned
 - Allowances are managed separately and can be added/updated independently
 
 ---
@@ -704,4 +708,3 @@ Deletes all users in a specific department.
 ```
 
 ---
-

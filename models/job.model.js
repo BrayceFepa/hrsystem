@@ -41,10 +41,17 @@ module.exports = (sequelize, Sequelize) => {
         type: Sequelize.STRING,
         allowNull: true,
       },
-      laptopAgreement: {
-        type: Sequelize.STRING,
+      takenAssets: {
+        type: Sequelize.TEXT,
         allowNull: true,
-        comment: "File path to laptop agreement document",
+        comment:
+          "Text field describing assets taken by employee (e.g., laptop, phone, etc.)",
+      },
+      documentScanned: {
+        type: Sequelize.BOOLEAN,
+        allowNull: true,
+        defaultValue: false,
+        comment: "Whether employee documents have been scanned (yes/no)",
       },
       guaranteeForm: {
         type: Sequelize.STRING,

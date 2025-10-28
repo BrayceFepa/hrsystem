@@ -290,7 +290,8 @@ Creates a complete employee with all associated information. This is typically d
     "agreementType": "Permanent", // Optional: "Permanent" | "Contract" | "Probation" | "Intern"
     "contract": "File", // Optional: Employment contract
     "certificate": "File", // Optional: Professional certificate
-    "laptopAgreement": "File", // Optional: Laptop agreement
+    "takenAssets": "Laptop (Dell XPS 15), Phone (iPhone 13)", // Optional: Assets assigned to employee (text)
+    "documentScanned": true, // Optional: Whether documents are scanned (true/false)
     "guaranteeForm": "File", // Optional: Guarantee form
     "companyGuaranteeSupportLetter": "File" // Optional: Support letter
   },
@@ -356,20 +357,21 @@ Creates a complete employee with all associated information. This is typically d
 
 **Field Reference - Job/Employment:**
 
-| Field                           | Type   | Required | Description                                          |
-| ------------------------------- | ------ | -------- | ---------------------------------------------------- |
-| `jobTitle`                      | string | ✅       | Job title/position                                   |
-| `startDate`                     | date   | ✅       | Employment start date                                |
-| `endDate`                       | date   | ❌       | Employment end date (for fixed-term)                 |
-| `empType`                       | string | ✅       | "Full-Time", "Part-Time", "Contract", or "Probation" |
-| `empStatus`                     | string | ✅       | "Active", "On Leave", "Terminated", or "Resigned"    |
-| `directSupervisor`              | string | ✅       | Supervisor name or ID                                |
-| `agreementType`                 | string | ❌       | "Permanent", "Contract", "Probation", or "Intern"    |
-| `contract`                      | file   | ❌       | Employment contract document                         |
-| `certificate`                   | file   | ❌       | Professional certificate                             |
-| `laptopAgreement`               | file   | ❌       | Laptop agreement document                            |
-| `guaranteeForm`                 | file   | ❌       | Guarantee form document                              |
-| `companyGuaranteeSupportLetter` | file   | ❌       | Company support letter                               |
+| Field                           | Type    | Required | Description                                               |
+| ------------------------------- | ------- | -------- | --------------------------------------------------------- |
+| `jobTitle`                      | string  | ✅       | Job title/position                                        |
+| `startDate`                     | date    | ✅       | Employment start date                                     |
+| `endDate`                       | date    | ❌       | Employment end date (for fixed-term)                      |
+| `empType`                       | string  | ✅       | "Full-Time", "Part-Time", "Contract", or "Probation"      |
+| `empStatus`                     | string  | ✅       | "Active", "On Leave", "Terminated", or "Resigned"         |
+| `directSupervisor`              | string  | ✅       | Supervisor name or ID                                     |
+| `agreementType`                 | string  | ❌       | "Permanent", "Contract", "Probation", or "Intern"         |
+| `contract`                      | file    | ❌       | Employment contract document                              |
+| `certificate`                   | file    | ❌       | Professional certificate                                  |
+| `takenAssets`                   | string  | ❌       | Assets assigned to employee (text field)                  |
+| `documentScanned`               | boolean | ❌       | Whether employee documents have been scanned (true/false) |
+| `guaranteeForm`                 | file    | ❌       | Guarantee form document                                   |
+| `companyGuaranteeSupportLetter` | file    | ❌       | Company support letter                                    |
 
 **Notes:**
 
@@ -377,6 +379,8 @@ Creates a complete employee with all associated information. This is typically d
 - Employee creation is a multi-step process (User → Personal Info → Financial Info → Job)
 - Financial information can include allowances which affect tax and pension calculations
 - Job documents (contracts, certificates) are uploaded as files
+- `takenAssets` is a text field (not a file) - describes assets assigned to employee
+- `documentScanned` is a boolean field (true/false) indicating if documents are scanned
 - Allowances are managed separately and can be added/updated independently
 
 ---
@@ -1051,7 +1055,8 @@ empStatus: "string"                     // Optional: "Active" | "On Leave" | "Te
 directSupervisor: "string"              // Optional (Supervisor name or ID)
 contract: File                          // Optional (PDF or Image, max 5MB)
 certificate: File                       // Optional (PDF or Image, max 5MB)
-laptopAgreement: File                   // Optional (PDF or Image, max 5MB) ✨ NEW
+takenAssets: "string"                   // Optional (Text field describing assets taken by employee) ✨ NEW
+documentScanned: boolean                // Optional (true/false - whether documents are scanned) ✨ NEW
 guaranteeForm: File                     // Optional (PDF or Image, max 5MB) ✨ NEW
 companyGuaranteeSupportLetter: File    // Optional (PDF or Image, max 5MB) ✨ NEW
 agreementType: "string"                // Optional: "Permanent" | "Contract" | "Probation" | "Intern" ✨ NEW
@@ -1071,7 +1076,8 @@ empStatus                       | text  | Active
 directSupervisor                | text  | John Smith
 contract                        | file  | employment_contract.pdf
 certificate                     | file  | certificate.pdf
-laptopAgreement                 | file  | laptop_agreement.pdf ✨ NEW
+takenAssets                     | text  | Laptop (Dell XPS 15), Phone (iPhone 13) ✨ NEW
+documentScanned                 | text  | true ✨ NEW
 guaranteeForm                   | file  | guarantee_form.pdf ✨ NEW
 companyGuaranteeSupportLetter   | file  | support_letter.pdf ✨ NEW
 agreementType                   | text  | Permanent ✨ NEW
@@ -1091,7 +1097,8 @@ userId                          | text  | 1
   "directSupervisor": "John Smith",
   "contract": "uploads/job-files/contract-1234567890-123456789.pdf",
   "certificate": "uploads/job-files/certificate-1234567890-987654321.pdf",
-  "laptopAgreement": "uploads/job-files/laptopAgreement-1234567890-111111111.pdf",
+  "takenAssets": "Laptop (Dell XPS 15), Phone (iPhone 13)",
+  "documentScanned": true,
   "guaranteeForm": "uploads/job-files/guaranteeForm-1234567890-222222222.pdf",
   "companyGuaranteeSupportLetter": "uploads/job-files/companyGuaranteeSupportLetter-1234567890-333333333.pdf",
   "agreementType": "Permanent",
@@ -1131,11 +1138,14 @@ userId                          | text  | 1
 - If user has an active job, its end date will be adjusted to one day before the new job's start date
 - Files are stored locally in `uploads/job-files/` directory
 - File paths are stored in the database as strings
-- All document fields (contract, certificate, laptopAgreement, guaranteeForm, companyGuaranteeSupportLetter) are optional
+- All document fields (contract, certificate, guaranteeForm, companyGuaranteeSupportLetter) are optional
+- `takenAssets` is a text field (not a file) - used to describe assets assigned to the employee
+- `documentScanned` is a boolean field (true/false) - indicates if employee documents have been scanned
 - All employment fields (empType, empStatus, directSupervisor, agreementType) are optional
 - The `endDate` field is optional (can be null for ongoing positions)
 - `empStatus` accepts: "Active", "On Leave", "Terminated", or "Resigned"
 - `agreementType` accepts: "Permanent", "Contract", "Probation", or "Intern"
+- For `documentScanned`, you can send: `true`, `"true"`, `1`, `"1"` (all treated as true) or `false`, `"false"`, `0`, `"0"` (all treated as false)
 
 ---
 

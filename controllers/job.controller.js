@@ -51,10 +51,14 @@ exports.create = (req, res) => {
       req.files && req.files.contract ? req.files.contract[0].path : null,
     certificate:
       req.files && req.files.certificate ? req.files.certificate[0].path : null,
-    laptopAgreement:
-      req.files && req.files.laptopAgreement
-        ? req.files.laptopAgreement[0].path
-        : null,
+    takenAssets: req.body.takenAssets || null,
+    documentScanned:
+      req.body.documentScanned !== undefined
+        ? req.body.documentScanned === true ||
+          req.body.documentScanned === "true" ||
+          req.body.documentScanned === 1 ||
+          req.body.documentScanned === "1"
+        : false,
     guaranteeForm:
       req.files && req.files.guaranteeForm
         ? req.files.guaranteeForm[0].path
