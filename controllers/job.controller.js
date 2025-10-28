@@ -184,7 +184,17 @@ exports.update = (req, res) => {
     return;
   }
 
-  Job.update(req.body, {
+  // Normalize documentScanned field if provided
+  const updateData = { ...req.body };
+  if (updateData.documentScanned !== undefined) {
+    updateData.documentScanned =
+      updateData.documentScanned === true ||
+      updateData.documentScanned === "true" ||
+      updateData.documentScanned === 1 ||
+      updateData.documentScanned === "1";
+  }
+
+  Job.update(updateData, {
     where: { id: id },
   })
     .then((num) => {
