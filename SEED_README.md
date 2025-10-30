@@ -198,25 +198,18 @@ If you encounter issues:
 
 ## Quick Login Reference
 
-### For Manager Testing:
+matthew_thomas0 (ROLE_ADMIN)
 
-```
-Username: joseph_anderson2
-Password: password123
-```
+- ashley_robinson1 (ROLE_ADMIN)
+- james_garcia2 (ROLE_MANAGER)
+- margaret_walker3 (ROLE_MANAGER)
+- margaret_garcia4 (ROLE_MANAGER)
+- anthony_young5 (ROLE_MANAGER)
+- margaret_brown6 (ROLE_MANAGER)
+- daniel_sanchez7 (ROLE_HR)
+- nancy_rodriguez8 (ROLE_HR)
+- karen_lewis9 (ROLE_FINANCE)
 
-or
-
-```
-Username: jennifer_clark3
-Password: password123
-```
-
-### For Admin Testing:
-
-```
-Username: james_smith0
-Password: password123
 ```
 
 **All accounts use the same password:** `password123`
@@ -224,3 +217,4 @@ Password: password123
 ---
 
 Happy Testing! 🎉
+```

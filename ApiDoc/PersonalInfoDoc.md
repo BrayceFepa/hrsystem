@@ -15,25 +15,21 @@ Creates personal information for a user with optional ID copy upload.
 **Request Body (Form Data):**
 
 ```
-dateOfBirth: "date"                   // Optional (YYYY-MM-DD)
-gender: "string"                      // Optional: "Male" | "Female"
-maritalStatus: "string"               // Optional: "Married" | "Single" | "Widowed"
-fatherName: "string"                  // Optional
-idNumber: "string"                    // Optional
-address: "string"                     // Optional
-city: "string"                        // Optional
-country: "string"                     // Optional
-mobile: "string"                      // Optional
-phone: "string"                       // Optional
-emailAddress: "string"               // Optional
-emergencyContact: "string"            // Optional (emergency contact details)
-nationalIdNumber: "string"            // Optional (National ID/Passport number) ✨ ENHANCED
-emergencyContactId: "string"          // Optional (Emergency contact ID) ✨ NEW
-guarantorId: "string"                 // Optional (Guarantor ID) ✨ NEW
-guarantorSignature: File             // Optional (Guarantor signature document, max 5MB) ✨ NEW
-remark: "string"                      // Optional (Additional notes) ✨ NEW
-idCopy: File                          // Optional (PDF or Image, max 5MB)
-userId: number                        // Required
+dateOfBirth: "date"            // Optional (YYYY-MM-DD)
+gender: "string"               // Optional: "Male" | "Female"
+maritalStatus: "string"        // Optional: "Married" | "Single" | "Widowed"
+fatherName: "string"           // Optional
+idNumber: "string"             // Optional
+address: "string"              // Optional
+city: "string"                 // Optional
+country: "string"              // Optional
+mobile: "string"               // Optional
+phone: "string"                // Optional
+emailAddress: "string"         // Optional
+emergencyContact: "string"     // Optional (emergency contact details)
+nationalIdNumber: "string"     // Optional (National ID/Passport number)
+idCopy: File                     // Optional (PDF or Image, max 5MB)
+userId: number                   // Required
 ```
 
 **Example using Postman/Form Data:**
@@ -87,12 +83,10 @@ userId           | text  | 1
   "message": "Personal Information already exists for this User"
 }
 
-// 400 - Invalid file type
+// Upload validation failures
 {
   "message": "Invalid file type. Only JPEG, PNG, GIF, and PDF files are allowed."
 }
-
-// 413 - File too large
 {
   "message": "File too large. Maximum file size is 5MB."
 }
@@ -103,15 +97,20 @@ userId           | text  | 1
 - **Allowed file types:** JPEG, JPG, PNG, GIF, PDF
 - **Maximum file size:** 5MB per file
 - **Storage location:** `uploads/personal-info-files/`
-- **Filename format:** `idCopy-timestamp-randomnumber.extension`
-- **Optional field:** idCopy is optional
+- **Filename format:** `idCopy-<timestamp>-<random>.extension`
+- **Optional field:** `idCopy` is optional
+- **Note:** Only the `idCopy` file is accepted on create; updating files via PUT is not supported.
 
 **Notes:**
 
-- All fields are optional except `userId`
-- The `emergencyContact` field can store emergency contact details (name, phone, relationship, etc.)
-- The `idCopy` field stores the path to the uploaded ID document
-- Files are accessible via: `http://localhost:3002/uploads/personal-info-files/filename`
+- All fields are optional except `userId`.
+- `gender` must be one of: `Male`, `Female`.
+- `maritalStatus` must be one of: `Married`, `Single`, `Widowed`.
+- The `emergencyContact` field can store contact details (name, phone, relationship, etc.).
+- The `idCopy` field stores the server path to the uploaded file.
+- Files are served at: `http://localhost:3002/uploads/personal-info-files/<filename>`.
+- Duplicate creation is prevented per `userId`.
+- Caching: some GET routes use in-memory caching (see below).
 
 ---
 
@@ -141,6 +140,8 @@ Retrieves personal information for a specific user.
   }
 ]
 ```
+
+**Caching:** Response is cached for 5 minutes.
 
 ---
 
@@ -177,6 +178,8 @@ Retrieves a single personal information record.
 }
 ```
 
+**Caching:** Response is cached for 10 minutes.
+
 ---
 
 ### Update Personal Information
@@ -195,19 +198,23 @@ Updates personal information.
 
 ```json
 {
-  "dateOfBirth": "date", // Optional
-  "gender": "string", // Optional
-  "maritalStatus": "string", // Optional
-  "fatherName": "string", // Optional
-  "idNumber": "string", // Optional
-  "address": "string", // Optional
-  "city": "string", // Optional
-  "country": "string", // Optional
-  "mobile": "string", // Optional
-  "phone": "string", // Optional
-  "emailAddress": "string" // Optional
+  "dateOfBirth": "1990-01-15",
+  "gender": "Male",
+  "maritalStatus": "Single",
+  "fatherName": "Robert Doe",
+  "idNumber": "123456789",
+  "address": "123 Main St",
+  "city": "New York",
+  "country": "USA",
+  "mobile": "+1234567890",
+  "phone": "+0987654321",
+  "emailAddress": "john@example.com",
+  "emergencyContact": "Jane Doe - +1987654321",
+  "nationalIdNumber": "AB1234567"
 }
 ```
+
+Note: File updates are not supported on this endpoint.
 
 **Success Response (200):**
 
@@ -258,4 +265,14 @@ Deletes all personal information records.
 ```
 
 ---
-
+
+### Summary of Endpoints
+
+- `POST /api/personalInformations` — Create (Admin, multipart/form-data; accepts `idCopy`).
+- `GET /api/personalInformations/user/:id` — List by userId (Admin; cached 5m).
+- `GET /api/personalInformations/:id` — Get one (Any authenticated; cached 10m; includes `user`).
+- `PUT /api/personalInformations/:id` — Update (Admin; JSON body; no file upload).
+- `DELETE /api/personalInformations/:id` — Delete one (Admin).
+- `DELETE /api/personalInformations` — Delete all (Admin).
+
+---
