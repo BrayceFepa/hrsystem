@@ -28,6 +28,10 @@ phone: "string"                // Optional
 emailAddress: "string"         // Optional
 emergencyContact: "string"     // Optional (emergency contact details)
 nationalIdNumber: "string"     // Optional (National ID/Passport number)
+emergencyContactId: "string"   // Optional (Emergency contact ID)
+guarantorId: "string"          // Optional (Guarantor ID)
+guarantorSignature: File       // Optional (Guarantor signature document, max 5MB)
+remark: "string"               // Optional (Additional notes)
 idCopy: File                     // Optional (PDF or Image, max 5MB)
 userId: number                   // Required
 ```
@@ -35,22 +39,27 @@ userId: number                   // Required
 **Example using Postman/Form Data:**
 
 ```
-Key              | Type  | Value
------------------|-------|---------------------------
-dateOfBirth      | text  | 1990-01-15
-gender           | text  | Male
-maritalStatus    | text  | Single
-fatherName       | text  | Robert Doe
-idNumber         | text  | 123456789
-address          | text  | 123 Main St
-city             | text  | New York
-country          | text  | USA
-mobile           | text  | +1234567890
-phone            | text  | +0987654321
-emailAddress     | text  | john@example.com
-emergencyContact | text  | Jane Doe - +1987654321
-idCopy           | file  | id_document.pdf
-userId           | text  | 1
+Key                 | Type  | Value
+--------------------|-------|---------------------------
+dateOfBirth         | text  | 1990-01-15
+gender              | text  | Male
+maritalStatus       | text  | Single
+fatherName          | text  | Robert Doe
+idNumber            | text  | 123456789
+address             | text  | 123 Main St
+city                | text  | New York
+country             | text  | USA
+mobile              | text  | +1234567890
+phone               | text  | +0987654321
+emailAddress        | text  | john@example.com
+emergencyContact    | text  | Jane Doe - +1987654321
+nationalIdNumber    | text  | AB1234567
+emergencyContactId  | text  | ECO123
+guarantorId         | text  | GUAR123
+guarantorSignature  | file  | guarantor_signature.pdf
+remark              | text  | No special notes
+idCopy              | file  | id_document.pdf
+userId              | text  | 1
 ```
 
 **Success Response (200):**
@@ -70,6 +79,11 @@ userId           | text  | 1
   "phone": "+0987654321",
   "emailAddress": "john@example.com",
   "emergencyContact": "Jane Doe - +1987654321",
+  "nationalIdNumber": "AB1234567",
+  "emergencyContactId": "ECO123",
+  "guarantorId": "GUAR123",
+  "guarantorSignature": "uploads/personal-info-files/guarantorSignature-1234567890-123456789.pdf",
+  "remark": "No special notes",
   "idCopy": "uploads/personal-info-files/idCopy-1234567890-123456789.pdf",
   "userId": 1
 }
@@ -97,9 +111,9 @@ userId           | text  | 1
 - **Allowed file types:** JPEG, JPG, PNG, GIF, PDF
 - **Maximum file size:** 5MB per file
 - **Storage location:** `uploads/personal-info-files/`
-- **Filename format:** `idCopy-<timestamp>-<random>.extension`
-- **Optional field:** `idCopy` is optional
-- **Note:** Only the `idCopy` file is accepted on create; updating files via PUT is not supported.
+- **Filename format:** `<fieldname>-<timestamp>-<random>.extension`
+- **Uploadable fields:** `idCopy`, `guarantorSignature` (both optional)
+- **Note:** File uploads are only supported on create (POST); updating files via PUT is not supported.
 
 **Notes:**
 
@@ -107,7 +121,7 @@ userId           | text  | 1
 - `gender` must be one of: `Male`, `Female`.
 - `maritalStatus` must be one of: `Married`, `Single`, `Widowed`.
 - The `emergencyContact` field can store contact details (name, phone, relationship, etc.).
-- The `idCopy` field stores the server path to the uploaded file.
+- The `idCopy` and `guarantorSignature` fields store server paths to uploaded files.
 - Files are served at: `http://localhost:3002/uploads/personal-info-files/<filename>`.
 - Duplicate creation is prevented per `userId`.
 - Caching: some GET routes use in-memory caching (see below).
@@ -210,7 +224,10 @@ Updates personal information.
   "phone": "+0987654321",
   "emailAddress": "john@example.com",
   "emergencyContact": "Jane Doe - +1987654321",
-  "nationalIdNumber": "AB1234567"
+  "nationalIdNumber": "AB1234567",
+  "emergencyContactId": "ECO123",
+  "guarantorId": "GUAR123",
+  "remark": "Updated notes"
 }
 ```
 
@@ -268,7 +285,7 @@ Deletes all personal information records.
 
 ### Summary of Endpoints
 
-- `POST /api/personalInformations` — Create (Admin, multipart/form-data; accepts `idCopy`).
+- `POST /api/personalInformations` — Create (Admin, multipart/form-data; accepts `idCopy` and `guarantorSignature` files).
 - `GET /api/personalInformations/user/:id` — List by userId (Admin; cached 5m).
 - `GET /api/personalInformations/:id` — Get one (Any authenticated; cached 10m; includes `user`).
 - `PUT /api/personalInformations/:id` — Update (Admin; JSON body; no file upload).

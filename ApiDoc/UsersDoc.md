@@ -48,13 +48,13 @@ Creates a new user (Admin function).
 
 - User is created with `active: true` by default
 - After creating a user, you need to create associated records:
-  - Personal Information (Personal & Contact details)
-  - Financial Information (Salary & Banking details)
-  - Job (Employment details)
+  - Personal Information (Personal & Contact details) - See [PersonalInfoDoc.md](./PersonalInfoDoc.md) for details
+  - Financial Information (Salary & Banking details) - See [FinancialInfoDoc.md](./FinancialInfoDoc.md) for details
+  - Job (Employment details) - See [JobsDoc.md](./JobsDoc.md) for details
 - Use the following endpoints to complete employee setup:
-  1. `POST /api/personalInformations` - Add personal information
-  2. `POST /api/financialInformations` - Add financial information
-  3. `POST /api/jobs` - Add employment/job information
+  1. `POST /api/personalInformations` - Add personal information (see [PersonalInfoDoc.md](./PersonalInfoDoc.md))
+  2. `POST /api/financialInformations` - Add financial information (see [FinancialInfoDoc.md](./FinancialInfoDoc.md))
+  3. `POST /api/jobs` - Add employment/job information (see [JobsDoc.md](./JobsDoc.md))
 
 ---
 
@@ -65,10 +65,10 @@ Creates a complete employee with all associated information. This is typically d
 **Workflow:**
 
 1. **Create User Account** (`POST /api/users`)
-2. **Add Personal Information** (`POST /api/personalInformations`)
-3. **Add Financial Information** (`POST /api/financialInformations`)
-4. **Add Employment/Job** (`POST /api/jobs`)
-5. **(Optional)** Add Certificates (`POST /api/userCertificates`)
+2. **Add Personal Information** (`POST /api/personalInformations`) - See [PersonalInfoDoc.md](./PersonalInfoDoc.md) for full endpoint documentation
+3. **Add Financial Information** (`POST /api/financialInformations`) - See [FinancialInfoDoc.md](./FinancialInfoDoc.md) for full endpoint documentation
+4. **Add Employment/Job** (`POST /api/jobs`) - See [JobsDoc.md](./JobsDoc.md) for full endpoint documentation
+5. **(Optional)** Add Certificates (`POST /api/userCertificates`) - See [UserCertificatesDoc.md](./UserCertificatesDoc.md) for full endpoint documentation
 6. **(Optional)** Set up Employee Allowances (`POST /api/employeeAllowances`)
 
 **Complete Employee Data Structure:**
@@ -155,6 +155,8 @@ Creates a complete employee with all associated information. This is typically d
 
 **Field Reference - Personal Information:**
 
+> **Note:** This is a reference for the complete employee workflow. For full endpoint documentation, request/response examples, and field specifications, see [PersonalInfoDoc.md](./PersonalInfoDoc.md)
+
 | Field                | Type   | Required | Description                         |
 | -------------------- | ------ | -------- | ----------------------------------- |
 | `dateOfBirth`        | date   | ✅       | Employee date of birth (YYYY-MM-DD) |
@@ -171,6 +173,12 @@ Creates a complete employee with all associated information. This is typically d
 | `guarantorId`        | string | ❌       | Guarantor ID                        |
 | `guarantorSignature` | file   | ❌       | Guarantor signature document        |
 | `remark`             | string | ❌       | Additional notes                    |
+
+**See [PersonalInfoDoc.md](./PersonalInfoDoc.md) for:**
+- Complete endpoint documentation (`POST /api/personalInformations`)
+- Request/response examples
+- File upload specifications
+- All available fields and their requirements
 
 **Field Reference - Financial Information:**
 

@@ -93,9 +93,10 @@ const uploadJobFiles = uploadJob.fields([
   { name: "certificate", maxCount: 1 },
 ]);
 
-// Multer middleware for personal info files (idCopy)
+// Multer middleware for personal info files (idCopy and guarantorSignature)
 const uploadPersonalInfoFiles = uploadPersonalInfo.fields([
   { name: "idCopy", maxCount: 1 },
+  { name: "guarantorSignature", maxCount: 1 },
 ]);
 
 module.exports = {
