@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Card, Button, Alert } from "react-bootstrap";
+import { Card, Button, Alert, Form } from "react-bootstrap";
 import { Redirect } from "react-router-dom";
 import "react-bootstrap-table-next/dist/react-bootstrap-table2.min.css";
 import "react-bootstrap-table2-paginator/dist/react-bootstrap-table2-paginator.min.css";
@@ -8,6 +8,7 @@ import moment from 'moment';
 import MaterialTable from 'material-table';
 import { ThemeProvider } from '@material-ui/core';
 import { createMuiTheme } from '@material-ui/core/styles';
+import { LEAVE_TYPE_OPTIONS } from '../../constants/leaveTypes';
 
 // Function to decode JWT token
 const decodeToken = (token) => {
@@ -43,7 +44,13 @@ export default class ApplicationList extends Component {
       currentPage: 0,
       pageSize: this.defaultPageSize,
       isLoading: false,
-      error: null
+      error: null,
+      filters: {
+        status: '',
+        type: '',
+        startDate: '',
+        endDate: ''
+      }
     };
   }
 
@@ -55,7 +62,31 @@ export default class ApplicationList extends Component {
   componentWillUnmount() {
     this._isMounted = false;
   }
+  handleFilterChange = (e) => {
+    const { name, value } = e.target;
+    this.setState(prevState => ({
+      filters: {
+        ...prevState.filters,
+        [name]: value
+      }
+    }));
+  };
 
+  handleFilterSubmit = (e) => {
+    e.preventDefault();
+    this.fetchApplications(0); // Reset to first page when applying filters
+  };
+
+  resetFilters = () => {
+    this.setState({
+      filters: {
+        status: '',
+        type: '',
+        startDate: '',
+        endDate: ''
+      }
+    }, () => this.fetchApplications(0));
+  };
   fetchApplications = (page, pageSize = this.defaultPageSize) => {
     // Get the token from localStorage
     const token = localStorage.getItem("token");
@@ -63,14 +94,14 @@ export default class ApplicationList extends Component {
       console.error('No token found');
       return Promise.reject('No authentication token found');
     }
-    
+
     // Decode the token to get user info
     const decoded = decodeToken(token);
     if (!decoded || !decoded.user || !decoded.user.id) {
       console.error('Invalid token format');
       return Promise.reject('Invalid authentication token');
     }
-    
+
     const userId = decoded.user.id;
     const validPageSize = Math.min(Math.max(1, pageSize), this.maxPageSize);
     const validPage = Math.max(0, page);
@@ -85,65 +116,97 @@ export default class ApplicationList extends Component {
       });
     }
 
+    // Build URL with pagination
+    let url = `/api/applications/user/${userId}?page=${apiPage}&size=${validPageSize}`;
+
+    // Add filters to URL
+    const { filters } = this.state;
+    const params = [];
+    if (filters.status) params.push(`status=${encodeURIComponent(filters.status)}`);
+    if (filters.type) params.push(`type=${encodeURIComponent(filters.type)}`);
+    if (filters.startDate) params.push(`startDate=${encodeURIComponent(filters.startDate)}`);
+    if (filters.endDate) params.push(`endDate=${encodeURIComponent(filters.endDate)}`);
+
+    if (params.length > 0) {
+      url += `&${params.join('&')}`;
+    }
+
     return axios({
       method: "get",
-      url: `/api/applications/user/${userId}?page=${apiPage}&size=${validPageSize}`,
-      headers: { Authorization: `Bearer ${token}` },
+      url: url,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Cache-Control': 'no-cache'
+      },
       timeout: 10000
     })
-    .then((res) => {
-      if (!res.data) {
-        throw new Error('No data received from server');
-      }
+      .then((res) => {
+        if (!res.data) {
+          throw new Error('No data received from server');
+        }
 
-      const { items, ...pagination } = res.data;
-      const formattedData = items.map(app => ({
-        ...app,
-        user: app.user || { id: null, fullName: 'Unknown User' },
-        startDate: app.startDate ? moment(app.startDate).format('YYYY-MM-DD') : '',
-        endDate: app.endDate ? moment(app.endDate).format('YYYY-MM-DD') : ''
-      }));
-      
-      if (this._isMounted) {
-        this.setState({ 
-          applications: formattedData,
-          totalItems: pagination.totalItems,
-          totalPages: pagination.totalPages,
-          currentPage: pagination.currentPage - 1, // Convert to 0-based
-          pageSize: pagination.pageSize,
-          hasError: false,
-          errorMsg: '',
-          isLoading: false
-        });
-      }
-      
-      return {
-        data: formattedData,
-        page: pagination.currentPage - 1,
-        totalCount: pagination.totalItems
-      };
-    })
-    .catch(error => {
-      console.error('Error fetching applications:', error);
-      const errorMessage = error.response?.data?.message || 'Failed to load applications. Please try again later.';
-      
-      if (this._isMounted) {
-        this.setState({ 
-          hasError: true, 
-          errorMsg: errorMessage,
-          applications: [],
-          isLoading: false
-        });
-      }
-      
-      return {
-        data: [],
-        page: 0,
-        totalCount: 0
-      };
-    });
+        const { items, ...pagination } = res.data;
+
+const formattedData = items.map(app => {
+  const formattedApp = {
+    ...app,
+    user: app.user || { id: null, fullName: 'Unknown User' }
   };
 
+  // Format dates if they exist
+  if (app.startDate) {
+    // Handle both date and datetime formats
+    const startMoment = moment(app.startDate, ['YYYY-MM-DD', 'YYYY-MM-DD HH:mm:ss']);
+    formattedApp.startDate = startMoment.isValid() ? startMoment.format('YYYY-MM-DD') : app.startDate;
+  }
+  if (app.endDate) {
+    // Handle both date and datetime formats
+    const endMoment = moment(app.endDate, ['YYYY-MM-DD', 'YYYY-MM-DD HH:mm:ss']);
+    formattedApp.endDate = endMoment.isValid() ? endMoment.format('YYYY-MM-DD') : app.endDate;
+  }
+
+  return formattedApp;
+});
+
+        if (this._isMounted) {
+          this.setState({
+            applications: formattedData,
+            totalItems: pagination.totalItems,
+            totalPages: pagination.totalPages,
+            currentPage: pagination.currentPage - 1, // Convert to 0-based
+            pageSize: pagination.pageSize,
+            hasError: false,
+            errorMsg: '',
+            isLoading: false
+          });
+        }
+
+        return {
+          data: formattedData,
+          page: pagination.currentPage - 1,
+          totalCount: pagination.totalItems
+        };
+      })
+      .catch(error => {
+        console.error('Error fetching applications:', error);
+        const errorMessage = error.response?.data?.message || 'Failed to load applications. Please try again later.';
+
+        if (this._isMounted) {
+          this.setState({
+            hasError: true,
+            errorMsg: errorMessage,
+            applications: [],
+            isLoading: false
+          });
+        }
+
+        return {
+          data: [],
+          page: 0,
+          totalCount: 0
+        };
+      });
+  };
   handlePageChange = (page, pageSize) => {
     return this.fetchApplications(page, pageSize);
   };
@@ -169,16 +232,16 @@ export default class ApplicationList extends Component {
       data: { status },
       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
     })
-    .then(() => {
-      const { currentPage, pageSize } = this.state;
-      this.fetchApplications(currentPage, pageSize);
-    })
-    .catch((err) => {
-      this.setState({
-        hasError: true,
-        errorMsg: err.response?.data?.message || 'Failed to update application status.',
+      .then(() => {
+        const { currentPage, pageSize } = this.state;
+        this.fetchApplications(currentPage, pageSize);
+      })
+      .catch((err) => {
+        this.setState({
+          hasError: true,
+          errorMsg: err.response?.data?.message || 'Failed to update application status.',
+        });
       });
-    });
   };
 
   render() {
@@ -200,24 +263,32 @@ export default class ApplicationList extends Component {
     });
 
     const columns = [
-      { 
-        title: 'Type', 
+      {
+        title: 'Type',
         field: 'type',
         render: rowData => rowData.type || 'N/A',
         width: 200
       },
-      {
-        title: 'Start Date',
-        field: 'startDate',
-        render: rowData => moment(rowData.startDate).format('MMM D, YYYY'),
-        width: 150
-      },
-      {
-        title: 'End Date',
-        field: 'endDate',
-        render: rowData => moment(rowData.endDate).format('MMM D, YYYY'),
-        width: 150
-      },
+{
+  title: 'Start Date',
+  field: 'startDate',
+  render: rowData => {
+    if (!rowData.startDate) return 'N/A';
+    const date = moment(rowData.startDate, ['YYYY-MM-DD', 'YYYY-MM-DD HH:mm:ss']);
+    return date.isValid() ? date.format('MMM D, YYYY') : rowData.startDate;
+  },
+  width: 150
+},
+{
+  title: 'End Date',
+  field: 'endDate',
+  render: rowData => {
+    if (!rowData.endDate) return 'N/A';
+    const date = moment(rowData.endDate, ['YYYY-MM-DD', 'YYYY-MM-DD HH:mm:ss']);
+    return date.isValid() ? date.format('MMM D, YYYY') : rowData.endDate;
+  },
+  width: 150
+},
       {
         title: 'Days',
         field: 'numberOfDays',
@@ -229,10 +300,10 @@ export default class ApplicationList extends Component {
         title: 'Status',
         field: 'status',
         render: rowData => (
-          <span 
+          <span
             style={{
-              color: rowData.status === 'Approved' ? 'green' : 
-                     rowData.status === 'Rejected' ? 'red' : 'orange',
+              color: rowData.status === 'Approved' ? 'green' :
+                rowData.status === 'Rejected' ? 'red' : 'orange',
               fontWeight: 'bold',
               padding: '4px 8px',
               borderRadius: '12px',
@@ -257,8 +328,8 @@ export default class ApplicationList extends Component {
         {this.state.hasError && (
           <div className="row justify-content-center mt-3">
             <div className="col-12">
-              <Alert 
-                variant="danger" 
+              <Alert
+                variant="danger"
                 className="p-3"
                 style={{
                   boxShadow: '0 0 10px rgba(0,0,0,0.1)',
@@ -267,7 +338,7 @@ export default class ApplicationList extends Component {
                 }}
               >
                 <div className="d-flex">
-                  <i className="fas fa-exclamation-triangle mt-3 me-3" style={{minWidth: '20px'}}></i>
+                  <i className="fas fa-exclamation-triangle mt-3 me-3" style={{ minWidth: '20px' }}></i>
                   <div>
                     <h5 className="alert-heading mb-1">Error</h5>
                     <p className="mb-0">{this.state.errorMsg}</p>
@@ -278,6 +349,85 @@ export default class ApplicationList extends Component {
           </div>
         )}
         <div className="col-sm-12">
+          <Card className="mb-4">
+            <Card.Body>
+              <Form onSubmit={this.handleFilterSubmit}>
+                <div className="row">
+                  <div className="col-md-3">
+                    <Form.Group>
+                      <Form.Label>Status</Form.Label>
+                      <Form.Control
+                        as="select"
+                        name="status"
+                        value={this.state.filters.status}
+                        onChange={this.handleFilterChange}
+                      >
+                        <option value="">All Status</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Approved">Approved</option>
+                        <option value="Rejected">Rejected</option>
+                      </Form.Control>
+                    </Form.Group>
+                  </div>
+                  <div className="col-md-3">
+                    <Form.Group>
+                      <Form.Label>Leave Type</Form.Label>
+                      <Form.Control
+                        as="select"
+                        name="type"
+                        value={this.state.filters.type}
+                        onChange={this.handleFilterChange}
+                      >
+                        <option value="">All Types</option>
+                        {LEAVE_TYPE_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </Form.Control>
+                    </Form.Group>
+                  </div>
+                  {/* <div className="col-md-3">
+                    <Form.Group>
+                      <Form.Label>Start Date</Form.Label>
+                      <Form.Control
+                        type="date"
+                        name="startDate"
+                        value={this.state.filters.startDate}
+                        onChange={this.handleFilterChange}
+                      />
+                    </Form.Group>
+                  </div>
+                  <div className="col-md-3">
+                    <Form.Group>
+                      <Form.Label>End Date</Form.Label>
+                      <Form.Control
+                        type="date"
+                        name="endDate"
+                        value={this.state.filters.endDate}
+                        onChange={this.handleFilterChange}
+                      />
+                    </Form.Group>
+                  </div> */}
+                </div>
+                <div className="row mt-2">
+                  <div className="col-12 d-flex justify-content-end">
+                    <Button
+                      variant="secondary"
+                      className="mr-2"
+                      onClick={this.resetFilters}
+                      type="button"
+                    >
+                      Reset Filters
+                    </Button>
+                    <Button variant="danger" type="submit">
+                      Apply Filters
+                    </Button>
+                  </div>
+                </div>
+              </Form>
+            </Card.Body>
+          </Card>
           <Card>
             <Card.Header className="bg-danger text-white">
               <strong>Application List</strong>
@@ -286,7 +436,7 @@ export default class ApplicationList extends Component {
               <ThemeProvider theme={theme}>
                 <MaterialTable
                   columns={[
-                    { 
+                    {
                       title: 'NO',
                       field: 'tableData.id',
                       width: 70,
@@ -301,13 +451,13 @@ export default class ApplicationList extends Component {
                       }
                     },
                     { title: 'APP ID', field: 'id' },
-                    { 
-                      title: 'Full Name', 
+                    {
+                      title: 'Full Name',
                       field: 'fullName',
                       render: rowData => rowData.user?.fullName || rowData.name || 'N/A'
                     },
-                    { 
-                      title: 'Start Date', 
+                    {
+                      title: 'Start Date',
                       field: 'startDate',
                       render: rowData => moment(rowData.startDate).format('MMM D, YYYY')
                     },
@@ -318,13 +468,13 @@ export default class ApplicationList extends Component {
                       title: 'Status',
                       field: 'status',
                       render: rowData => (
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant={
-                            rowData.status === 'Approved' ? "success" : 
-                            rowData.status === 'Pending' ? "warning" : "danger"
+                            rowData.status === 'Approved' ? "success" :
+                              rowData.status === 'Pending' ? "warning" : "danger"
                           }
-                          style={{ 
+                          style={{
                             backgroundColor: rowData.status === 'Pending' ? '#fff3cd' : null,
                             color: rowData.status === 'Pending' ? '#000' : '#fff'
                           }}
@@ -340,11 +490,11 @@ export default class ApplicationList extends Component {
                     //   render: rowData => {
                     //     const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
                     //     const isCurrentUser = rowData.user?.id === currentUser.id;
-                        
+
                     //     if (isCurrentUser || rowData.status !== 'Pending') {
                     //       return null;
                     //     }
-                        
+
                     //     return (
                     //       <div>
                     //         <Button 

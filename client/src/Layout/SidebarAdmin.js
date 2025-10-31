@@ -87,6 +87,15 @@ export default class SidebarAdmin extends Component {
         ]
       },
       {
+        id: 'applications',
+        title: 'Applications',
+        icon: 'file-alt',
+        children: [
+          { title: 'Add Application', to: '/application', icon: 'user-plus' },
+          { title: 'Application List', to: '/application-list', icon: 'users' },
+        ]
+      },
+      {
         id: 'jobs',
         title: 'Job List',
         icon: 'briefcase',

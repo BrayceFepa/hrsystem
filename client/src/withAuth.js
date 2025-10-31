@@ -2,10 +2,12 @@ import React, { Component } from "react";
 import { Redirect } from "react-router-dom";
 import axios from "axios";
 
-export default function withAuth(ComponentToProtect) {
+const withAuth = (WrappedComponent) => {
   return class extends Component {
-    constructor() {
-      super();
+    _isMounted = false;
+
+    constructor(props) {
+      super(props);
       this.state = {
         isAuthenticated: false,
         loading: true,
@@ -14,36 +16,76 @@ export default function withAuth(ComponentToProtect) {
     }
 
     componentDidMount() {
-      let token = localStorage.getItem('token');
-      axios({
-        method: "get",
-        url: "/checkToken",
-        headers: {"Authorization" : `Bearer ${token}`}
-      })
-        .then((res) => {
-          this.setState({ isAuthenticated: true });
-          console.log(`Access: ${this.state.isAuthenticated}`);
-          localStorage.setItem('user', JSON.stringify(res.data.authData.user))
-          this.setState({ loading: false });
-        })
-        .catch((err) => {
-          console.log(err)
-          console.log(`Access: ${this.state.isAuthenticated}`);
-          // localStorage.removeItem('user')
-          // localStorage.removeItem('token')
-          this.setState({ loading: false, redirect: true });
-        });
+      this._isMounted = true;
+      this.verifyToken();
     }
 
+    componentWillUnmount() {
+      this._isMounted = false;
+    }
+
+    verifyToken = async () => {
+      const token = localStorage.getItem('token');
+      
+      // If no token, redirect to login
+      if (!token) {
+        this.safeSetState({ loading: false, redirect: true });
+        return;
+      }
+
+      try {
+        const response = await axios({
+          method: "get",
+          url: "/checkToken",
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        // Only proceed if component is still mounted
+        if (this._isMounted) {
+          localStorage.setItem('user', JSON.stringify(response.data.authData.user));
+          this.safeSetState({ 
+            isAuthenticated: true,
+            loading: false 
+          });
+        }
+      } catch (error) {
+        console.error('Authentication error:', error);
+        if (this._isMounted) {
+          localStorage.removeItem('user');
+          localStorage.removeItem('token');
+          this.safeSetState({ 
+            isAuthenticated: false,
+            loading: false, 
+            redirect: true 
+          });
+        }
+      }
+    };
+
+    // Helper method to safely set state if component is still mounted
+    safeSetState = (newState) => {
+      if (this._isMounted) {
+        this.setState(newState);
+      }
+    };
+
     render() {
-      const { loading, redirect } = this.state;
+      const { loading, redirect, isAuthenticated } = this.state;
+      
+      // Show nothing while loading
       if (loading) {
         return null;
       }
-      if (redirect) {
+      
+      // Redirect to login if not authenticated
+      if (redirect || !isAuthenticated) {
         return <Redirect to="/login" />;
       }
-      return <ComponentToProtect {...this.props} />;
+      
+      // Render the protected component with props
+      return <WrappedComponent {...this.props} />;
     }
   };
-}
+};
+
+export default withAuth;

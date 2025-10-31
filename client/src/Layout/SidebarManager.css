@@ -4,6 +4,120 @@
   transition: all 0.3s ease-in-out;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
   color: #6c757d;
+  width: 250px;
+  overflow: hidden;
+}
+
+/* Collapsed state */
+.sidebar-white.sidebar-collapse {
+  width: 60px;
+  overflow: visible;
+  transition: all 0.3s ease-in-out;
+}
+
+/* Hide text and carets when collapsed */
+.sidebar-collapse .nav-link p,
+.sidebar-collapse .user-panel .info,
+.sidebar-collapse .nav-item > .nav-link > .right,
+.sidebar-collapse .nav-item > .nav-link > .fa-angle-left,
+.sidebar-collapse .nav-item > .nav-link > i.fa-angle-left,
+.sidebar-collapse .nav-link .nav-item-title {
+  display: none !important;
+}
+
+/* Nav items in collapsed state */
+.sidebar-collapse .nav-item {
+  width: 100%;
+  margin: 0;
+  position: relative;
+}
+
+/* Nav links in collapsed state */
+.sidebar-collapse .nav-link {
+  display: flex !important;
+  align-items: center;
+  padding: 12px 15px !important;
+  margin: 0;
+  border-left: 3px solid transparent;
+  transition: all 0.2s;
+  justify-content: flex-start !important;
+  text-align: left;
+}
+
+/* Icons in collapsed state */
+.sidebar-collapse .nav-link > i.nav-icon {
+  display: inline-block !important;
+  margin: 0 !important;
+  font-size: 1.2rem;
+  min-width: 24px;
+  text-align: left;
+  color: #6c757d;
+}
+
+/* Active/hover state for collapsed sidebar */
+.sidebar-collapse .nav-link:hover,
+.sidebar-collapse .nav-link.active {
+  background-color: #f8f9fa;
+  border-left-color: #007bff;
+}
+
+.sidebar-collapse .nav-link:hover > i.nav-icon,
+.sidebar-collapse .nav-link.active > i.nav-icon {
+  color: #007bff;
+}
+
+/* Hide submenus when collapsed */
+.sidebar-collapse .nav-treeview {
+  display: none !important;
+}
+
+/* Tooltip for collapsed items */
+.sidebar-collapse .nav-link::after {
+  content: attr(data-title);
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #343a40;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 4px;
+  white-space: nowrap;
+  margin-left: 15px;
+  font-size: 0.85rem;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s;
+  z-index: 1000;
+  pointer-events: none;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.sidebar-collapse .nav-link:hover::after {
+  opacity: 1;
+  visibility: visible;
+  margin-left: 20px;
+}
+
+/* Adjust brand logo for collapsed state */
+.sidebar-collapse .brand-link {
+  padding: 1rem 0.5rem !important;
+  justify-content: center !important;
+}
+
+.sidebar-collapse .brand-image {
+  margin: 0 auto;
+}
+
+/* Adjust user panel for collapsed state */
+.sidebar-collapse .user-panel {
+  padding: 0.5rem 0;
+  justify-content: center;
+}
+
+.sidebar-collapse .user-panel .image {
+  padding-left: 0;
+  margin: 0 auto;
 }
 
 /* Brand link */
@@ -56,25 +170,71 @@
 /* User panel */
 .user-panel {
   border-bottom: 1px solid #e9ecef;
-  padding-bottom: 1rem;
+  padding: 0.5rem 1rem 1rem 1rem;
   margin-bottom: 1rem;
+  position: relative;
+  width: 100%;
 }
 
 .user-panel .image {
   display: inline-block;
-  padding-left: 0.8rem;
+  padding-left: 0;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
 }
 
 .user-panel .info {
   display: inline-block;
-  padding: 5px 5px 5px 10px;
+  padding: 0 10px;
+  flex-grow: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .user-panel .info a {
   color: #6c757d;
   text-decoration: none;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .user-panel .info a:hover {
   color: #000000;
+}
+
+/* Collapse toggle button */
+.user-panel .ml-auto {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+}
+
+.user-panel .btn-link {
+  color: #6c757d;
+  transition: color 0.2s;
+}
+
+.user-panel .btn-link:hover {
+  color: #000000;
+  text-decoration: none;
+}
+
+/* Collapsed state adjustments */
+.sidebar-collapse .user-panel {
+  padding: 0.5rem;
+  justify-content: center;
+}
+
+.sidebar-collapse .user-panel .ml-auto {
+  display: none;
+}
+
+/* Make sure the image is centered when collapsed */
+.sidebar-collapse .user-panel .image {
+  margin: 0 auto;
+  float: none;
+  display: block;
 }

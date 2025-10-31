@@ -31,107 +31,136 @@ export default class EmployeeEdit extends Component {
   constructor(props) {
     super(props);
     this.state = {
-        user: {
-            id: null,
-            fullName: '',
-            role: null,
-            active: null,
-            departmentId: null,
-            username: '',
-            password: ''
-        },
-        userPersonalInfo: {
-            id: null,
-            dateOfBirth: null,
-            gender: '',
-            maritalStatus: '',
-            fatherName: '',
-            idNumber: '',
-            address: '',
-            city: '',
-            country: '',
-            mobile: null,
-            phone: null,
-            emailAddress: ''
-        },
-        userFinancialInfo: {
-            id: null,
-            bankName: '',
-            accountName: '',
-            accountNumber: '',
-            iban: ''
-        },
-        department: {
-          departmentId: null,
-          departmentName: null
-        },
-        departments: [],
-        job: {
-          id: null,
-          jobTitle: '',
-          startDate: null,
-          endDate: null,
-          empType: '',
-          empStatus: 'Active',
-          contract: null,
-          certificate: null,
-          directSupervisor: ''
-        },
-        idCopy: null,
-        contractFile: null,
-        professionalCertificate: null,
+      isLoading: true,
+      user: {
+        id: null,
+        fullName: '',
+        role: null,
+        active: null,
+        departmentId: null,
+        username: '',
+        password: ''
+      },
+      userPersonalInfo: {
+        id: null,
+        dateOfBirth: null,
+        gender: '',
+        maritalStatus: '',
+        fatherName: '',
+        idNumber: '',
+        address: '',
+        city: '',
+        country: '',
+        mobile: null,
+        phone: null,
+        emailAddress: '',
         emergencyContact: '',
-        hasError: false,
-        errMsg: "",
-        completed: false,
-        falseRedirect: false
+        emergencyContactId: '',
+        guarantorId: '',
+        guarantorSignature: null,
+        nationalIdNumber: ''
+      },
+      userFinancialInfo: {
+        id: null,
+        bankName: '',
+        accountName: '',
+        accountNumber: '',
+        iban: ''
+      },
+      department: {
+        departmentId: null,
+        departmentName: null
+      },
+      departments: [],
+      job: {
+        id: null,
+        jobTitle: '',
+        startDate: null,
+        endDate: null,
+        empType: '',
+        empStatus: 'Active',
+        agreementType: '',
+        contract: null,
+        certificate: null,
+        directSupervisor: '',
+        takenAssets: '',
+        guaranteeForm: null,
+        companyGuaranteeSupportLetter: null
+      },
+      idCopy: null,
+      contractFile: null,
+      professionalCertificate: null,
+      emergencyContact: '',
+      guarantorSignatureFile: null,
+      guaranteeFormFile: null,
+      companySupportLetterFile: null,
+      hasError: false,
+      errMsg: "",
+      completed: false,
+      falseRedirect: false
     };
   }
 
   componentDidMount() {
-      if(this.props.location.state) {
-          axios({
-              method: 'get',
-              url: 'api/users/' + this.props.location.state.selectedUser.id,
-              headers: {Authorization: `Bearer ${localStorage.getItem('token')}`}
-          })
-          .then(res => {
-                let user = res.data
-                this.setState({user: user})
-                if(user.jobs.length > 0) {
-                  user.jobs.map((job, index) => {
-                    if(new Date(job.startDate) <= Date.now() && new Date(job.endDate) >= Date.now()) {
-                      job.startDate = moment(new Date(job.startDate)).toDate()
-                      job.endDate = moment(new Date(job.endDate)).toDate()
-                      this.setState({job: job})
-                    }
-                  })
-                }
-                this.setState({department: user.department})
-                if(user.user_personal_info.dateOfBirth) {
-                    user.user_personal_info.dateOfBirth = moment(new Date(user.user_personal_info.dateOfBirth)).toDate()
-                }
-                this.setState({userPersonalInfo: user.user_personal_info})
-                this.setState({userFinancialInfo: user.user_financial_info})
-          })
-          .catch(err => {
-              console.log(err)
-          })
+    if (this.props.location?.state?.selectedUser) {
+      const userId = this.props.location.state.selectedUser.id;
 
-          axios({
-            method: 'get',
-            url: '/api/departments',
-            headers: {Authorization: `Bearer ${localStorage.getItem('token')}`}
-          })
-          .then(res => {
-            this.setState({departments: res.data.items || []})
-          })
-          .catch(err => {
-            console.log(err)
-          })
-      } else {
-          this.setState({falseRedirect: true})
-      }
+      Promise.all([
+        axios.get(`api/users/${userId}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        }),
+        axios.get('/api/departments', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        })
+      ])
+        .then(([userRes, deptRes]) => {
+          const user = userRes.data;
+          const departments = deptRes.data.items || [];
+
+          let currentJob = {};
+          if (user.jobs?.length > 0) {
+            const activeJob = user.jobs.find(job =>
+              new Date(job.startDate) <= new Date() &&
+              new Date(job.endDate) >= new Date()
+            );
+
+            if (activeJob) {
+              currentJob = {
+                ...activeJob,
+                startDate: moment(activeJob.startDate).toDate(),
+                endDate: moment(activeJob.endDate).toDate()
+              };
+            }
+          }
+
+          this.setState({
+            user,
+            department: user.department || {},
+            userPersonalInfo: {
+              ...user.userPersonalInfo,
+              dateOfBirth: user.userPersonalInfo?.dateOfBirth ?
+                moment(user.userPersonalInfo.dateOfBirth).toDate() : null
+            },
+            userFinancialInfo: user.user_financial_info || {},
+            job: currentJob,
+            departments,
+            isLoading: false
+          });
+        })
+        .catch(err => {
+          console.error('Error loading data:', err);
+          this.setState({
+            hasError: true,
+            errMsg: 'Failed to load employee data. Please try again later.',
+            isLoading: false
+          });
+        });
+    } else {
+      this.setState({
+        falseRedirect: true,
+        isLoading: false
+      });
+    }
   }
 
   handleChangeUser = (event) => {
@@ -192,7 +221,7 @@ export default class EmployeeEdit extends Component {
   };
 
   pushDepartments = () => {
-    let items= []
+    let items = []
     this.state.departments.map((dept, index) => {
       items.push(<option key={index} value={dept.id}>{dept.departmentName}</option>)
     })
@@ -203,10 +232,10 @@ export default class EmployeeEdit extends Component {
 
     e.preventDefault()
 
-    this.setState({hasError: false, errorMsg: "", completed: false})
+    this.setState({ hasError: false, errorMsg: "", completed: false })
 
     let user = {
-      fullName: this.state.user.fullName, 
+      fullName: this.state.user.fullName,
       role: this.state.user.role,
       departmentId: this.state.user.departmentId,
       active: this.state.user.active
@@ -216,111 +245,160 @@ export default class EmployeeEdit extends Component {
       method: 'put',
       url: '/api/users/' + this.props.location.state.selectedUser.id,
       data: user,
-      headers: {Authorization: `Bearer ${localStorage.getItem('token')}`}
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
     })
-    .then(res => {
- 
-      let user_id = res.data.id
-
-      let userPersonalData = {
-        dateOfBirth: moment(this.state.userPersonalInfo.dateOfBirth).format('YYYY-MM-DD'),
-        gender: this.state.userPersonalInfo.gender,
-        maritalStatus: this.state.userPersonalInfo.maritalStatus,
-        // fatherName: this.state.userPersonalInfo.fatherName,
-        idNumber: this.state.userPersonalInfo.idNumber,
-        address: this.state.userPersonalInfo.address,
-        city: this.state.userPersonalInfo.city,
-        country: this.state.userPersonalInfo.country,
-        // mobile: this.state.userPersonalInfo.mobile,
-        phone: this.state.userPersonalInfo.phone,
-        emailAddress: this.state.userPersonalInfo.emailAddress,
-        userId: user_id
-      }    
-
-      axios({
-        method: 'put',
-        url: '/api/personalInformations/' + this.state.userPersonalInfo.id,
-        data: userPersonalData,
-        headers: {Authorization: `Bearer ${localStorage.getItem('token')}`}
-      })
       .then(res => {
-        let userFinancialInfo = {
-          bankName: this.state.userFinancialInfo.bankName,
-          // accountName: this.state.userFinancialInfo.accountName,
-          accountNumber: this.state.userFinancialInfo.accountNumber,
-          // iban: this.state.userFinancialInfo.iban,
+
+        let user_id = res.data.id
+
+        const personalFormData = new FormData();
+        const personalInfoFields = {
+          dateOfBirth: moment(this.state.userPersonalInfo.dateOfBirth).format('YYYY-MM-DD'),
+          gender: this.state.userPersonalInfo.gender,
+          maritalStatus: this.state.userPersonalInfo.maritalStatus,
+          idNumber: this.state.userPersonalInfo.idNumber,
+          address: this.state.userPersonalInfo.address,
+          city: this.state.userPersonalInfo.city,
+          country: this.state.userPersonalInfo.country,
+          phone: this.state.userPersonalInfo.phone,
+          emailAddress: this.state.userPersonalInfo.emailAddress,
+          emergencyContact: this.state.userPersonalInfo.emergencyContact,
+          emergencyContactId: this.state.userPersonalInfo.emergencyContactId,
+          guarantorId: this.state.userPersonalInfo.guarantorId,
+          nationalIdNumber: this.state.userPersonalInfo.nationalIdNumber,
           userId: user_id
+        };
+
+        // Append all fields to formData
+        Object.entries(personalInfoFields).forEach(([key, value]) => {
+          if (value !== null && value !== undefined) {
+            personalFormData.append(key, value);
+          }
+        });
+
+        // Append files if they exist
+        if (this.state.idCopy) {
+          personalFormData.append('idCopy', this.state.idCopy);
+        }
+        if (this.state.guarantorSignatureFile) {
+          personalFormData.append('guarantorSignature', this.state.guarantorSignatureFile);
         }
 
         axios({
           method: 'put',
-          url: 'api/financialInformations/' + this.state.userFinancialInfo.id,
-          data: userFinancialInfo,
-          headers: {Authorization: `Bearer ${localStorage.getItem('token')}`}
+          url: '/api/personalInformations/' + this.state.userPersonalInfo.id,
+          data: personalFormData,
+          headers: { 
+            'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${localStorage.getItem('token')}` 
+          }
+          // headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         })
-        .then(res => {
-          if(this.state.job.id !== null) {
-            let newJob = {
-              jobTitle: this.state.job.jobTitle,
-              startDate: this.state.job.startDate,
-              endDate: this.state.job.endDate,
-              empType: this.state.job.empType,
-              empStatus: this.state.job.empStatus,
-              contract: this.state.job.contract,
-              certificate: this.state.job.certificate,
-              directSupervisor: this.state.job.directSupervisor
+          .then(res => {
+            let userFinancialInfo = {
+              bankName: this.state.userFinancialInfo.bankName,
+              // accountName: this.state.userFinancialInfo.accountName,
+              accountNumber: this.state.userFinancialInfo.accountNumber,
+              // iban: this.state.userFinancialInfo.iban,
+              userId: user_id
             }
+
             axios({
               method: 'put',
-              url: 'api/jobs/' + this.state.job.id,
-              data: newJob,
-              headers: {Authorization: `Bearer ${localStorage.getItem('token')}`}
+              url: 'api/financialInformations/' + this.state.userFinancialInfo.id,
+              data: userFinancialInfo,
+              headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
             })
-            .then(res => {
-              this.setState({completed: true})
-            })
-            .catch(err => {
-              console.log(err)
-              // this.setState({hasError: true, errMsg: err.data.message})
-              window.scrollTo(0, 0)
-            })
-          } else {
-            this.setState({completed: true})
-          }
-        })
-        .catch(err => {
-          this.setState({hasError: true, errMsg: err.data.message})
-          window.scrollTo(0, 0)
-        })
+              .then(res => {
+                if (this.state.job.id !== null) {
+                  const jobFormData = new FormData();
+                  const jobFields = {
+                    jobTitle: this.state.job.jobTitle,
+                    startDate: this.state.job.startDate,
+                    endDate: this.state.job.endDate,
+                    empType: this.state.job.empType,
+                    empStatus: this.state.job.empStatus,
+                    agreementType: this.state.job.agreementType,
+                    directSupervisor: this.state.job.directSupervisor,
+                    takenAssets: this.state.job.takenAssets,
+                    userId: user_id
+                  };
+
+                  // Append job fields to formData
+                  Object.entries(jobFields).forEach(([key, value]) => {
+                    if (value !== null && value !== undefined) {
+                      jobFormData.append(key, value);
+                    }
+                  });
+
+                  // Append files if they exist
+                  if (this.state.contractFile) {
+                    jobFormData.append('contract', this.state.contractFile);
+                  }
+                  if (this.state.professionalCertificate) {
+                    jobFormData.append('certificate', this.state.professionalCertificate);
+                  }
+                  if (this.state.guaranteeFormFile) {
+                    jobFormData.append('guaranteeForm', this.state.guaranteeFormFile);
+                  }
+                  if (this.state.companySupportLetterFile) {
+                    jobFormData.append('companyGuaranteeSupportLetter', this.state.companySupportLetterFile);
+                  }
+
+                  axios({
+                    method: 'put',
+                    url: 'api/jobs/' + this.state.job.id,
+                    data: jobFormData,
+                    headers: { 
+                      'Content-Type': 'multipart/form-data',
+                      'Authorization': `Bearer ${localStorage.getItem('token')}` 
+                    }
+                  })
+                    .then(res => {
+                      this.setState({ completed: true })
+                    })
+                    .catch(err => {
+                      console.log(err)
+                      // this.setState({hasError: true, errMsg: err.data.message})
+                      window.scrollTo(0, 0)
+                    })
+                } else {
+                  this.setState({ completed: true })
+                }
+              })
+              .catch(err => {
+                this.setState({ hasError: true, errMsg: err.data.message })
+                window.scrollTo(0, 0)
+              })
+          })
+          .catch(err => {
+            this.setState({ hasError: true, errMsg: err.data.message })
+            window.scrollTo(0, 0)
+          })
       })
       .catch(err => {
-        this.setState({hasError: true, errMsg: err.data.message})
+        console.log(err)
+        // this.setState({hasError: true, errMsg: err.data.message})
         window.scrollTo(0, 0)
       })
-    })
-    .catch(err => {
-      console.log(err)
-      // this.setState({hasError: true, errMsg: err.data.message})
-      window.scrollTo(0, 0)
-    })
   }
 
   render() {
-    if(this.state.user.id === null || this.state.userPersonalInfo.id === null || this.state.userFinancialInfo.id === null) {
+    if (this.state.user.id === null || this.state.userPersonalInfo.id === null || this.state.userFinancialInfo.id === null) {
       return <p>Loading...</p>
     }
     return (
       <Form onSubmit={this.onSubmit}>
         <div className="row">
-        {this.state.falseRedirect ? (<Redirect to="/" />) : null}
+          {this.state.falseRedirect ? (<Redirect to="/" />) : null}
           {this.state.hasError ? (
             <Alert variant="danger" className="m-3" block>
               {this.state.errMsg}
             </Alert>
-          ): 
-          this.state.completed ? (
-            <Redirect to="employee-list" />
-          ) : (<></>)}
+          ) :
+            this.state.completed ? (
+              <Redirect to="employee-list" />
+            ) : (<></>)}
 
           {/* Main Card */}
           <Card className="col-sm-12 main-card mb-3 border-danger">
@@ -390,11 +468,11 @@ export default class EmployeeEdit extends Component {
                             <DatePicker
                               selected={this.state.userPersonalInfo.dateOfBirth}
                               onChange={dateOfBirth => this.setState(prevState => ({
-                                  userPersonalInfo: {
-                                    ...prevState.userPersonalInfo,
-                                    dateOfBirth: dateOfBirth
-                                  }
-                                }))}
+                                userPersonalInfo: {
+                                  ...prevState.userPersonalInfo,
+                                  dateOfBirth: dateOfBirth
+                                }
+                              }))}
                               showMonthDropdown
                               showYearDropdown
                               dropdownMode="select"
@@ -414,14 +492,14 @@ export default class EmployeeEdit extends Component {
                           </Form.Label>
                           <Form.Control
                             as="select"
-                            value={this.state.userPersonalInfo.gender}
+                            value={this.state.userPersonalInfo.gender || ''}
                             onChange={this.handleChangeUserPersonal}
                             name="gender"
                             required
                           >
                             <option value="">Choose...</option>
-                            <option value="male">Male</option>
-                            <option value="female">Female</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
                           </Form.Control>
                         </Form.Group>
 
@@ -431,14 +509,14 @@ export default class EmployeeEdit extends Component {
                           </Form.Label>
                           <Form.Control
                             as="select"
-                            value={this.state.userPersonalInfo.maritalStatus}
+                            value={this.state.userPersonalInfo.maritalStatus || ''}
                             onChange={this.handleChangeUserPersonal}
                             name="maritalStatus"
                             required
                           >
                             <option value="">Choose...</option>
-                            <option value="married">Married</option>
-                            <option value="single">Single</option>
+                            <option value="Married">Married</option>
+                            <option value="Single">Single</option>
                           </Form.Control>
                         </Form.Group>
 
@@ -485,7 +563,7 @@ export default class EmployeeEdit extends Component {
                           <Form.Control
                             type="text"
                             value={this.state.userPersonalInfo.address}
-                            onChange={this.handleChangeUserPersonal} 
+                            onChange={this.handleChangeUserPersonal}
                             name="address"
                             placeholder="Enter Address"
                             required
@@ -508,12 +586,12 @@ export default class EmployeeEdit extends Component {
                           <Form.Label className="text-muted required">
                             City
                           </Form.Label>
-                          <Form.Control 
-                            type="text" 
+                          <Form.Control
+                            type="text"
                             value={this.state.userPersonalInfo.city}
                             onChange={this.handleChangeUserPersonal}
                             name="city"
-                            placeholder="Enter City" 
+                            placeholder="Enter City"
                             required
                           />
                         </Form.Group>
@@ -534,29 +612,29 @@ export default class EmployeeEdit extends Component {
                           <Form.Label className="text-muted">
                             Phone
                           </Form.Label>
-                          <Form.Control 
-                            type="text" 
+                          <Form.Control
+                            type="text"
                             value={this.state.userPersonalInfo.phone || ''}
                             onChange={this.handleChangeUserPersonal}
                             name="phone"
-                            placeholder="Enter Phone" 
+                            placeholder="Enter Phone"
                           />
                         </Form.Group>
                         <Form.Group controlId="formEmail">
                           <Form.Label className="text-muted required">
                             Email
                           </Form.Label>
-                          <Form.Control 
-                            type="text" 
+                          <Form.Control
+                            type="text"
                             value={this.state.userPersonalInfo.emailAddress}
                             onChange={this.handleChangeUserPersonal}
                             name="emailAddress"
-                            placeholder="Enter Email" 
+                            placeholder="Enter Email"
                             required
                           />
                         </Form.Group>
-                        
-                        <Form.Group controlId="formFatherName">
+
+                        <Form.Group controlId="formEmergencyContact">
                           <Form.Label className="text-muted required">
                             Emergency Contact
                           </Form.Label>
@@ -567,6 +645,47 @@ export default class EmployeeEdit extends Component {
                             value={this.state.userPersonalInfo.emergencyContact}
                             onChange={this.handleChangeUserPersonal}
                             required
+                          />
+                        </Form.Group>
+
+                        <Form.Group controlId="formEmergencyContactId">
+                          <Form.Label className="text-muted required">
+                            Emergency Contact ID
+                          </Form.Label>
+                          <Form.Control
+                            type="text"
+                            placeholder="Enter Emergency Contact ID"
+                            name="emergencyContactId"
+                            value={this.state.userPersonalInfo.emergencyContactId}
+                            onChange={this.handleChangeUserPersonal}
+                            required
+                          />
+                        </Form.Group>
+
+                        <Form.Group controlId="formGuarantorId">
+                          <Form.Label className="text-muted required">
+                            Guarantor ID
+                          </Form.Label>
+                          <Form.Control
+                            type="text"
+                            placeholder="Enter Guarantor ID"
+                            name="guarantorId"
+                            value={this.state.userPersonalInfo.guarantorId}
+                            onChange={this.handleChangeUserPersonal}
+                            required
+                          />
+                        </Form.Group>
+
+                        <Form.Group controlId="formGuarantorSignature">
+                          <Form.Label className="text-muted required">
+                            Guarantor Signature
+                          </Form.Label>
+                          <Form.File
+                            id="guarantor-signature-upload"
+                            label={this.state.guarantorSignatureFile ? this.state.guarantorSignatureFile.name : "Upload Guarantor Signature"}
+                            custom
+                            onChange={(e) => this.setState({ guarantorSignatureFile: e.target.files[0] })}
+                            className="custom-file-upload"
                           />
                         </Form.Group>
                       </Card.Text>
@@ -580,6 +699,64 @@ export default class EmployeeEdit extends Component {
                     <Card.Header className="bg-danger">Job Information</Card.Header>
                     <Card.Body>
                       <Card.Text>
+                        <Form.Group controlId="formAgreementType">
+                          <Form.Label className="text-muted required">
+                            Agreement Type
+                          </Form.Label>
+                          <Form.Control
+                            as="select"
+                            name="agreementType"
+                            value={this.state.job.agreementType || ''}
+                            onChange={this.handleChangeJob}
+                            required
+                          >
+                            <option value="">Select Agreement Type</option>
+                            <option value="Permanent">Permanent</option>
+                            <option value="Contract">Contract</option>
+                            <option value="Probation">Probation</option>
+                            <option value="Intern">Intern</option>
+                          </Form.Control>
+                        </Form.Group>
+
+                        <Form.Group controlId="formTakenAssets">
+                          <Form.Label className="text-muted">
+                            Taken Assets
+                          </Form.Label>
+                          <Form.Control
+                            as="textarea"
+                            rows={3}
+                            name="takenAssets"
+                            value={this.state.job.takenAssets || ''}
+                            onChange={this.handleChangeJob}
+                            placeholder="List any assets assigned to the employee"
+                          />
+                        </Form.Group>
+
+                        <Form.Group controlId="formGuaranteeForm">
+                          <Form.Label className="text-muted required">
+                            Guarantee Form
+                          </Form.Label>
+                          <Form.File
+                            id="guarantee-form-upload"
+                            label={this.state.guaranteeFormFile ? this.state.guaranteeFormFile.name : "Upload Guarantee Form"}
+                            custom
+                            onChange={(e) => this.setState({ guaranteeFormFile: e.target.files[0] })}
+                            className="custom-file-upload"
+                          />
+                        </Form.Group>
+
+                        <Form.Group controlId="formCompanySupportLetter">
+                          <Form.Label className="text-muted required">
+                            Company Support Letter
+                          </Form.Label>
+                          <Form.File
+                            id="company-letter-upload"
+                            label={this.state.companySupportLetterFile ? this.state.companySupportLetterFile.name : "Upload Company Support Letter"}
+                            custom
+                            onChange={(e) => this.setState({ companySupportLetterFile: e.target.files[0] })}
+                            className="custom-file-upload"
+                          />
+                        </Form.Group>
                         <Form.Group controlId="formJobTitle">
                           <Form.Label className="text-muted required">
                             Job Title
@@ -592,34 +769,33 @@ export default class EmployeeEdit extends Component {
                             required
                           />
                         </Form.Group>
-
                         <Form.Group controlId="formEmploymentType">
                           <Form.Label className="text-muted required">
                             Employment Type
                           </Form.Label>
                           <Form.Control
                             as="select"
-                            name="employmentType"
-                            value={this.state.job?.employmentType || ''}
+                            name="empType"
+                            value={this.state.job.empType || ''}
                             onChange={this.handleChangeJob}
                             required
                           >
                             <option value="">Select Employment Type</option>
-                            <option value="Full-time">Full-time</option>
-                            <option value="Part-time">Part-time</option>
+                            <option value="Full Time">Full Time</option>
+                            <option value="Part Time">Part Time</option>
                             <option value="Contract">Contract</option>
                             <option value="Temporary">Temporary</option>
                           </Form.Control>
                         </Form.Group>
 
-                        <Form.Group controlId="formStatus">
+                        <Form.Group controlId="formEmploymentStatus">
                           <Form.Label className="text-muted required">
-                            Status
+                            Employment Status
                           </Form.Label>
                           <Form.Control
                             as="select"
-                            name="status"
-                            value={this.state.job?.status || ''}
+                            name="empStatus"
+                            value={this.state.job.empStatus || 'Active'}
                             onChange={this.handleChangeJob}
                             required
                           >
@@ -627,7 +803,7 @@ export default class EmployeeEdit extends Component {
                             <option value="Active">Active</option>
                             <option value="On Leave">On Leave</option>
                             <option value="Terminated">Terminated</option>
-                            <option value="Retired">Retired</option>
+                            <option value="Resigned">Resigned</option>
                           </Form.Control>
                         </Form.Group>
 
@@ -730,12 +906,12 @@ export default class EmployeeEdit extends Component {
                         </Form.Group>
                         <Form.Group controlId="formIban">
                           <Form.Label className="text-muted required">Branch </Form.Label>
-                          <Form.Control 
-                            type="text" 
+                          <Form.Control
+                            type="text"
                             value={this.state.userFinancialInfo.branch}
                             onChange={this.handleChangeUserFinancial}
                             name="branch"
-                            placeholder="Enter Branch" 
+                            placeholder="Enter Branch"
                           />
                         </Form.Group>
                       </Card.Text>
@@ -753,7 +929,7 @@ export default class EmployeeEdit extends Component {
                           </Form.Label>
                           <div>{this.state.user.id}</div>
                         </Form.Group>
-                        <Form.Group controlId="formAccountNumber">
+                        {/* <Form.Group controlId="formAccountNumber">
                           <Form.Label className="text-muted required">
                             Password
                           </Form.Label>
@@ -764,7 +940,7 @@ export default class EmployeeEdit extends Component {
                             name="password"
                             placeholder="Enter Password"
                           />
-                        </Form.Group>
+                        </Form.Group> */}
                         <Form.Group controlId="formDepartment">
                           <Form.Label className="text-muted required">
                             Department
@@ -795,6 +971,7 @@ export default class EmployeeEdit extends Component {
                             <option value="ROLE_MANAGER">Manager</option>
                             <option value="ROLE_HR">HR</option>
                             <option value="ROLE_ADMIN">Admin</option>
+                            
                           </Form.Control>
                         </Form.Group>
                         <Form.Group controlId="formActive">
@@ -816,8 +993,13 @@ export default class EmployeeEdit extends Component {
                       </Card.Text>
                     </Card.Body>
                   </Card>
-                  <Button className="btn bg-danger" type="submit" block>
-                    Submit
+                  <Button
+                    className="btn bg-danger"
+                    type="submit"
+                    block
+                    disabled={this.state.isLoading}
+                  >
+                    {this.state.isLoading ? 'Saving...' : 'Submit'}
                   </Button>
                 </div>
               </div>

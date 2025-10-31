@@ -41,55 +41,78 @@ import Register from "./components/Register";
 import withAuth from "./withAuth";
 import Login from "./components/Login";
 import JobList from "./components/JobList";
-import JobListManager from './components/manager/JobList'
+import JobListManager from './components/manager/JobList';
 import SidebarFinance from './Layout/SidebarFinance';
 import TerminatedEmployees from './components/TerminatedEmployees';
 
-export default class App extends Component {
+// Define container components first
+const LoginContainer = () => (
+  <div style={centerStyle}>
+    <Route exact path="/" render={() => <Redirect to="/login" />} />
+    <Route path="/login" component={Login} />
+  </div>
+);
+
+const RegisterContainer = () => (
+  <div style={centerStyle}>
+    <Route exact path="/" render={() => <Redirect to="/register" />} />
+    <Route path="/register" component={Register} />
+  </div>
+);
+
+const centerStyle = {
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  position: "relative",
+  height: "600px"
+};
+
+// Define DefaultContainer
+const DefaultContainer = () => {
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
+
+  if (!user) {
+    return <Redirect to="/login" />;
+  }
+
+  switch (user.role) {
+    case "ROLE_ADMIN":
+      return <AdminContainer />;
+    case "ROLE_HR":
+      return <HRContainer />;
+    case "ROLE_MANAGER":
+      return <ManagerContainer />;
+    case "ROLE_EMPLOYEE":
+      return <EmployeeContainer />;
+    case "ROLE_FINANCE":
+      return <FinanceContainer />;
+    default:
+      return <Redirect to="/login" />;
+  }
+};
+
+// Create protected container
+const ProtectedDefaultContainer = withAuth(DefaultContainer);
+
+// Main App component
+class App extends Component {
   render() {
     return (
       <ConfirmationProvider>
         <Router>
-            <Switch>
-              <Route exact path="/login" component={LoginContainer} />
-              <Route exact path="/register" component={RegisterContainer} />
-              <Route path="/" component={withAuth(DefaultContainer)} />
-            </Switch>
+          <Switch>
+            <Route exact path="/login" component={LoginContainer} />
+            <Route exact path="/register" component={RegisterContainer} />
+            <Route path="/" component={ProtectedDefaultContainer} />
+          </Switch>
         </Router>
       </ConfirmationProvider>
-    )
+    );
   }
 }
 
-const LoginContainer = () => (
-  <div style={{display: "flex", justifyContent: "center", alignItems: "center", position: "relative", height: "600px"}}>
-    <Route exact path="/" render={() => <Redirect to="/login" />} />
-    <Route path="/login" component={Login} />
-  </div>
-)
-
-const RegisterContainer = () => (
-  <div style={{display: "flex", justifyContent: "center", alignItems: "center", position: "relative", height: "600px"}}>
-    <Route exact path="/" render={() => <Redirect to="/register" />} />
-    <Route path="/register" component={Register} />
-  </div>
-)
-
-const DefaultContainer = () => (
-  <div>
-    {JSON.parse(localStorage.getItem('user')).role === "ROLE_ADMIN" ? (
-      AdminContainer()
-    ) : JSON.parse(localStorage.getItem('user')).role === "ROLE_HR" ? (
-      HRContainer()
-    ) : JSON.parse(localStorage.getItem('user')).role === "ROLE_MANAGER" ? (
-      ManagerContainer()
-    ) : JSON.parse(localStorage.getItem('user')).role === "ROLE_EMPLOYEE" ? (
-      EmployeeContainer()
-    ) : JSON.parse(localStorage.getItem('user')).role === "ROLE_FINANCE" ? (
-      FinanceContainer()
-    ) : null}
-  </div>
-)
+export default App;
 
 const HRContainer = () => (
   <div>
@@ -143,6 +166,7 @@ const AdminContainer = () => (
         <Route exact path="/employee-add" component={withAuth(EmployeeAdd)} />
         <Route exact path="/employee-view" component={withAuth(EmployeeView)} />
         <Route exact path="/employee-edit" component={withAuth(EmployeeEdit)} />
+        <Route exact path="/terminated-employees" component={withAuth(TerminatedEmployees)} />
         <Route exact path="/departments" component={withAuth(DepartmentList)} />
         <Route exact path="/job-list" component={withAuth(JobList)} />
         <Route exact path="/application-list" component={withAuth(ApplicationList)} />

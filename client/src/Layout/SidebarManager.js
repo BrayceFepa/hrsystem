@@ -15,15 +15,15 @@ export default class SidebarManager extends Component {
   componentDidMount() {
     try {
       const storedData = localStorage.getItem('user');
-      console.log('Stored user data:', storedData); // Debug log
+      // console.log('Stored user data:', storedData); 
       
       if (storedData) {
         const userData = JSON.parse(storedData);
-        console.log('Parsed user data:', userData); // Debug log
+        // console.log('Parsed user data:', userData); 
         
         // Handle both direct user object and nested user object
         const user = userData.user || userData;
-        console.log('Extracted user:', user); // Debug log
+        // console.log('Extracted user:', user); 
         
         if (user) {
           this.setState({ user });

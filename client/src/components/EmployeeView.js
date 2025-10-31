@@ -1,8 +1,9 @@
 import React, { Component } from "react";
-import { Card, Row, Col, Form } from "react-bootstrap";
-import { Redirect } from 'react-router-dom'
-import axios from 'axios'
-import moment from 'moment'
+import { Card, Row, Col, Form, Button } from "react-bootstrap";
+import { Redirect, Link } from 'react-router-dom';
+import axios from 'axios';
+import moment from 'moment';
+import { FiFileText } from 'react-icons/fi';
 
 export default class EmployeeView extends Component {
   constructor(props) {

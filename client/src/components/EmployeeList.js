@@ -17,124 +17,261 @@ export default class EmployeeList extends Component {
   constructor(props) {
     super(props);
     this.defaultPageSize = 10;
-    this.maxPageSize = 100; // Match backend's max page size
+    this.maxPageSize = 100;
+    this.searchTimeout = null;
 
     this.state = {
       users: [],
-      totalCount: 0,
-      pageSize: this.defaultPageSize,
-      currentPage: 0,
+      searchText: '',
+      filters: {
+        role: '',
+        active: '',
+        empStatus: ''
+      },
       selectedUser: null,
       viewRedirect: false,
       editRedirect: false,
       deleteModal: false,
       isLoading: false,
-      error: null
-    };
-  }
-
-fetchUsers = (page, pageSize) => {
-  // Cancel previous request if it exists
-  if (cancel) {
-    cancel('Operation canceled due to new request');
-  }
-
-  const validPageSize = Math.min(Math.max(1, pageSize), this.maxPageSize);
-  const validPage = Math.max(0, page);
-  const apiPage = validPage + 1; // Convert to 1-based for backend
-
-  // Only update loading state if component is still mounted
-  if (this._isMounted) {
-    this.setState({
-      isLoading: true,
       error: null,
-      pageSize: validPageSize,
-      currentPage: validPage
-    });
+      pagination: {
+        currentPage: 0,
+        totalPages: 1,
+        totalItems: 0,
+        pageSize: this.defaultPageSize,
+        hasNextPage: false,
+        hasPrevPage: false
+      }
+    };
   }
 
-  return axios({
-    method: 'get',
-    url: `/api/users?page=${apiPage}&size=${validPageSize}`,
-    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-    timeout: 10000,
-    cancelToken: new CancelToken(function executor(c) {
-      // An executor function receives a cancel function as a parameter
-      cancel = c;
-    })
-  })
-  .then(res => {
-    if (!res.data) {
-      throw new Error('No data received from server');
-    }
+  fetchUsers = (page, pageSize = this.state.pagination.pageSize) => {
+    console.log('[fetchUsers] Called with:', { page, pageSize, currentState: this.state.pagination });
 
-    const response = {
-      items: res.data.items || [],
-      totalItems: res.data.totalItems || 0,
-      currentPage: res.data.currentPage || 1,
-      totalPages: res.data.totalPages || 0,
-      pageSize: res.data.pageSize || validPageSize
-    };
-
-    // Only update state if component is still mounted
-    if (this._isMounted) {
-      this.setState({
-        users: response.items,
-        totalCount: response.totalItems,
-        currentPage: response.currentPage - 1, // Convert to 0-based for Material-UI
-        pageSize: response.pageSize,
-        isLoading: false
-      });
-    }
-
-    // Return data in format expected by MaterialTable
-    return {
-      data: response.items,
-      page: response.currentPage - 1,
-      totalCount: response.totalItems,
-      hasNextPage: (response.currentPage * response.pageSize) < response.totalItems
-    };
-  })
-  .catch(error => {
-    // Don't log cancellation errors
-    if (!axios.isCancel(error)) {
-      console.error('Error fetching users:', error);
-      const errorMessage = error.response?.data?.message || 'Failed to fetch users. Please try again.';
-      
-      if (this._isMounted) {
-        this.setState({
-          isLoading: false,
-          error: errorMessage
-        });
+    return new Promise((resolve, reject) => {
+      if (this.cancelToken) {
+        console.log('[fetchUsers] Canceling previous request');
+        this.cancelToken.cancel('Operation canceled due to new request');
       }
-    }
-    
-    // Re-throw the error so it can be handled by the caller if needed
-    throw error;
-  });
-};
+
+      // Ensure page and pageSize are valid numbers
+      const currentPage = Math.max(0, parseInt(page, 10) || 0);
+      const currentPageSize = Math.min(
+        Math.max(1, parseInt(pageSize, 10) || this.defaultPageSize),
+        this.maxPageSize
+      );
+
+      // Convert to 1-based page for API
+      const apiPage = currentPage + 1;
+      const apiPageSize = currentPageSize;
+
+      console.log('[fetchUsers] Converted to API params:', { apiPage, apiPageSize });
+
+      this.setState({ isLoading: true, error: null });
+
+      this.cancelToken = axios.CancelToken.source();
+      let url = `/api/users?page=${apiPage}&size=${apiPageSize}`;
+
+      // Add search and filters to URL
+      if (this.state.searchText) {
+        const searchParam = encodeURIComponent(this.state.searchText.trim());
+        url += `&search=${searchParam}`;
+      }
+
+      const { filters } = this.state;
+      if (filters.role) url += `&role=${encodeURIComponent(filters.role)}`;
+      if (filters.active !== '') url += `&active=${filters.active === 'true'}`;
+      if (filters.empStatus) url += `&empStatus=${encodeURIComponent(filters.empStatus)}`;
+
+      console.log('[fetchUsers] Making API request to:', url);
+
+      axios({
+        method: 'get',
+        url: url,
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+          'Cache-Control': 'no-cache'
+        },
+        cancelToken: this.cancelToken.token
+      })
+        .then(res => {
+          if (!res.data) throw new Error('No data received from server');
+
+          const { items = [], totalItems, totalPages } = res.data;
+
+          // Ensure we have valid pagination data
+          const newPagination = {
+            currentPage: currentPage,
+            totalItems: parseInt(totalItems) || 0,
+            totalPages: parseInt(totalPages) || 1,
+            pageSize: currentPageSize,
+            hasNextPage: (currentPage + 1) < (parseInt(totalPages) || 1),
+            hasPrevPage: currentPage > 0
+          };
+
+          console.log('[fetchUsers] Updating state with pagination:', newPagination);
+
+          if (this._isMounted) {
+            this.setState({
+              users: items,
+              pagination: newPagination,
+              isLoading: false
+            });
+          }
+
+          resolve({
+            data: items,
+            page: currentPage,
+            totalCount: parseInt(totalItems) || 0
+          });
+        })
+        .catch(error => {
+          if (axios.isCancel(error)) {
+            console.log('[fetchUsers] Request canceled:', error.message);
+            return;
+          }
+
+          console.error('[fetchUsers] Error:', error);
+          const errorMessage = error.response?.data?.message || 'Failed to load users. Please try again later.';
+
+          if (this._isMounted) {
+            this.setState({
+              isLoading: false,
+              error: errorMessage
+            });
+          }
+
+          reject(error);
+        });
+    });
+  };
+
+  handleFilterChange = (filterName, value) => {
+    this.setState(prevState => ({
+      filters: {
+        ...prevState.filters,
+        [filterName]: value
+      },
+      pagination: {
+        ...prevState.pagination,
+        currentPage: 0 // Reset to first page when filters change
+      }
+    }), () => {
+      this.updateURL();
+      this.fetchUsers(0, this.state.pagination.pageSize);
+    });
+  };
 
   componentDidMount() {
     this._isMounted = true;
-    this.fetchUsers(0, this.state.pageSize);
+    this.loadStateFromURL();
   }
 
   componentWillUnmount() {
-    // Cancel any pending requests when component unmounts
     this._isMounted = false;
-    if (cancel) {
-      cancel('Operation canceled by the user.');
+    if (this.cancelToken) {
+      this.cancelToken.cancel('Component unmounted');
     }
   }
 
-  handlePageChange = (page, pageSize) => {
-    return this.fetchUsers(page, pageSize);
+  // Load state from URL parameters
+  loadStateFromURL = () => {
+    if (typeof window === 'undefined') return;
+
+    const params = new URLSearchParams(window.location.search);
+
+    const pagination = {
+      currentPage: parseInt(params.get('page')) || 0,
+      pageSize: Math.min(
+        parseInt(params.get('pageSize')) || this.defaultPageSize,
+        this.maxPageSize
+      ),
+      // These will be updated after the API call
+      totalItems: 0,
+      totalPages: 1,
+      hasNextPage: false,
+      hasPrevPage: false
+    };
+
+    const searchText = params.get('search') || '';
+    const filters = {
+      role: params.get('role') || '',
+      active: params.get('active') || '',
+      empStatus: params.get('empStatus') || ''
+    };
+
+    this.setState(
+      {
+        pagination,
+        searchText,
+        filters
+      },
+      () => {
+        this.fetchUsers(pagination.currentPage, pagination.pageSize);
+      }
+    );
+  };
+
+  updateURL = () => {
+    if (typeof window === 'undefined') return; // Skip during SSR
+
+    const { pagination, searchText, filters } = this.state;
+    const params = new URLSearchParams();
+
+    // Add pagination
+    params.set('page', pagination.currentPage);
+    params.set('pageSize', pagination.pageSize);
+
+    // Add search
+    if (searchText) {
+      params.set('search', searchText);
+    }
+
+    // Add filters
+    if (filters.role) params.set('role', filters.role);
+    if (filters.active !== '') params.set('active', filters.active);
+    if (filters.empStatus) params.set('empStatus', filters.empStatus);
+
+    // Update URL without page reload
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    window.history.pushState({ path: newUrl }, '', newUrl);
+  };
+
+  handlePageChange = (newPage) => {
+    console.log('[handlePageChange] New page:', newPage, 'Current state:', this.state.pagination);
+    this.fetchUsers(newPage);
+  }
+
+  handleChange = (event) => {
+    const { value, name } = event.target;
+    console.log('[handleChange]', { name, value });
+    this.setState({
+      [name]: value,
+    });
   };
 
   handlePageSizeChange = (pageSize) => {
-    // Reset to first page when changing page size
-    return this.fetchUsers(0, pageSize);
+    console.log('[handlePageSizeChange] New page size:', pageSize, 'Current state:', this.state.pagination);
+
+    this.setState({
+      pagination: {
+        ...this.state.pagination,
+        currentPage: 0,
+        pageSize: pageSize
+      }
+    }, () => {
+      console.log('[handlePageSizeChange] State after update:', this.state.pagination);
+      this.updateURL();
+      this.fetchUsers(0, pageSize);
+    });
   };
+  // Handle browser back/forward navigation
+  componentDidUpdate(prevProps, prevState) {
+    if (window.location.search !== this.lastSearch) {
+      this.lastSearch = window.location.search;
+      this.loadStateFromURL();
+    }
+  }
 
   onView = (user) => {
     return (event) => {
@@ -242,16 +379,218 @@ fetchUsers = (page, pageSize) => {
               </div>
             </Card.Header>
             <div className="w-full p-0">
-              <div style={{ width: '100%', overflow: 'hidden' }}>
+              <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
+                <div className="flex flex-col md:flex-row md:items-center md:space-x-4 space-y-3 md:space-y-0">
+                  <div className="w-full md:w-1/4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                    <select
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                      value={this.state.filters.role}
+                      onChange={(e) => {
+                        const value = e?.target?.value || '';
+                        this.setState(
+                          (prevState) => ({
+                            filters: { ...prevState.filters, role: value },
+                          }),
+                          () => this.fetchUsers(0, this.state.pageSize, this.state.searchText)
+                        );
+                      }}
+                    >
+                      <option value="">All Roles</option>
+                      <option value="ROLE_ADMIN">Admin</option>
+                      <option value="ROLE_EMPLOYEE">Employee</option>
+                      <option value="ROLE_MANAGER">Manager</option>
+                      <option value="ROLE_HR">HR</option>
+                      <option value="ROLE_FINANCE">Finance</option>
+                    </select>
+                  </div>
+
+                  <div className="w-full md:w-1/4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                      value={this.state.filters.active}
+                      onChange={(e) => {
+                        const value = e?.target?.value || '';
+                        this.setState(
+                          (prevState) => ({
+                            filters: { ...prevState.filters, active: value },
+                          }),
+                          () => this.fetchUsers(0, this.state.pageSize, this.state.searchText)
+                        );
+                      }}
+                    >
+                      <option value="">All Statuses</option>
+                      <option value="true">Active</option>
+                      <option value="false">Inactive</option>
+                    </select>
+                  </div>
+
+                  <div className="w-full md:w-1/4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Employment Status</label>
+                    <select
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                      value={this.state.filters.empStatus}
+                      onChange={(e) => {
+                        const value = e?.target?.value || '';
+                        this.setState(
+                          (prevState) => ({
+                            filters: { ...prevState.filters, empStatus: value },
+                          }),
+                          () => this.fetchUsers(0, this.state.pageSize, this.state.searchText)
+                        );
+                      }}
+                    >
+                      <option value="">All Statuses</option>
+                      <option value="Active">Active</option>
+                      <option value="On Leave">On Leave</option>
+                      <option value="Terminated">Terminated</option>
+                    </select>
+                  </div>
+
+                  <div className="w-full md:w-1/4 flex items-end">
+                    <button
+                      onClick={() => {
+                        this.setState(
+                          {
+                            filters: {
+                              role: '',
+                              active: '',
+                              empStatus: ''
+                            },
+                          },
+                          () => this.fetchUsers(0, this.state.pageSize, this.state.searchText)
+                        );
+                      }}
+                      className="w-full md:w-auto bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300 transition-colors duration-200"
+                    >
+                      Clear Filters
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ width: '100%', overflow: 'hidden', position: 'relative' }}>
+                {this.state.isLoading && (
+                  <div className="absolute inset-0 bg-white bg-opacity-75 z-10 flex flex-col">
+                    {/* Table Header Skeleton */}
+                    <div className="flex items-center h-14 bg-gray-50 px-4 border-b border-gray-200">
+                      {[...Array(6)].map((_, i) => (
+                        <div
+                          key={`header-${i}`}
+                          className="h-4 bg-gray-200 rounded mr-6"
+                          style={{
+                            width: i === 0 ? '10%' : i === 5 ? '15%' : '15%',
+                            minWidth: '80px'
+                          }}
+                        />
+                      ))}
+                    </div>
+
+                    {/* Table Rows Skeleton */}
+                    {[...Array(5)].map((_, rowIndex) => (
+                      <div
+                        key={`row-${rowIndex}`}
+                        className={`flex items-center h-16 px-4 ${rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}
+                      >
+                        {[...Array(6)].map((_, cellIndex) => (
+                          <div
+                            key={`cell-${rowIndex}-${cellIndex}`}
+                            className="mr-6 overflow-hidden"
+                            style={{
+                              width: cellIndex === 0 ? '10%' : cellIndex === 5 ? '15%' : '15%',
+                              minWidth: '80px'
+                            }}
+                          >
+                            <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                            {cellIndex === 0 && (
+                              <div className="h-3 bg-gray-100 rounded mt-1 w-3/4 animate-pulse"></div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+
+                    {/* Pagination Skeleton */}
+                    <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-white">
+                      <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
+                      <div className="flex space-x-2">
+                        {[...Array(5)].map((_, i) => (
+                          <div
+                            key={`page-${i}`}
+                            className="h-8 w-8 bg-gray-200 rounded-md animate-pulse"
+                          ></div>
+                        ))}
+                      </div>
+                      <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
+                    </div>
+                  </div>
+                )}
                 <ThemeProvider theme={theme}>
                   <MaterialTable
                     title=""
+                    data={this.state.users}
+                    isLoading={this.state.isLoading}
+                    options={{
+                      pageSize: this.state.pagination.pageSize,
+                      page: this.state.pagination.currentPage,
+                      count: this.state.pagination.totalItems,
+                      pageSizeOptions: [10, 20, 50],
+                      paginationType: 'stepped',
+                      filtering: false,
+                      search: false, // We'll handle search separately
+                      showTitle: false,
+                      debounceInterval: 500,
+                      paging: true,
+                      emptyRowsWhenPaging: false,
+                      rowStyle: this.rowStyle,
+                      headerStyle: {
+                        backgroundColor: '#f8fafc',
+                        color: '#334155',
+                        fontWeight: 600,
+                        padding: '12px 16px',
+                        borderBottom: '1px solid #e2e8f0',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                        whiteSpace: 'nowrap'
+                      },
+                      cellStyle: {
+                        padding: '12px 16px',
+                        borderBottom: '1px solid #e2e8f0',
+                        color: '#334155',
+                        fontSize: '0.875rem'
+                      },
+
+                      onSearchChange: (searchText) => {
+                        this.setState(
+                          {
+                            searchText,
+                            pagination: {
+                              ...this.state.pagination,
+                              currentPage: 0
+                            }
+                          },
+                          () => {
+                            clearTimeout(this.searchTimeout);
+                            this.searchTimeout = setTimeout(() => {
+                              this.updateURL();
+                              this.fetchUsers(0, this.state.pagination.pageSize);
+                            }, 500);
+                          }
+                        );
+                      }
+                    }}
                     columns={[
                       {
                         title: 'NO',
                         field: 'no',
                         headerStyle: { minWidth: '100px' },
-                        cellStyle: { fontFamily: 'monospace', color: '#4b5563' }
+                        cellStyle: { fontFamily: 'monospace', color: '#4b5563' },
+                        render: (rowData) => {
+                          const rowIndex = rowData.tableData?.id ?? 0;
+                          const pageOffset = (this.state.pagination.currentPage || 0) * (this.state.pagination.pageSize || 10);
+                          return rowIndex + 1 + pageOffset;
+                        }
                       },
                       {
                         title: 'EMP ID',
@@ -271,6 +610,22 @@ fetchUsers = (page, pageSize) => {
                         headerStyle: { minWidth: '180px' },
                         cellStyle: { color: '#475569' },
                         render: rowData => rowData.department?.departmentName || 'N/A'
+                      },
+                      {
+                        title: 'ROLE',
+                        field: 'role',
+                        headerStyle: { minWidth: '180px' },
+                        cellStyle: { color: '#475569' },
+                        render: rowData => {
+                          const roleMap = {
+                            'ROLE_ADMIN': 'Admin',
+                            'ROLE_MANAGER': 'Manager',
+                            'ROLE_HR': 'HR',
+                            'ROLE_FINANCE': 'Finance',
+                            'ROLE_EMPLOYEE': 'Employee'
+                          };
+                          return roleMap[rowData.role] || rowData.role || 'N/A';
+                        }
                       },
                       {
                         title: 'JOB TITLE',
@@ -293,173 +648,62 @@ fetchUsers = (page, pageSize) => {
                         render: rowData => rowData.user_personal_info?.phone || 'N/A'
                       },
                       {
-                        title: 'STATUS',
-                        field: 'active',
+                        title: 'Employment Status',
+                        field: 'jobs[0].empStatus',
                         headerStyle: { minWidth: '120px' },
-                        render: rowData => (
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            rowData.active ? 'bg-green-200 text-green-600' : 'bg-red-100 text-red-800'
-                          }`}>
-                            {rowData.active ? 'Active' : 'Inactive'}
-                          </span>
-                        )
+                        render: rowData => {
+                          const status = rowData.jobs?.[0]?.empStatus || 'N/A';
+                          const statusClass = {
+                            'Active': 'bg-green-200 text-green-600',
+                            'On Leave': 'bg-yellow-200 text-yellow-600',
+                            'Terminated': 'bg-red-100 text-red-800'
+                          }[status] || 'bg-gray-100 text-gray-800';
+
+                          return (
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusClass}`}>
+                              {status}
+                            </span>
+                          );
+                        }
                       },
                       {
-                        title: '',
-                        field: 'actions',
-                        headerStyle: { width: '80px' },
-                        cellStyle: { textAlign: 'center' },
-                        render: rowData => (
-                          <button
-                            onClick={this.onView(rowData)}
-                            className="p-2 text-red-400 hover:bg-red-50 rounded-full transition-colors duration-200"
-                            title="View Details"
-                          >
-                            <FiEye className="w-5 h-5" />
-                          </button>
-                        )
-                      },
-                      {
-                        title: '',
+                        title: 'Actions',
                         field: 'actions',
                         headerStyle: { width: '120px' },
-                        cellStyle: { textAlign: 'center' },
+                        cellStyle: {
+                          textAlign: 'center',
+                          padding: '0 4px'
+                        },
                         render: rowData => (
-                          <div className="flex space-x-2">
+                          <div className="flex items-center justify-center space-x-1">
+                            <button
+                              onClick={this.onView(rowData)}
+                              className="p-1.5 text-blue-400 hover:bg-blue-50 rounded-full transition-colors duration-200"
+                              title="View Details"
+                            >
+                              <FiEye className="w-4 h-4" />
+                            </button>
                             <button
                               onClick={this.onEdit(rowData)}
-                              className="px-3 py-1.5 bg-red-500 text-white text-sm rounded-md hover:bg-red-700 transition-colors duration-200 flex items-center"
+                              className="p-1.5 text-yellow-400 hover:bg-yellow-50 rounded-full transition-colors duration-200"
+                              title="Edit Details"
                             >
-                              <FiEdit2 className="mr-1.5" size={14} />
-                              Edit
+                              <FiEdit2 className="w-4 h-4" />
                             </button>
                             {rowData.id !== JSON.parse(localStorage.getItem('user'))?.id && (
                               <button
                                 onClick={this.onDelete(rowData)}
-                                className="px-3 py-1.5 bg-red-600 text-white text-sm rounded-md hover:bg-red-700 transition-colors duration-200 flex items-center"
+                                className="p-1.5 text-red-400 hover:bg-red-50 rounded-full transition-colors duration-200"
+                                title="Delete"
                               >
-                                <FiTrash2 className="mr-1.5" size={14} />
-                                Delete
+                                <FiTrash2 className="w-4 h-4" />
                               </button>
                             )}
                           </div>
                         )
                       }
                     ]}
-                    data={query => {
-                      // Cancel previous request if it exists
-                      if (cancel) {
-                        cancel('Operation canceled due to new request');
-                      }
-                      
-                      const page = query.page;
-                      const pageSize = query.pageSize;
-                      
-                      return this.fetchUsers(page, pageSize)
-                        .then(result => {
-                          // Only update state if component is still mounted
-                          if (this._isMounted) {
-                            this.setState({
-                              pageSize: pageSize,
-                              currentPage: page
-                            });
-                          }
-                          
-                          // Add row numbers that continue across pagination
-                          const dataWithRowNumbers = result.data.map((item, index) => ({
-                            ...item,
-                            no: (page * pageSize) + index + 1 // Calculate row number
-                          }));
-                          
-                          return {
-                            data: dataWithRowNumbers,
-                            page: page,
-                            totalCount: result.totalCount
-                          };
-                        })
-                        .catch(error => {
-                          if (axios.isCancel(error)) {
-                            // Request was cancelled, no need to show error
-                            return { data: [], page: 0, totalCount: 0 };
-                          }
-                          console.error('Error in data promise:', error);
-                          return { data: [], page: 0, totalCount: 0 };
-                        });
-                    }}
-                    options={{
-                      pageSize: this.state.pageSize,
-                      pageSizeOptions: [10, 20, 50],
-                      paginationType: 'stepped',
-                      paginationPosition: 'both',
-                      showFirstLastPageButtons: true,
-                      emptyRowsWhenPaging: true,
-                      sorting: false,
-                      search: true,
-                      showNextPageButton: () => {
-                        const { currentPage, pageSize, totalCount } = this.state;
-                        return (currentPage + 1) * pageSize < totalCount;
-                      },
-                      searchFieldVariant: 'outlined',
-                      searchFieldStyle: {
-                        padding: '1px 10px',
-                        borderRadius: '0.375rem',
-                        borderColor: '#e2e8f0',
-                        marginBottom: '1rem',
-                        width: '300px',
-                        fontSize: '0.875rem'
-                      },
-                      headerStyle: {
-                        backgroundColor: '#f8fafc',
-                        borderBottom: '1px solid #e2e8f0',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.05em',
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        color: '#64748b',
-                      },
-                      rowStyle: (rowData, index) => ({
-                        backgroundColor: index % 2 === 0 ? '#ffffff' : '#f8fafc',
-                        transition: 'background-color 0.2s',
-                        '&:hover': {
-                          backgroundColor: '#f1f5f9',
-                        },
-                      }),
-                      loadingType: 'linear',
-                      showEmptyDataSourceMessage: !this.state.isLoading,
-                      toolbar: true,
-                      toolbarButtonAlignment: 'left',
-                      maxBodyHeight: 'calc(100vh - 300px)',
-                      minBodyHeight: '400px',
-                      draggable: false,
-                      filtering: false,
-                      actionsColumnIndex: -1,
-                      debounceInterval: 500,
-                      thirdSortClick: false,
-                      components: {
-                        Toolbar: props => (
-                          <div className="px-6 py-4 border-b border-gray-200">
-                            <div className="flex justify-between items-center">
-                              <div className="flex-1 max-w-md">
-                                <div className="relative">
-                                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <svg className="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                                      <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-                                    </svg>
-                                  </div>
-                                  <input
-                                    type="text"
-                                    placeholder="Search employees..."
-                                    value={props.searchText || ''}
-                                    onChange={e => props.onSearchChanged(e.target.value)}
-                                    className="block w-full mt-5 pl-10 pr-5 py-0.5 border border-red-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 text-sm h-8"
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        )
-                      }
-                    }}
+        
                   />
                 </ThemeProvider>
               </div>
