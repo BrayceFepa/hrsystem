@@ -21,7 +21,8 @@ module.exports = (sequelize, Sequelize) => {
         allowNull: true,
       },
       empType: {
-        type: Sequelize.STRING,
+        type: Sequelize.ENUM,
+        values: ["Full Time", "Part Time", "Internship", "Contractual"],
         allowNull: true,
       },
       empStatus: {

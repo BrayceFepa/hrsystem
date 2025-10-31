@@ -10,7 +10,7 @@ module.exports = (sequelize, Sequelize) => {
       },
       employmentType: {
         type: Sequelize.ENUM,
-        values: ["Full Time", "Part Time"],
+        values: ["Full Time", "Part Time", "Internship", "Contractual"],
         allowNull: true,
       },
       salaryBasic: {

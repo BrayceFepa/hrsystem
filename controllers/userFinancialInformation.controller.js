@@ -14,6 +14,15 @@ exports.create = (req, res) => {
     return;
   }
 
+  // Validate employmentType if provided
+  const validEmploymentTypes = ["Full Time", "Part Time", "Internship", "Contractual"];
+  if (req.body.employmentType && !validEmploymentTypes.includes(req.body.employmentType)) {
+    res.status(400).send({
+      message: `Invalid employmentType. Must be one of: ${validEmploymentTypes.join(", ")}`,
+    });
+    return;
+  }
+
   // Create an UserFinancialInformation
   const userFinancialInformation = {
     employmentType: req.body.employmentType,

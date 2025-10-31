@@ -14,6 +14,15 @@ exports.create = (req, res) => {
     return;
   }
 
+  // Validate empType if provided
+  const validEmpTypes = ["Full Time", "Part Time", "Internship", "Contractual"];
+  if (req.body.empType && !validEmpTypes.includes(req.body.empType)) {
+    res.status(400).send({
+      message: `Invalid empType. Must be one of: ${validEmpTypes.join(", ")}`,
+    });
+    return;
+  }
+
   // Validate empStatus if provided
   const validStatuses = ["Active", "On Leave", "Terminated", "Resigned"];
   if (req.body.empStatus && !validStatuses.includes(req.body.empStatus)) {

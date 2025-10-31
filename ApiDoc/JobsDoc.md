@@ -18,7 +18,7 @@ Creates a new job position for a user with optional file uploads.
 jobTitle: "string"                      // Required
 startDate: "date"                       // Required (YYYY-MM-DD)
 endDate: "date"                         // Optional (YYYY-MM-DD)
-empType: "string"                       // Optional (e.g., "Full-Time", "Part-Time", "Contract")
+empType: "string"                       // Optional: "Full Time" | "Part Time" | "Internship" | "Contractual"
 empStatus: "string"                     // Optional: "Active" | "On Leave" | "Terminated" | "Resigned"
 directSupervisor: "string"              // Optional (Supervisor name or ID)
 contract: File                          // Optional (PDF or Image, max 5MB)
@@ -39,7 +39,7 @@ Key                             | Type  | Value
 jobTitle                        | text  | Software Engineer
 startDate                       | text  | 2024-01-01
 endDate                         | text  | 2024-12-31
-empType                         | text  | Full-Time
+empType                         | text  | Full Time
 empStatus                       | text  | Active
 directSupervisor                | text  | John Smith
 contract                        | file  | employment_contract.pdf
@@ -60,7 +60,7 @@ userId                          | text  | 1
   "jobTitle": "Software Engineer",
   "startDate": "2024-01-01T00:00:00.000Z",
   "endDate": "2024-12-31T00:00:00.000Z",
-  "empType": "Full-Time",
+  "empType": "Full Time",
   "empStatus": "Active",
   "directSupervisor": "John Smith",
   "contract": "uploads/job-files/contract-1234567890-123456789.pdf",
@@ -111,6 +111,7 @@ userId                          | text  | 1
 - `documentScanned` is a boolean field (true/false) - indicates if employee documents have been scanned
 - All employment fields (empType, empStatus, directSupervisor, agreementType) are optional
 - The `endDate` field is optional (can be null for ongoing positions)
+- `empType` accepts: "Full Time", "Part Time", "Internship", or "Contractual"
 - `empStatus` accepts: "Active", "On Leave", "Terminated", or "Resigned"
 - `agreementType` accepts: "Permanent", "Contract", "Probation", or "Intern"
 - For `documentScanned`, you can send: `true`, `"true"`, `1`, `"1"` (all treated as true) or `false`, `"false"`, `0`, `"0"` (all treated as false)

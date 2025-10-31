@@ -14,7 +14,7 @@ Creates new financial information for a user.
 
 ```json
 {
-  "employmentType": "string",          // Optional: "Full Time" | "Part Time"
+  "employmentType": "string",          // Optional: "Full Time" | "Part Time" | "Internship" | "Contractual"
   "salaryBasic": number,               // Optional
   "salaryGross": number,               // Optional
   "salaryNet": number,                 // Optional
@@ -243,4 +243,3 @@ Updates an existing financial information record.
 ```
 
 ---
-

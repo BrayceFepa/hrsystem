@@ -113,7 +113,7 @@ Creates a complete employee with all associated information. This is typically d
     "jobTitle": "Software Engineer", // Required: Job title
     "startDate": "2024-01-01", // Required: Employment start date
     "endDate": "2025-12-31", // Optional: Employment end date
-    "empType": "Full-Time", // Required: "Full-Time" | "Part-Time" | "Contract"
+    "empType": "Full Time", // Required: "Full Time" | "Part Time" | "Internship" | "Contractual"
     "empStatus": "Active", // Required: "Active" | "On Leave" | "Terminated" | "Resigned"
     "directSupervisor": "Jane Manager", // Required: Supervisor name
     "agreementType": "Permanent", // Optional: "Permanent" | "Contract" | "Probation" | "Intern"
@@ -175,6 +175,7 @@ Creates a complete employee with all associated information. This is typically d
 | `remark`             | string | ❌       | Additional notes                    |
 
 **See [PersonalInfoDoc.md](./PersonalInfoDoc.md) for:**
+
 - Complete endpoint documentation (`POST /api/personalInformations`)
 - Request/response examples
 - File upload specifications
@@ -199,7 +200,7 @@ Creates a complete employee with all associated information. This is typically d
 | `jobTitle`                      | string  | ✅       | Job title/position                                        |
 | `startDate`                     | date    | ✅       | Employment start date                                     |
 | `endDate`                       | date    | ❌       | Employment end date (for fixed-term)                      |
-| `empType`                       | string  | ✅       | "Full-Time", "Part-Time", "Contract", or "Probation"      |
+| `empType`                       | string  | ✅       | "Full Time", "Part Time", "Internship", or "Contractual"  |
 | `empStatus`                     | string  | ✅       | "Active", "On Leave", "Terminated", or "Resigned"         |
 | `directSupervisor`              | string  | ✅       | Supervisor name or ID                                     |
 | `agreementType`                 | string  | ❌       | "Permanent", "Contract", "Probation", or "Intern"         |
