@@ -87,10 +87,12 @@ const uploadPersonalInfo = multer({
   fileFilter: fileFilter,
 });
 
-// Multer middleware for job files (contract and certificate)
+// Multer middleware for job files (contract, certificate, guaranteeForm, companyGuaranteeSupportLetter)
 const uploadJobFiles = uploadJob.fields([
   { name: "contract", maxCount: 1 },
   { name: "certificate", maxCount: 1 },
+  { name: "guaranteeForm", maxCount: 1 },
+  { name: "companyGuaranteeSupportLetter", maxCount: 1 },
 ]);
 
 // Multer middleware for personal info files (idCopy and guarantorSignature)
